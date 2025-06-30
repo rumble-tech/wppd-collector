@@ -1,9 +1,61 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "4e62b8c9-0c07-4356-8bc6-b45c632fa509",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "cc6bcd95-c68b-4ae7-abcf-33442be02e5d",
+  "prevId": "4e62b8c9-0c07-4356-8bc6-b45c632fa509",
   "tables": {
+    "plugins": {
+      "name": "plugins",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "latest_version": {
+          "name": "latest_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "latest_php_version": {
+          "name": "latest_php_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "latest_wp_version": {
+          "name": "latest_wp_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "sites": {
       "name": "sites",
       "columns": {
