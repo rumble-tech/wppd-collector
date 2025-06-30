@@ -9,3 +9,4 @@ services:
       volumes:
         - ../src:/app/src
         - ../logs:/app/logs
+        - ../sqlite:/app/sqlite

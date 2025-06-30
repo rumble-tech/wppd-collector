@@ -11,4 +11,4 @@ COPY package*.json ./
 RUN npm install --omit=dev
 COPY --from=builder /app/dist ./dist
 ENV NODE_ENV=production
-CMD ["sh", "-c", "node dist/index.js"]
+CMD ["sh", "-c", "npm run migrate:apply && node dist/index.js"]

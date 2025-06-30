@@ -4,7 +4,9 @@
     "main": "index.js",
     "scripts": {
         "dev": "docker-compose -f ./docker/compose.dev.yml -f ./docker/compose.dev.override.yml up --build",
-        "build": "docker build --no-cache -f ./docker/Dockerfile.prod -t rumble-wppd-collector:latest ./"
+        "build": "docker build --no-cache -f ./docker/Dockerfile.prod -t rumble-wppd-collector:latest ./",
+        "migrate:create": "npx drizzle-kit generate",
+        "migrate:apply": "npx ts-node src/components/database/Migrate.ts"
     },
     "repository": {
         "type": "git",
@@ -19,8 +21,10 @@
     "description": "",
     "devDependencies": {
         "@eslint/js": "^9.30.0",
+        "@types/better-sqlite3": "^7.6.13",
         "@types/cors": "^2.8.19",
         "@types/express": "^5.0.3",
+        "drizzle-kit": "^0.31.4",
         "eslint": "^9.30.0",
         "globals": "^16.2.0",
         "ts-node": "^10.9.2",
@@ -30,7 +34,9 @@
         "typescript-eslint": "^8.35.0"
     },
     "dependencies": {
+        "better-sqlite3": "^12.2.0",
         "cors": "^2.8.5",
+        "drizzle-orm": "^0.44.2",
         "express": "^5.1.0",
         "winston": "^3.17.0",
         "winston-daily-rotate-file": "^5.0.0"
