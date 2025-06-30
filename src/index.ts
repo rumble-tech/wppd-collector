@@ -7,18 +7,21 @@ import IndexController from 'src/controllers/IndexController';
 Config.load(ConfigSchema);
 
 Logger.setConfig(Config.getLoggerConfig());
-Logger.init();
+const logger = new Logger();
 
 Server.setConfig(Config.getServerConfig());
-const server = Server.getInstance();
+const server = Server.getInstance(logger);
 
-server.useRouter('/', new IndexController().getRouter());
+
+const indexController = new IndexController(logger);
+
+server.useRouter('/', indexController.getRouter());
 server
     .start()
     .then(() => {
-        Logger.app.info('Server started successfully');
+        logger.app.info('Server started successfully');
     })
     .catch((error) => {
-        Logger.app.error('Failed to start server:', error);
+        logger.app.error('Failed to start server:', error);
         process.exit(1);
     });

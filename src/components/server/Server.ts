@@ -12,11 +12,13 @@ export default class Server {
     private app: express.Application;
     private server: http.Server;
     private router: express.Router;
+    private logger: Logger;
 
-    private constructor() {
+    private constructor(logger: Logger) {
         this.app = express();
         this.server = http.createServer(this.app);
         this.router = express.Router();
+        this.logger = logger;
 
         this.app.use(express.json());
         this.app.use(cors(Server.config.corsOptions));
@@ -25,9 +27,9 @@ export default class Server {
         this.useErrorHandlers();
     }
 
-    public static getInstance(): Server {
+    public static getInstance(logger: Logger): Server {
         if (!Server.instance) {
-            Server.instance = new Server();
+            Server.instance = new Server(logger);
         }
 
         return Server.instance;
@@ -68,7 +70,7 @@ export default class Server {
                 const statusCode = err.getStatusCode();
                 const message = err.message;
 
-                Logger.app.error(`[${statusCode}] ${message}`);
+                this.logger.app.error(`[${statusCode}] ${message}`);
 
                 res.status(statusCode).json({ error: message });
                 return;

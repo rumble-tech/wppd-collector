@@ -1,4 +1,4 @@
-import AbstractController from './AbstractController';
+import AbstractController from 'src/controllers/AbstractController';
 
 export default class IndexController extends AbstractController {
     protected useRoutes(): void {

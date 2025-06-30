@@ -4,17 +4,18 @@ import winston from 'winston';
 import 'winston-daily-rotate-file';
 
 export default class Logger {
+    private static instance: Logger;
     private static config: LoggerConfig;
 
-    private static _app: winston.Logger;
-    private static _scheduler: winston.Logger;
+    private _app: winston.Logger;
+    private _scheduler: winston.Logger;
 
     public static setConfig(config: LoggerConfig): void {
         Logger.config = config;
     }
 
-    public static init(): void {
-        Logger._app = winston.createLogger({
+    constructor() {
+        this._app = winston.createLogger({
             level: Logger.config.level,
             transports: [
                 new winston.transports.DailyRotateFile({
@@ -24,7 +25,7 @@ export default class Logger {
                     maxSize: '20m',
                     maxFiles: '14d',
                     level: 'info',
-                    format: Logger.getAppFileFormat(),
+                    format: this.getAppFileFormat(),
                 }),
                 new winston.transports.DailyRotateFile({
                     filename: path.join(Logger.config.directory, 'error', 'combined-%DATE%.log'),
@@ -33,21 +34,21 @@ export default class Logger {
                     maxSize: '20m',
                     maxFiles: '14d',
                     level: 'error',
-                    format: Logger.getAppFileFormat(),
+                    format: this.getAppFileFormat(),
                 }),
             ],
         });
 
         if (Logger.config.level === 'silly') {
-            Logger._app.add(
+            this._app.add(
                 new winston.transports.Console({
-                    format: Logger.getConsoleFormat(),
+                    format: this.getConsoleFormat(),
                     level: 'silly',
                 })
             );
         }
 
-        Logger._scheduler = winston.createLogger({
+        this._scheduler = winston.createLogger({
             level: 'info',
             transports: [
                 new winston.transports.DailyRotateFile({
@@ -56,21 +57,21 @@ export default class Logger {
                     zippedArchive: true,
                     maxSize: '20m',
                     maxFiles: '7d',
-                    format: Logger.getSchedulerFileFormat(),
+                    format: this.getSchedulerFileFormat(),
                 }),
             ],
         });
     }
 
-    public static get app(): winston.Logger {
-        return Logger._app;
+    public get app(): winston.Logger {
+        return this._app;
     }
 
-    public static get scheduler(): winston.Logger {
-        return Logger._scheduler;
+    public get scheduler(): winston.Logger {
+        return this._scheduler;
     }
 
-    private static getConsoleFormat(): winston.Logform.Format {
+    private getConsoleFormat(): winston.Logform.Format {
         return winston.format.combine(
             winston.format.timestamp({
                 format: 'YYYY-MM-DD HH:mm:ss',
@@ -81,7 +82,7 @@ export default class Logger {
         );
     }
 
-    private static getAppFileFormat(): winston.Logform.Format {
+    private getAppFileFormat(): winston.Logform.Format {
         return winston.format.combine(
             winston.format.timestamp({
                 format: 'YYYY-MM-DD HH:mm:ss',
@@ -91,7 +92,7 @@ export default class Logger {
         );
     }
 
-    private static getSchedulerFileFormat(): winston.Logform.Format {
+    private getSchedulerFileFormat(): winston.Logform.Format {
         return winston.format.combine(
             winston.format.timestamp({
                 format: 'YYYY-MM-DD HH:mm:ss',
