@@ -3,7 +3,7 @@
     "version": "0.0.0",
     "main": "index.js",
     "scripts": {
-        "dev": "docker-compose -f ./docker/compose.dev.yml up --build",
+        "dev": "docker-compose -f ./docker/compose.dev.yml -f ./docker/compose.dev.override.yml up --build",
         "build": "docker build --no-cache -f ./docker/Dockerfile.prod -t rumble-wppd-collector:latest ./"
     },
     "repository": {
@@ -26,5 +26,9 @@
         "tsconfig-paths": "^4.2.0",
         "typescript": "^5.8.3",
         "typescript-eslint": "^8.35.0"
+    },
+    "dependencies": {
+        "winston": "^3.17.0",
+        "winston-daily-rotate-file": "^5.0.0"
     }
 }

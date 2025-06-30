@@ -19,4 +19,9 @@ type ConfigSchema = {
     [key: string]: ConfigField;
 };
 
-export type { ConfigField, ConfigSchema };
+type LoggerConfig = {
+    level: string;
+    directory: string;
+};
+
+export type { ConfigField, ConfigSchema, LoggerConfig };

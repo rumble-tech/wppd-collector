@@ -5,6 +5,16 @@ const schema: ConfigSchema = {
         type: 'string',
         required: true,
     },
+    LOG_LEVEL: {
+        type: 'string',
+        required: false,
+        defaultValue: 'info',
+    },
+    LOG_DIRECTORY: {
+        type: 'string',
+        required: false,
+        defaultValue: '/app/logs',
+    },
 };
 
 export default schema;
