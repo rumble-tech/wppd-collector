@@ -1,3 +1,5 @@
+import { CorsOptions } from 'cors';
+
 type ConfigField =
     | {
           type: 'string';
@@ -24,4 +26,9 @@ type LoggerConfig = {
     directory: string;
 };
 
-export type { ConfigField, ConfigSchema, LoggerConfig };
+type ServerConfig = {
+    port: number;
+    corsOptions: CorsOptions;
+};
+
+export type { ConfigField, ConfigSchema, LoggerConfig, ServerConfig };

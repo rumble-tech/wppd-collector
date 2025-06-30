@@ -1,7 +1,7 @@
+import path from 'path';
 import { LoggerConfig } from 'src/config/Types';
 import winston from 'winston';
 import 'winston-daily-rotate-file';
-import path from 'path';
 
 export default class Logger {
     private static config: LoggerConfig;

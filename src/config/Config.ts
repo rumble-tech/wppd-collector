@@ -1,4 +1,5 @@
-import { ConfigSchema, LoggerConfig } from 'src/config/Types';
+import { CorsOptions } from 'cors';
+import { ConfigSchema, LoggerConfig, ServerConfig } from 'src/config/Types';
 
 export default class Config {
     private static values: Record<string, string | number | boolean | undefined> = {};
@@ -63,5 +64,28 @@ export default class Config {
             level: Config.get<string>('LOG_LEVEL'),
             directory: Config.get<string>('LOG_DIRECTORY'),
         };
+    }
+
+    public static getServerConfig(): ServerConfig {
+        return {
+            port: 80,
+            corsOptions: Config.getCorsOptions(),
+        };
+    }
+    private static getCorsOptions(): CorsOptions {
+        const whitelist = Config.get<string>('CORS_WHITELIST').split(',');
+
+        const options: CorsOptions = {
+            credentials: true,
+            origin: (origin, callback) => {
+                if (!origin || whitelist.indexOf(origin) !== -1) {
+                    callback(null, true);
+                } else {
+                    callback(new Error('Not allowed by CORS'), false);
+                }
+            },
+        };
+
+        return options;
     }
 }

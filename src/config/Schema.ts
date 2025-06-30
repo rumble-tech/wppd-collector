@@ -15,6 +15,10 @@ const schema: ConfigSchema = {
         required: false,
         defaultValue: '/app/logs',
     },
+    CORS_WHITELIST: {
+        type: 'string',
+        required: true,
+    },
 };
 
 export default schema;

@@ -2,3 +2,5 @@ services:
     app:
       environment:
         - YOUR_ENV_VAR=your_value
+      ports:
+        - 'YOUR_EXTERNAL_PORT:80'
