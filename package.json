@@ -1,0 +1,19 @@
+{
+  "name": "@rumble/wppd-collector",
+  "version": "0.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rumble-tech/wppd-collector.git"
+  },
+  "author": "rumble GmbH & Co. KG",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rumble-tech/wppd-collector/issues"
+  },
+  "homepage": "https://github.com/rumble-tech/wppd-collector#readme",
+  "description": ""
+}
