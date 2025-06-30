@@ -1,0 +1,10 @@
+name: wppd-collector-dev
+
+services:
+    app:
+      build:
+        context: ..
+        dockerfile: ./docker/Dockerfile.dev
+      restart: unless-stopped
+      volumes:
+        - ../src:/app/src

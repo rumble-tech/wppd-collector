@@ -1,1 +1,4 @@
 node_modules
+dist
+docker/**override**
+!docker/compose.dev.override.example.yml
