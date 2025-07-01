@@ -12,6 +12,7 @@ import LatestVersionResolver from 'src/services/latest-version/LatestVersionReso
 import WordPressApiLatestVersionProvider from 'src/services/latest-version/providers/WordPressApi';
 import SESMailer from 'src/services/mailing/SESMailer';
 import Scheduler from 'src/components/Scheduler';
+import UpdatePluginsLatestVersionTask from 'src/tasks/UpdatePluginsLatestVersion';
 
 Config.load(ConfigSchema);
 
@@ -43,3 +44,4 @@ server
     });
 
 const scheduler = Scheduler.getInstance(logger);
+scheduler.addTask('update-plugins-latest-versions', '0 * * * *', () => new UpdatePluginsLatestVersionTask(logger, pluginRepository).run()); // Every hour

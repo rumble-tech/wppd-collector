@@ -41,6 +41,27 @@ export default class PluginRepository {
         return new Plugin(createdPlugin.id, createdPlugin.slug, createdPlugin.name, { version: createdPlugin.latestVersion, requiredPhpVersion: createdPlugin.requiredPhpVersion, requiredWpVersion: createdPlugin.requiredWpVersion });
     }
 
+    public async update(plugin: TPlugin): Promise<Plugin | null> {
+        const [updatedPlugin] = await this.db
+            .update(this.pluginsTable)
+            .set({
+                slug: plugin.slug,
+                name: plugin.name,
+                latestVersion: plugin.latestVersion,
+                requiredPhpVersion: plugin.requiredPhpVersion,
+                requiredWpVersion: plugin.requiredWpVersion,
+            })
+            .where(eq(this.pluginsTable.id, plugin.id))
+            .returning()
+            .execute();
+
+        if (!updatedPlugin) {
+            return null;
+        }
+
+        return new Plugin(updatedPlugin.id, updatedPlugin.slug, updatedPlugin.name, { version: updatedPlugin.latestVersion, requiredPhpVersion: updatedPlugin.requiredPhpVersion, requiredWpVersion: updatedPlugin.requiredWpVersion });
+    }
+
     public async getLatestVersion(slug: TPlugin['slug']): Promise<TPluginVersion> {
         return await this.latestVersionResolver.resolve(slug);
     }
