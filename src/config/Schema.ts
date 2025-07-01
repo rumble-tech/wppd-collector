@@ -19,6 +19,11 @@ const schema: ConfigSchema = {
         type: 'string',
         required: true,
     },
+    WP_PLUGIN_API_URL: {
+        type: 'string',
+        required: false,
+        defaultValue: 'https://api.wordpress.org/plugins/info/1.0',
+    },
 };
 
 export default schema;

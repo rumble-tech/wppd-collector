@@ -53,7 +53,7 @@ export default class Config {
         const value = Config.values[key];
 
         if (value === undefined) {
-            throw new Error(`missing required environment variable: ${key}`);
+            throw new Error(`missing requested environment variable: ${key}`);
         }
 
         return value as T;

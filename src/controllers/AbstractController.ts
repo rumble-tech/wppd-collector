@@ -1,11 +1,11 @@
 import express from 'express';
 import Logger from 'src/components/Logger';
 
-interface IController {
+interface ControllerInterface {
     getRouter(): express.Router;
 }
 
-export default abstract class AbstractController implements IController {
+export default abstract class AbstractController implements ControllerInterface {
     protected router: express.Router;
     protected logger: Logger;
 

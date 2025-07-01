@@ -1,13 +1,15 @@
+import { db } from 'src/components/database/Database';
+import { pluginsTable, sitePluginsTable, sitesTable } from 'src/components/database/Schema';
 import Logger from 'src/components/Logger';
 import Server from 'src/components/server/Server';
 import Config from 'src/config/Config';
 import ConfigSchema from 'src/config/Schema';
 import IndexController from 'src/controllers/IndexController';
 import SiteController from 'src/controllers/SiteController';
-import SiteRepository from 'src/repositories/SiteRepository';
 import PluginRepository from 'src/repositories/PluginRepository';
-import { db } from 'src/components/database/Database';
-import { sitesTable, pluginsTable } from 'src/components/database/Schema';
+import SiteRepository from 'src/repositories/SiteRepository';
+import LatestVersionResolver from 'src/services/latest-version/LatestVersionResolver';
+import WordPressApiLatestVersionProvider from 'src/services/latest-version/providers/WordPressApi';
 import Scheduler from 'src/components/Scheduler';
 
 Config.load(ConfigSchema);
@@ -18,8 +20,11 @@ const logger = new Logger();
 Server.setConfig(Config.getServerConfig());
 const server = Server.getInstance(logger);
 
-const siteRepository = new SiteRepository(db, sitesTable);
-const pluginRepository = new PluginRepository(db, pluginsTable);
+const latestVersionResolver = new LatestVersionResolver();
+latestVersionResolver.addProvider(new WordPressApiLatestVersionProvider());
+
+const siteRepository = new SiteRepository(db, sitesTable, pluginsTable, sitePluginsTable);
+const pluginRepository = new PluginRepository(db, pluginsTable, latestVersionResolver);
 
 const indexController = new IndexController(logger);
 const siteController = new SiteController(logger, siteRepository, pluginRepository);
