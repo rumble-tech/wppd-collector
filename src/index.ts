@@ -10,6 +10,7 @@ import PluginRepository from 'src/repositories/PluginRepository';
 import SiteRepository from 'src/repositories/SiteRepository';
 import LatestVersionResolver from 'src/services/latest-version/LatestVersionResolver';
 import WordPressApiLatestVersionProvider from 'src/services/latest-version/providers/WordPressApi';
+import SESMailer from 'src/services/mailing/SESMailer';
 import Scheduler from 'src/components/Scheduler';
 
 Config.load(ConfigSchema);

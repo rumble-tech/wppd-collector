@@ -31,4 +31,10 @@ type ServerConfig = {
     corsOptions: CorsOptions;
 };
 
-export type { ConfigField, ConfigSchema, LoggerConfig, ServerConfig };
+type MailingSESConfig = {
+    region: string;
+    accessKeyId: string;
+    secretAccessKey: string;
+};
+
+export type { ConfigField, ConfigSchema, LoggerConfig, ServerConfig, MailingSESConfig };

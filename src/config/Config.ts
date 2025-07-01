@@ -1,5 +1,5 @@
 import { CorsOptions } from 'cors';
-import { ConfigSchema, LoggerConfig, ServerConfig } from 'src/config/Types';
+import { ConfigSchema, LoggerConfig, MailingSESConfig, ServerConfig } from 'src/config/Types';
 
 export default class Config {
     private static values: Record<string, string | number | boolean | undefined> = {};
@@ -72,6 +72,15 @@ export default class Config {
             corsOptions: Config.getCorsOptions(),
         };
     }
+
+    public static getMailingSESConfig(): MailingSESConfig {
+        return {
+            region: Config.get<string>('MAILING_SES_REGION'),
+            accessKeyId: Config.get<string>('MAILING_SES_ACCESS_KEY_ID'),
+            secretAccessKey: Config.get<string>('MAILING_SES_SECRET_ACCESS_KEY'),
+        };
+    }
+
     private static getCorsOptions(): CorsOptions {
         const whitelist = Config.get<string>('CORS_WHITELIST').split(',');
 
