@@ -8,6 +8,7 @@ import SiteRepository from 'src/repositories/SiteRepository';
 import PluginRepository from 'src/repositories/PluginRepository';
 import { db } from 'src/components/database/Database';
 import { sitesTable, pluginsTable } from 'src/components/database/Schema';
+import Scheduler from 'src/components/Scheduler';
 
 Config.load(ConfigSchema);
 
@@ -34,3 +35,5 @@ server
         logger.app.error('Failed to start server:', error);
         process.exit(1);
     });
+
+const scheduler = Scheduler.getInstance(logger);
