@@ -1,5 +1,5 @@
-import { eq } from 'drizzle-orm';
-import { TDatabase, TPluginsTable } from 'src/components/database/Types';
+import { eq, notInArray } from 'drizzle-orm';
+import { TDatabase, TPluginsTable, TSitePluginsTable } from 'src/components/database/Types';
 import Plugin from 'src/entities/Plugin';
 import { TNewPlugin, TPlugin, TPluginVersion } from 'src/models/Plugin';
 import LatestVersionResolver from 'src/services/latest-version/LatestVersionResolver';
@@ -7,11 +7,13 @@ import LatestVersionResolver from 'src/services/latest-version/LatestVersionReso
 export default class PluginRepository {
     private db: TDatabase;
     private pluginsTable: TPluginsTable;
+    private sitePluginsTable: TSitePluginsTable;
     private latestVersionResolver: LatestVersionResolver;
 
-    constructor(db: TDatabase, pluginsTable: TPluginsTable, latestVersionResolver: LatestVersionResolver) {
+    constructor(db: TDatabase, pluginsTable: TPluginsTable, sitePluginsTable: TSitePluginsTable, latestVersionResolver: LatestVersionResolver) {
         this.db = db;
         this.pluginsTable = pluginsTable;
+        this.sitePluginsTable = sitePluginsTable;
         this.latestVersionResolver = latestVersionResolver;
     }
 
@@ -60,6 +62,16 @@ export default class PluginRepository {
         }
 
         return new Plugin(updatedPlugin.id, updatedPlugin.slug, updatedPlugin.name, { version: updatedPlugin.latestVersion, requiredPhpVersion: updatedPlugin.requiredPhpVersion, requiredWpVersion: updatedPlugin.requiredWpVersion });
+    }
+
+    public async deleteUnused(): Promise<boolean> {
+        const usedPlugins = await this.db.select().from(this.sitePluginsTable).execute();
+
+        const usedPluginIds = usedPlugins.map((sitePlugin) => sitePlugin.pluginId);
+
+        const result = await this.db.delete(this.pluginsTable).where(notInArray(this.pluginsTable.id, usedPluginIds)).execute();
+
+        return result.changes >= 0;
     }
 
     public async getLatestVersion(slug: TPlugin['slug']): Promise<TPluginVersion> {

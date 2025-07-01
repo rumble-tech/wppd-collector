@@ -83,7 +83,11 @@ export default class SiteRepository {
         return updatedSite;
     }
 
-    public async delete(siteId: TSite['id']): Promise<void> {}
+    public async delete(siteId: TSite['id']): Promise<boolean> {
+        const result = await this.db.delete(this.sitesTable).where(eq(this.sitesTable.id, siteId)).execute();
+
+        return result.changes > 1;
+    }
 
     public async findAllSitePlugins(siteId: TSitePlugin['siteId']): Promise<SitePlugin[]> {
         const sitePlugins = await this.db

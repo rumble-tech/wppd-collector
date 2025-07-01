@@ -13,6 +13,8 @@ import WordPressApiLatestVersionProvider from 'src/services/latest-version/provi
 import SESMailer from 'src/services/mailing/SESMailer';
 import Scheduler from 'src/components/Scheduler';
 import UpdatePluginsLatestVersionTask from 'src/tasks/UpdatePluginsLatestVersion';
+import DeletePluginsUnusedTask from 'src/tasks/DeletePluginsUnused';
+import DeleteSitesInactiveTask from 'src/tasks/DeleteSitesInactive';
 
 Config.load(ConfigSchema);
 
@@ -26,7 +28,7 @@ const latestVersionResolver = new LatestVersionResolver();
 latestVersionResolver.addProvider(new WordPressApiLatestVersionProvider());
 
 const siteRepository = new SiteRepository(db, sitesTable, pluginsTable, sitePluginsTable);
-const pluginRepository = new PluginRepository(db, pluginsTable, latestVersionResolver);
+const pluginRepository = new PluginRepository(db, pluginsTable, sitePluginsTable, latestVersionResolver);
 
 const indexController = new IndexController(logger);
 const siteController = new SiteController(logger, siteRepository, pluginRepository);
@@ -45,3 +47,5 @@ server
 
 const scheduler = Scheduler.getInstance(logger);
 scheduler.addTask('update-plugins-latest-versions', '0 * * * *', () => new UpdatePluginsLatestVersionTask(logger, pluginRepository).run()); // Every hour
+scheduler.addTask('delete-plugins-unused', '0 12 */2 * *', () => new DeletePluginsUnusedTask(logger, pluginRepository).run()); // Every 2 days at 12:00
+scheduler.addTask('delete-sites-inactive', '0 12 */7 * *', () => new DeleteSitesInactiveTask(logger, siteRepository).run()); // Every 7 days at 12:00
