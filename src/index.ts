@@ -56,7 +56,7 @@ server
 const scheduler = Scheduler.getInstance(logger);
 scheduler.addTask('update-plugins-latest-versions', '0 * * * *', () => new UpdatePluginsLatestVersionTask(logger, pluginRepository).run()); // Every hour
 scheduler.addTask('update-plugins-vulnerabilities', '0 */3 * * *', () => new UpdatePluginsVulnerabilitiesTask(logger, pluginRepository).run()); // Every 3 hours
-scheduler.addTask('delete-plugins-unused', '0 12 */2 * *', () => new DeletePluginsUnusedTask(logger, pluginRepository).run()); // Every 2 days at 12:00
+scheduler.addTask('delete-plugins-unused', '0 12 * * *', () => new DeletePluginsUnusedTask(logger, pluginRepository).run()); // Every day at 12:00
 scheduler.addTask('delete-sites-inactive', '0 12 */7 * *', () => new DeleteSitesInactiveTask(logger, siteRepository).run()); // Every 7 days at 12:00
 
 async function main() {
