@@ -290,7 +290,7 @@ export default class SiteController extends AbstractController {
                 if (!(await this.pluginRepository.findBySlug(slug))) {
                     this.logger.app.info('Plugin not found, creating new plugin', { slug, name, installedVersion, requiredPhpVersion, requiredWpVersion });
 
-                    const latestVersion: TPluginVersion = { version: '1.0.0', requiredPhpVersion: '8.3.4', requiredWpVersion: '6.4' };
+                    const latestVersion: TPluginVersion = await this.pluginRepository.getLatestVersion(slug);
 
                     const createdPlugin = await this.pluginRepository.create({
                         slug,
