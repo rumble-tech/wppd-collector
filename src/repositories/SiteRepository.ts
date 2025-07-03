@@ -116,14 +116,14 @@ export default class SiteRepository {
                     sitePlugin.name,
                     sitePlugin.isActive === 1,
                     {
-                        version: sitePlugin.installedVersion,
-                        requiredPhpVersion: sitePlugin.installedRequiredPhpVersion,
-                        requiredWpVersion: sitePlugin.installedRequiredWpVersion,
-                    },
-                    {
                         version: sitePlugin.latestVersion,
                         requiredPhpVersion: sitePlugin.latestRequiredPhpVersion,
                         requiredWpVersion: sitePlugin.latestRequiredWpVersion,
+                    },
+                    {
+                        version: sitePlugin.installedVersion,
+                        requiredPhpVersion: sitePlugin.installedRequiredPhpVersion,
+                        requiredWpVersion: sitePlugin.installedRequiredWpVersion,
                     }
                 )
         );
@@ -159,14 +159,14 @@ export default class SiteRepository {
             sitePlugin.name,
             sitePlugin.isActive === 1,
             {
-                version: sitePlugin.installedVersion,
-                requiredPhpVersion: sitePlugin.installedRequiredPhpVersion,
-                requiredWpVersion: sitePlugin.installedRequiredWpVersion,
-            },
-            {
                 version: sitePlugin.latestVersion,
                 requiredPhpVersion: sitePlugin.latestRequiredPhpVersion,
                 requiredWpVersion: sitePlugin.latestRequiredWpVersion,
+            },
+            {
+                version: sitePlugin.installedVersion,
+                requiredPhpVersion: sitePlugin.installedRequiredPhpVersion,
+                requiredWpVersion: sitePlugin.installedRequiredWpVersion,
             }
         );
     }
@@ -194,14 +194,14 @@ export default class SiteRepository {
             plugin.name,
             createdSitePlugin.isActive === 1,
             {
-                version: createdSitePlugin.installedVersion,
-                requiredPhpVersion: createdSitePlugin.requiredPhpVersion,
-                requiredWpVersion: createdSitePlugin.requiredWpVersion,
-            },
-            {
                 version: plugin.latestVersion,
                 requiredPhpVersion: plugin.requiredPhpVersion,
                 requiredWpVersion: plugin.requiredWpVersion,
+            },
+            {
+                version: createdSitePlugin.installedVersion,
+                requiredPhpVersion: createdSitePlugin.requiredPhpVersion,
+                requiredWpVersion: createdSitePlugin.requiredWpVersion,
             }
         );
     }
@@ -235,14 +235,14 @@ export default class SiteRepository {
             plugin.name,
             updatedSitePlugin.isActive === 1,
             {
-                version: updatedSitePlugin.installedVersion,
-                requiredPhpVersion: updatedSitePlugin.requiredPhpVersion,
-                requiredWpVersion: updatedSitePlugin.requiredWpVersion,
-            },
-            {
                 version: plugin.latestVersion,
                 requiredPhpVersion: plugin.requiredPhpVersion,
                 requiredWpVersion: plugin.requiredWpVersion,
+            },
+            {
+                version: updatedSitePlugin.installedVersion,
+                requiredPhpVersion: updatedSitePlugin.requiredPhpVersion,
+                requiredWpVersion: updatedSitePlugin.requiredWpVersion,
             }
         );
     }
