@@ -1,6 +1,7 @@
 import { db } from 'src/components/database/Database';
-import { pluginsTable, sitePluginsTable, sitesTable, pluginVulnerabilitiesTable } from 'src/components/database/Schema';
+import { pluginsTable, pluginVulnerabilitiesTable, sitePluginsTable, sitesTable } from 'src/components/database/Schema';
 import Logger from 'src/components/Logger';
+import Scheduler from 'src/components/Scheduler';
 import Server from 'src/components/server/Server';
 import Config from 'src/config/Config';
 import ConfigSchema from 'src/config/Schema';
@@ -10,13 +11,13 @@ import PluginRepository from 'src/repositories/PluginRepository';
 import SiteRepository from 'src/repositories/SiteRepository';
 import LatestVersionResolver from 'src/services/latest-version/LatestVersionResolver';
 import WordPressApiLatestVersionProvider from 'src/services/latest-version/providers/WordPressApi';
-import SESMailer from 'src/services/mailing/SESMailer';
-import Scheduler from 'src/components/Scheduler';
-import UpdatePluginsLatestVersionTask from 'src/tasks/UpdatePluginsLatestVersion';
-import DeletePluginsUnusedTask from 'src/tasks/DeletePluginsUnused';
-import DeleteSitesInactiveTask from 'src/tasks/DeleteSitesInactive';
+import MailResolver from 'src/services/mailing/MailResolver';
+import SESMailProvider from 'src/services/mailing/providers/SES';
 import WordFenceApiVulnerabilitiesProvider from 'src/services/vulnerabilities/providers/WordFenceApi';
 import VulnerabilitiesResolver from 'src/services/vulnerabilities/VulnerabilitiesResolver';
+import DeletePluginsUnusedTask from 'src/tasks/DeletePluginsUnused';
+import DeleteSitesInactiveTask from 'src/tasks/DeleteSitesInactive';
+import UpdatePluginsLatestVersionTask from 'src/tasks/UpdatePluginsLatestVersion';
 import UpdatePluginsVulnerabilitiesTask from 'src/tasks/UpdatePluginsVulnerabilities';
 
 Config.load(ConfigSchema);
@@ -34,6 +35,9 @@ const wordFenceApiVulnerabilitiesProvider = new WordFenceApiVulnerabilitiesProvi
 
 const vulnerabilitiesResolver = new VulnerabilitiesResolver();
 vulnerabilitiesResolver.addProvider(wordFenceApiVulnerabilitiesProvider);
+
+const mailResolver = new MailResolver();
+mailResolver.setProvider(new SESMailProvider(Config.getMailingSESConfig()));
 
 const siteRepository = new SiteRepository(db, sitesTable, pluginsTable, sitePluginsTable);
 const pluginRepository = new PluginRepository(db, pluginsTable, sitePluginsTable, pluginVulnerabilitiesTable, latestVersionResolver, vulnerabilitiesResolver);

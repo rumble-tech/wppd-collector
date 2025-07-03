@@ -1,14 +1,12 @@
 import { SendEmailCommand, SESv2Client } from '@aws-sdk/client-sesv2';
 import { createTransport, Transporter } from 'nodemailer';
-import Logger from 'src/components/Logger';
 import { MailingSESConfig } from 'src/config/Types';
-import AbstractMailer from 'src/services/mailing/AbstractMailer';
+import { MailProviderInterface } from 'src/services/mailing/MailProviderInterface';
 
-export default class SESMailer extends AbstractMailer {
+export default class SESMailer implements MailProviderInterface {
     private config: MailingSESConfig;
 
-    constructor(logger: Logger, config: MailingSESConfig) {
-        super(logger);
+    constructor(config: MailingSESConfig) {
         this.config = config;
     }
 
