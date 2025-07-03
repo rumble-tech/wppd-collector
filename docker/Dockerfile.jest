@@ -1,0 +1,8 @@
+FROM node:23-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --no-cache
+COPY . .
+ENV NODE_ENV=test
+RUN mkdir /app/sqlite
+CMD ["sh", "-c", "npm run migrate:apply && npx jest --color"]
