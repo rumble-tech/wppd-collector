@@ -6,7 +6,13 @@ export default class Tools {
             versionParts.push('0');
         }
 
-        return versionParts.join('.');
+        const constructedVersion = versionParts.join('.');
+
+        if (!Tools.isValidVersion(constructedVersion)) {
+            return 'invalid-version-format';
+        }
+
+        return constructedVersion;
     }
 
     public static getPluginSlugFromFile(file: string): string | null {
