@@ -17,6 +17,7 @@ import WordFenceApiVulnerabilitiesProvider from 'src/services/vulnerabilities/pr
 import VulnerabilitiesResolver from 'src/services/vulnerabilities/VulnerabilitiesResolver';
 import DeletePluginsUnusedTask from 'src/tasks/DeletePluginsUnused';
 import DeleteSitesInactiveTask from 'src/tasks/DeleteSitesInactive';
+import SendReportMailTask from 'src/tasks/SendReportMail';
 import UpdatePluginsLatestVersionTask from 'src/tasks/UpdatePluginsLatestVersion';
 import UpdatePluginsVulnerabilitiesTask from 'src/tasks/UpdatePluginsVulnerabilities';
 
@@ -62,6 +63,7 @@ scheduler.addTask('update-plugins-latest-versions', '0 * * * *', () => new Updat
 scheduler.addTask('update-plugins-vulnerabilities', '0 */3 * * *', () => new UpdatePluginsVulnerabilitiesTask(logger, pluginRepository).run()); // Every 3 hours
 scheduler.addTask('delete-plugins-unused', '0 12 * * *', () => new DeletePluginsUnusedTask(logger, pluginRepository).run()); // Every day at 12:00
 scheduler.addTask('delete-sites-inactive', '0 12 */7 * *', () => new DeleteSitesInactiveTask(logger, siteRepository).run()); // Every 7 days at 12:00
+scheduler.addTask('send-report-mail', '0 12 * * *', () => new SendReportMailTask(logger, siteRepository, pluginRepository, mailResolver).run()); // Every day at 12:00
 
 async function main() {
     try {

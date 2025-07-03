@@ -1,4 +1,5 @@
-export type TSiteEnvironment = 'production' | 'staging' | 'development';
+export const siteEnvironments = ['production', 'staging', 'development'] as const;
+export type TSiteEnvironment = (typeof siteEnvironments)[number];
 
 export type TSite = {
     id: number;
