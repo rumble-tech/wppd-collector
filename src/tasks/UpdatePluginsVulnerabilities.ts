@@ -21,15 +21,23 @@ export default class UpdatePluginsVulnerabilitiesTask extends AbstractTask imple
                 const vulnerabilities = await this.pluginRepository.getVulnerabilities(plugin.getSlug());
 
                 if (!vulnerabilities || !Array.isArray(vulnerabilities)) {
-                    this.logger.app.error('Failed to fetch vulnerabilities for plugin', { id: plugin.getId(), slug: plugin.getSlug() });
+                    this.logger.app.error('Failed to fetch vulnerabilities for plugin', {
+                        id: plugin.getId(),
+                        slug: plugin.getSlug(),
+                    });
                     continue;
                 }
 
-                this.logger.app.info(`Found ${vulnerabilities.length} vulnerabilities for plugin. Clearing existing vulnerabilities and inserting new ones`, { id: plugin.getId(), slug: plugin.getSlug() });
+                this.logger.app.info(
+                    `Found ${vulnerabilities.length} vulnerabilities for plugin. Clearing existing vulnerabilities and inserting new ones`,
+                    { id: plugin.getId(), slug: plugin.getSlug() }
+                );
 
                 await this.pluginRepository.deleteAllVulnerabilitiesForPlugin(plugin.getId());
 
-                this.logger.app.info('Inserting vulnerabilities for plugin', { plugin: { id: plugin.getId(), slug: plugin.getSlug() } });
+                this.logger.app.info('Inserting vulnerabilities for plugin', {
+                    plugin: { id: plugin.getId(), slug: plugin.getSlug() },
+                });
 
                 for (const vulnerability of vulnerabilities) {
                     await this.pluginRepository.createVulnerability({
@@ -37,7 +45,10 @@ export default class UpdatePluginsVulnerabilitiesTask extends AbstractTask imple
                         ...vulnerability,
                     });
 
-                    this.logger.app.info('Vulnerability created successfully', { plugin: { id: plugin.getId(), slug: plugin.getSlug() }, vulnerability });
+                    this.logger.app.info('Vulnerability created successfully', {
+                        plugin: { id: plugin.getId(), slug: plugin.getSlug() },
+                        vulnerability,
+                    });
                 }
             }
         } catch (err) {

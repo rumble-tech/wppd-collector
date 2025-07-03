@@ -11,7 +11,12 @@ export default class SiteRepository {
     private pluginsTable: TPluginsTable;
     private sitePluginsTable: TSitePluginsTable;
 
-    constructor(db: TDatabase, sitesTable: TSitesTable, pluginsTable: TPluginsTable, sitePluginsTable: TSitePluginsTable) {
+    constructor(
+        db: TDatabase,
+        sitesTable: TSitesTable,
+        pluginsTable: TPluginsTable,
+        sitePluginsTable: TSitePluginsTable
+    ) {
         this.db = db;
         this.sitesTable = sitesTable;
         this.pluginsTable = pluginsTable;
@@ -21,17 +26,45 @@ export default class SiteRepository {
     public async findAll(): Promise<Site[]> {
         const sites = await this.db.select().from(this.sitesTable).execute();
 
-        return sites.map((site) => new Site(site.id, site.name, site.phpVersion, site.wpVersion, site.token, new Date(site.createdAt), new Date(site.updatedAt), site.url, site.environment));
+        return sites.map(
+            (site) =>
+                new Site(
+                    site.id,
+                    site.name,
+                    site.phpVersion,
+                    site.wpVersion,
+                    site.token,
+                    new Date(site.createdAt),
+                    new Date(site.updatedAt),
+                    site.url,
+                    site.environment
+                )
+        );
     }
 
     public async findById(siteId: TSite['id']): Promise<Site | null> {
-        const [site] = await this.db.select().from(this.sitesTable).where(eq(this.sitesTable.id, siteId)).limit(1).execute();
+        const [site] = await this.db
+            .select()
+            .from(this.sitesTable)
+            .where(eq(this.sitesTable.id, siteId))
+            .limit(1)
+            .execute();
 
         if (!site) {
             return null;
         }
 
-        return new Site(site.id, site.name, site.phpVersion, site.wpVersion, site.token, new Date(site.createdAt), new Date(site.updatedAt), site.url, site.environment);
+        return new Site(
+            site.id,
+            site.name,
+            site.phpVersion,
+            site.wpVersion,
+            site.token,
+            new Date(site.createdAt),
+            new Date(site.updatedAt),
+            site.url,
+            site.environment
+        );
     }
 
     public async findByNameAndUrl(name: TSite['name'], url: TSite['url']): Promise<Site | null> {
@@ -46,7 +79,17 @@ export default class SiteRepository {
             return null;
         }
 
-        return new Site(site.id, site.name, site.phpVersion, site.wpVersion, site.token, new Date(site.createdAt), new Date(site.updatedAt), site.url, site.environment);
+        return new Site(
+            site.id,
+            site.name,
+            site.phpVersion,
+            site.wpVersion,
+            site.token,
+            new Date(site.createdAt),
+            new Date(site.updatedAt),
+            site.url,
+            site.environment
+        );
     }
 
     public async create(site: TNewSite): Promise<Site | null> {
@@ -56,7 +99,17 @@ export default class SiteRepository {
             return null;
         }
 
-        return new Site(createdSite.id, createdSite.name, createdSite.phpVersion, createdSite.wpVersion, createdSite.token, new Date(createdSite.createdAt), new Date(createdSite.updatedAt), createdSite.url, createdSite.environment);
+        return new Site(
+            createdSite.id,
+            createdSite.name,
+            createdSite.phpVersion,
+            createdSite.wpVersion,
+            createdSite.token,
+            new Date(createdSite.createdAt),
+            new Date(createdSite.updatedAt),
+            createdSite.url,
+            createdSite.environment
+        );
     }
 
     public async update(site: TSite): Promise<Site | null> {
@@ -129,7 +182,10 @@ export default class SiteRepository {
         );
     }
 
-    public async findSitePlugin(siteId: TSitePlugin['siteId'], pluginId: TSitePlugin['pluginId']): Promise<SitePlugin | null> {
+    public async findSitePlugin(
+        siteId: TSitePlugin['siteId'],
+        pluginId: TSitePlugin['pluginId']
+    ): Promise<SitePlugin | null> {
         const [sitePlugin] = await this.db
             .select({
                 id: this.sitePluginsTable.pluginId,
@@ -172,7 +228,12 @@ export default class SiteRepository {
     }
 
     public async createSitePlugin(sitePlugin: TNewSitePlugin): Promise<SitePlugin | null> {
-        const [plugin] = await this.db.select().from(this.pluginsTable).where(eq(this.pluginsTable.id, sitePlugin.pluginId)).limit(1).execute();
+        const [plugin] = await this.db
+            .select()
+            .from(this.pluginsTable)
+            .where(eq(this.pluginsTable.id, sitePlugin.pluginId))
+            .limit(1)
+            .execute();
 
         if (!plugin) {
             throw new Error(`Plugin with ID: ${sitePlugin.pluginId} not found`);
@@ -207,7 +268,12 @@ export default class SiteRepository {
     }
 
     public async updateSitePlugin(sitePlugin: TSitePlugin): Promise<SitePlugin | null> {
-        const [plugin] = await this.db.select().from(this.pluginsTable).where(eq(this.pluginsTable.id, sitePlugin.pluginId)).limit(1).execute();
+        const [plugin] = await this.db
+            .select()
+            .from(this.pluginsTable)
+            .where(eq(this.pluginsTable.id, sitePlugin.pluginId))
+            .limit(1)
+            .execute();
 
         if (!plugin) {
             throw new Error(`Plugin with ID: ${sitePlugin.pluginId} not found`);
@@ -221,7 +287,12 @@ export default class SiteRepository {
                 requiredWpVersion: sitePlugin.requiredWpVersion,
                 isActive: Number(sitePlugin.isActive),
             })
-            .where(and(eq(this.sitePluginsTable.siteId, sitePlugin.siteId), eq(this.sitePluginsTable.pluginId, sitePlugin.pluginId)))
+            .where(
+                and(
+                    eq(this.sitePluginsTable.siteId, sitePlugin.siteId),
+                    eq(this.sitePluginsTable.pluginId, sitePlugin.pluginId)
+                )
+            )
             .returning()
             .execute();
 

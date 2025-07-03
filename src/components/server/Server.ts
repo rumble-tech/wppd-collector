@@ -65,18 +65,20 @@ export default class Server {
             next(error);
         });
 
-        this.app.use((err: Error | RouteError, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-            let statusCode = 500;
-            let message = 'Internal server error';
+        this.app.use(
+            (err: Error | RouteError, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+                let statusCode = 500;
+                let message = 'Internal server error';
 
-            if (err instanceof RouteError) {
-                statusCode = err.getStatusCode();
-                message = err.message;
+                if (err instanceof RouteError) {
+                    statusCode = err.getStatusCode();
+                    message = err.message;
+                }
+
+                this.logger.app.error(`[${statusCode}] ${message}`);
+
+                res.status(statusCode).json({ error: message });
             }
-
-            this.logger.app.error(`[${statusCode}] ${message}`);
-
-            res.status(statusCode).json({ error: message });
-        });
+        );
     }
 }

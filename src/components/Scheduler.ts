@@ -20,7 +20,11 @@ export default class Scheduler {
         return Scheduler.instance;
     }
 
-    public addTask(name: string, rule: RecurrenceRule | RecurrenceSpecDateRange | RecurrenceSpecObjLit | string | Date, callback: () => void): boolean {
+    public addTask(
+        name: string,
+        rule: RecurrenceRule | RecurrenceSpecDateRange | RecurrenceSpecObjLit | string | Date,
+        callback: () => void
+    ): boolean {
         if (this.tasks.has(name)) {
             this.logger.app.warn(`Task with name "${name}" already exists. Skipping addition.`);
             return false;

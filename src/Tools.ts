@@ -19,7 +19,10 @@ export default class Tools {
         return split[0];
     }
 
-    public static categorizeVersionDiff(installedVersion: string, latestVersion: string): 'major' | 'minor' | 'patch' | 'same' | 'igl' | 'invalid' {
+    public static categorizeVersionDiff(
+        installedVersion: string,
+        latestVersion: string
+    ): 'major' | 'minor' | 'patch' | 'same' | 'igl' | 'invalid' {
         if (!Tools.isValidVersion(installedVersion) || !Tools.isValidVersion(latestVersion)) {
             return 'invalid';
         }
@@ -27,7 +30,11 @@ export default class Tools {
         const [installedMajor, installedMinor, installedPatch] = installedVersion.split('.').map(Number);
         const [latestMajor, latestMinor, latestPatch] = latestVersion.split('.').map(Number);
 
-        if (installedMajor > latestMajor || (installedMajor === latestMajor && installedMinor > latestMinor) || (installedMajor === latestMajor && installedMinor === latestMinor && installedPatch > latestPatch)) {
+        if (
+            installedMajor > latestMajor ||
+            (installedMajor === latestMajor && installedMinor > latestMinor) ||
+            (installedMajor === latestMajor && installedMinor === latestMinor && installedPatch > latestPatch)
+        ) {
             return 'igl';
         }
 

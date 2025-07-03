@@ -30,16 +30,21 @@ export default class UpdatePluginsLatestVersionTask extends AbstractTask impleme
                 });
 
                 if (!updatedPlugin) {
-                    this.logger.scheduler.warn(`Failed to update plugin ${plugin.getSlug()} to latest version ${latestVersion.version}`);
+                    this.logger.scheduler.warn(
+                        `Failed to update plugin ${plugin.getSlug()} to latest version ${latestVersion.version}`
+                    );
                     continue;
                 }
 
-                this.logger.scheduler.info(`Updated plugin ${plugin.getSlug()} to latest version ${latestVersion.version}`, {
-                    pluginId: plugin.getId(),
-                    latestVersion: latestVersion.version,
-                    requiredPhpVersion: latestVersion.requiredPhpVersion,
-                    requiredWpVersion: latestVersion.requiredWpVersion,
-                });
+                this.logger.scheduler.info(
+                    `Updated plugin ${plugin.getSlug()} to latest version ${latestVersion.version}`,
+                    {
+                        pluginId: plugin.getId(),
+                        latestVersion: latestVersion.version,
+                        requiredPhpVersion: latestVersion.requiredPhpVersion,
+                        requiredWpVersion: latestVersion.requiredWpVersion,
+                    }
+                );
             }
         } catch (err) {
             this.logger.scheduler.error('Error while updating plugins latest version', { error: err });

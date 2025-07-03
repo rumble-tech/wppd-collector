@@ -26,7 +26,9 @@ type TWordFenceApiResponse = {
 export default class WordFenceApiVulnerabilitiesProvider implements VulnerabilitiesProviderInterface {
     private vulnerabilities: Record<string, Omit<TPluginVulnerability, 'id' | 'pluginId'>[]> = {};
 
-    public async getVulnerabilities(slug: TPlugin['slug']): Promise<Omit<TPluginVulnerability, 'id' | 'pluginId'>[] | null> {
+    public async getVulnerabilities(
+        slug: TPlugin['slug']
+    ): Promise<Omit<TPluginVulnerability, 'id' | 'pluginId'>[] | null> {
         const pluginVulnerabilities = this.vulnerabilities[slug];
 
         if (!pluginVulnerabilities) {

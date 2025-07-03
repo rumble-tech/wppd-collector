@@ -143,13 +143,13 @@ export default class SiteController extends AbstractController {
                     installedVersion: sitePlugin.getInstalledVersion(),
                     latestVersion: sitePlugin.getLatestVersion(),
                     isActive: sitePlugin.getIsActive(),
-                    vulnerabilities: (
-                        await this.pluginRepository.findVulnerabilities(sitePlugin.getId())
-                    ).map((vulnerabilitiy) => ({
-                        from: vulnerabilitiy.from,
-                        to: vulnerabilitiy.to,
-                        score: vulnerabilitiy.score,
-                    })),
+                    vulnerabilities: (await this.pluginRepository.findVulnerabilities(sitePlugin.getId())).map(
+                        (vulnerabilitiy) => ({
+                            from: vulnerabilitiy.from,
+                            to: vulnerabilitiy.to,
+                            score: vulnerabilitiy.score,
+                        })
+                    ),
                 }))
             );
 
@@ -191,7 +191,10 @@ export default class SiteController extends AbstractController {
                     throw new RouteError(500, 'Failed to update existing site');
                 }
 
-                this.logger.app.info('Site updated successfully', { id: updatedSite.getId(), name: updatedSite.getName() });
+                this.logger.app.info('Site updated successfully', {
+                    id: updatedSite.getId(),
+                    name: updatedSite.getName(),
+                });
 
                 res.status(200).json({
                     message: 'Site updated successfully',
@@ -221,7 +224,10 @@ export default class SiteController extends AbstractController {
                 throw new RouteError(500, 'Failed to create new site');
             }
 
-            this.logger.app.info('Site registered successfully', { id: createdSite.getId(), name: createdSite.getName() });
+            this.logger.app.info('Site registered successfully', {
+                id: createdSite.getId(),
+                name: createdSite.getName(),
+            });
 
             res.status(201).json({
                 message: 'Site registered successfully',
@@ -288,7 +294,13 @@ export default class SiteController extends AbstractController {
                 }
 
                 if (!(await this.pluginRepository.findBySlug(slug))) {
-                    this.logger.app.info('Plugin not found, creating new plugin', { slug, name, installedVersion, requiredPhpVersion, requiredWpVersion });
+                    this.logger.app.info('Plugin not found, creating new plugin', {
+                        slug,
+                        name,
+                        installedVersion,
+                        requiredPhpVersion,
+                        requiredWpVersion,
+                    });
 
                     const latestVersion: TPluginVersion = await this.pluginRepository.getLatestVersion(slug);
 
@@ -307,15 +319,23 @@ export default class SiteController extends AbstractController {
 
                     const vulnerabilities = await this.pluginRepository.getVulnerabilities(slug);
                     if (!vulnerabilities || !Array.isArray(vulnerabilities)) {
-                        this.logger.app.error('Failed to fetch vulnerabilities for plugin', { id: createdPlugin.getId(), slug: createdPlugin.getSlug() });
+                        this.logger.app.error('Failed to fetch vulnerabilities for plugin', {
+                            id: createdPlugin.getId(),
+                            slug: createdPlugin.getSlug(),
+                        });
                         continue;
                     }
 
-                    this.logger.app.info(`Found ${vulnerabilities.length} vulnerabilities for plugin. Clearing existing vulnerabilities and inserting new ones`, { plugin: { id: createdPlugin.getId(), slug: createdPlugin.getSlug() } });
+                    this.logger.app.info(
+                        `Found ${vulnerabilities.length} vulnerabilities for plugin. Clearing existing vulnerabilities and inserting new ones`,
+                        { plugin: { id: createdPlugin.getId(), slug: createdPlugin.getSlug() } }
+                    );
 
                     await this.pluginRepository.deleteAllVulnerabilitiesForPlugin(createdPlugin.getId());
 
-                    this.logger.app.info('Inserting vulnerabilities for plugin', { plugin: { id: createdPlugin.getId(), slug: createdPlugin.getSlug() } });
+                    this.logger.app.info('Inserting vulnerabilities for plugin', {
+                        plugin: { id: createdPlugin.getId(), slug: createdPlugin.getSlug() },
+                    });
 
                     for (const vulnerability of vulnerabilities) {
                         await this.pluginRepository.createVulnerability({
@@ -323,7 +343,10 @@ export default class SiteController extends AbstractController {
                             ...vulnerability,
                         });
 
-                        this.logger.app.info('Vulnerability created successfully', { plugin: { id: createdPlugin.getId(), slug: createdPlugin.getSlug() }, vulnerability });
+                        this.logger.app.info('Vulnerability created successfully', {
+                            plugin: { id: createdPlugin.getId(), slug: createdPlugin.getSlug() },
+                            vulnerability,
+                        });
                     }
                 }
 
@@ -334,7 +357,10 @@ export default class SiteController extends AbstractController {
                 }
 
                 if (!(await this.siteRepository.findSitePlugin(existingSite.getId(), plugin.getId()))) {
-                    this.logger.app.info('Site plugin not found in database. Inserting new Site Plugin', { site: { id: existingSite.getId(), name: existingSite.getName() }, plugin: { id: plugin.getId(), slug: plugin.getSlug() } });
+                    this.logger.app.info('Site plugin not found in database. Inserting new Site Plugin', {
+                        site: { id: existingSite.getId(), name: existingSite.getName() },
+                        plugin: { id: plugin.getId(), slug: plugin.getSlug() },
+                    });
 
                     const createdSitePlugin = await this.siteRepository.createSitePlugin({
                         siteId: existingSite.getId(),
@@ -346,13 +372,19 @@ export default class SiteController extends AbstractController {
                     });
 
                     if (!createdSitePlugin) {
-                        this.logger.app.warn('Failed to create site plugin', { site: { id: existingSite.getId(), name: existingSite.getName() }, plugin: { id: plugin.getId(), slug: plugin.getSlug() } });
+                        this.logger.app.warn('Failed to create site plugin', {
+                            site: { id: existingSite.getId(), name: existingSite.getName() },
+                            plugin: { id: plugin.getId(), slug: plugin.getSlug() },
+                        });
                         continue;
                     }
 
                     this.logger.app.info('Site plugin created successfully', { sitePlugin: createdSitePlugin });
                 } else {
-                    this.logger.app.info('Site plugin already exists, updating', { site: { id: existingSite.getId(), name: existingSite.getName() }, plugin: { id: plugin.getId(), slug: plugin.getSlug() } });
+                    this.logger.app.info('Site plugin already exists, updating', {
+                        site: { id: existingSite.getId(), name: existingSite.getName() },
+                        plugin: { id: plugin.getId(), slug: plugin.getSlug() },
+                    });
 
                     const updatedSitePlugin = await this.siteRepository.updateSitePlugin({
                         siteId: existingSite.getId(),
@@ -364,7 +396,10 @@ export default class SiteController extends AbstractController {
                     });
 
                     if (!updatedSitePlugin) {
-                        this.logger.app.warn('Failed to update site plugin', { site: { id: existingSite.getId(), name: existingSite.getName() }, plugin: { id: plugin.getId(), slug: plugin.getSlug() } });
+                        this.logger.app.warn('Failed to update site plugin', {
+                            site: { id: existingSite.getId(), name: existingSite.getName() },
+                            plugin: { id: plugin.getId(), slug: plugin.getSlug() },
+                        });
                     }
 
                     this.logger.app.info('Site plugin updated successfully', { sitePlugin: updatedSitePlugin });
@@ -375,7 +410,9 @@ export default class SiteController extends AbstractController {
 
             const assignedPlugins = await this.siteRepository.findAllSitePlugins(Number(siteId));
             const requestPluginFiles = sitePlugins.map((plugin) => Tools.getPluginSlugFromFile(plugin.file));
-            const deletableSitePlugins = assignedPlugins.filter((sitePlugin) => !requestPluginFiles.includes(sitePlugin.getSlug()));
+            const deletableSitePlugins = assignedPlugins.filter(
+                (sitePlugin) => !requestPluginFiles.includes(sitePlugin.getSlug())
+            );
 
             for (const deletableSitePlugin of deletableSitePlugins) {
                 this.logger.app.info('Removing site plugin that is no longer present in the request', {
@@ -383,7 +420,10 @@ export default class SiteController extends AbstractController {
                     plugin: { id: deletableSitePlugin.getId(), slug: deletableSitePlugin.getSlug() },
                 });
 
-                const isDeleted = await this.siteRepository.deleteSitePlugin(existingSite.getId(), deletableSitePlugin.getId());
+                const isDeleted = await this.siteRepository.deleteSitePlugin(
+                    existingSite.getId(),
+                    deletableSitePlugin.getId()
+                );
 
                 if (!isDeleted) {
                     this.logger.app.warn('Failed to delete site plugin', {

@@ -5,7 +5,14 @@ export default class SitePlugin extends Plugin {
     private installedVersion: TPluginVersion;
     private isActive: boolean;
 
-    constructor(id: number, slug: string, name: string, isActive: boolean, latestVersion: TPluginVersion, installedVersion: TPluginVersion) {
+    constructor(
+        id: number,
+        slug: string,
+        name: string,
+        isActive: boolean,
+        latestVersion: TPluginVersion,
+        installedVersion: TPluginVersion
+    ) {
         super(id, slug, name, latestVersion);
 
         this.isActive = isActive;

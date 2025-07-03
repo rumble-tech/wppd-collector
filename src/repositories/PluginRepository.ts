@@ -1,5 +1,10 @@
 import { eq, notInArray } from 'drizzle-orm';
-import { TDatabase, TPluginsTable, TPluginVulnerabilitiesTable, TSitePluginsTable } from 'src/components/database/Types';
+import {
+    TDatabase,
+    TPluginsTable,
+    TPluginVulnerabilitiesTable,
+    TSitePluginsTable,
+} from 'src/components/database/Types';
 import Plugin from 'src/entities/Plugin';
 import { TNewPlugin, TNewPluginVulnerability, TPlugin, TPluginVersion, TPluginVulnerability } from 'src/models/Plugin';
 import LatestVersionResolver from 'src/services/latest-version/LatestVersionResolver';
@@ -13,7 +18,14 @@ export default class PluginRepository {
     private latestVersionResolver: LatestVersionResolver;
     private vulnerabilitiesResolver: VulnerabilitiesResolver;
 
-    constructor(db: TDatabase, pluginsTable: TPluginsTable, sitePluginsTable: TSitePluginsTable, pluginVulnerabilitiesTable: TPluginVulnerabilitiesTable, latestVersionResolver: LatestVersionResolver, vulnerabilitiesResolver: VulnerabilitiesResolver) {
+    constructor(
+        db: TDatabase,
+        pluginsTable: TPluginsTable,
+        sitePluginsTable: TSitePluginsTable,
+        pluginVulnerabilitiesTable: TPluginVulnerabilitiesTable,
+        latestVersionResolver: LatestVersionResolver,
+        vulnerabilitiesResolver: VulnerabilitiesResolver
+    ) {
         this.db = db;
         this.pluginsTable = pluginsTable;
         this.sitePluginsTable = sitePluginsTable;
@@ -25,17 +37,33 @@ export default class PluginRepository {
     public async findAll(): Promise<Plugin[]> {
         const plugins = await this.db.select().from(this.pluginsTable).execute();
 
-        return plugins.map((plugin) => new Plugin(plugin.id, plugin.slug, plugin.name, { version: plugin.latestVersion, requiredPhpVersion: plugin.requiredPhpVersion, requiredWpVersion: plugin.requiredWpVersion }));
+        return plugins.map(
+            (plugin) =>
+                new Plugin(plugin.id, plugin.slug, plugin.name, {
+                    version: plugin.latestVersion,
+                    requiredPhpVersion: plugin.requiredPhpVersion,
+                    requiredWpVersion: plugin.requiredWpVersion,
+                })
+        );
     }
 
     public async findBySlug(slug: TPlugin['slug']): Promise<Plugin | null> {
-        const [plugin] = await this.db.select().from(this.pluginsTable).where(eq(this.pluginsTable.slug, slug)).limit(1).execute();
+        const [plugin] = await this.db
+            .select()
+            .from(this.pluginsTable)
+            .where(eq(this.pluginsTable.slug, slug))
+            .limit(1)
+            .execute();
 
         if (!plugin) {
             return null;
         }
 
-        return new Plugin(plugin.id, plugin.slug, plugin.name, { version: plugin.latestVersion, requiredPhpVersion: plugin.requiredPhpVersion, requiredWpVersion: plugin.requiredWpVersion });
+        return new Plugin(plugin.id, plugin.slug, plugin.name, {
+            version: plugin.latestVersion,
+            requiredPhpVersion: plugin.requiredPhpVersion,
+            requiredWpVersion: plugin.requiredWpVersion,
+        });
     }
 
     public async create(plugin: TNewPlugin): Promise<Plugin | null> {
@@ -45,7 +73,11 @@ export default class PluginRepository {
             return null;
         }
 
-        return new Plugin(createdPlugin.id, createdPlugin.slug, createdPlugin.name, { version: createdPlugin.latestVersion, requiredPhpVersion: createdPlugin.requiredPhpVersion, requiredWpVersion: createdPlugin.requiredWpVersion });
+        return new Plugin(createdPlugin.id, createdPlugin.slug, createdPlugin.name, {
+            version: createdPlugin.latestVersion,
+            requiredPhpVersion: createdPlugin.requiredPhpVersion,
+            requiredWpVersion: createdPlugin.requiredWpVersion,
+        });
     }
 
     public async update(plugin: TPlugin): Promise<Plugin | null> {
@@ -66,7 +98,11 @@ export default class PluginRepository {
             return null;
         }
 
-        return new Plugin(updatedPlugin.id, updatedPlugin.slug, updatedPlugin.name, { version: updatedPlugin.latestVersion, requiredPhpVersion: updatedPlugin.requiredPhpVersion, requiredWpVersion: updatedPlugin.requiredWpVersion });
+        return new Plugin(updatedPlugin.id, updatedPlugin.slug, updatedPlugin.name, {
+            version: updatedPlugin.latestVersion,
+            requiredPhpVersion: updatedPlugin.requiredPhpVersion,
+            requiredWpVersion: updatedPlugin.requiredWpVersion,
+        });
     }
 
     public async deleteUnused(): Promise<boolean> {
@@ -74,7 +110,10 @@ export default class PluginRepository {
 
         const usedPluginIds = usedPlugins.map((sitePlugin) => sitePlugin.pluginId);
 
-        const result = await this.db.delete(this.pluginsTable).where(notInArray(this.pluginsTable.id, usedPluginIds)).execute();
+        const result = await this.db
+            .delete(this.pluginsTable)
+            .where(notInArray(this.pluginsTable.id, usedPluginIds))
+            .execute();
 
         return result.changes >= 0;
     }
@@ -83,12 +122,18 @@ export default class PluginRepository {
         return await this.latestVersionResolver.resolve(slug);
     }
 
-    public async getVulnerabilities(slug: TPlugin['slug']): Promise<Omit<TPluginVulnerability, 'id' | 'pluginId'>[] | null> {
+    public async getVulnerabilities(
+        slug: TPlugin['slug']
+    ): Promise<Omit<TPluginVulnerability, 'id' | 'pluginId'>[] | null> {
         return await this.vulnerabilitiesResolver.resolve(slug);
     }
 
     public async findVulnerabilities(pluginId: TPlugin['id']): Promise<TPluginVulnerability[]> {
-        const vulnerabilities = await this.db.select().from(this.pluginVulnerabilitiesTable).where(eq(this.pluginVulnerabilitiesTable.pluginId, pluginId)).execute();
+        const vulnerabilities = await this.db
+            .select()
+            .from(this.pluginVulnerabilitiesTable)
+            .where(eq(this.pluginVulnerabilitiesTable.pluginId, pluginId))
+            .execute();
 
         return vulnerabilities.map((vuln) => ({
             id: vuln.id,
@@ -121,6 +166,9 @@ export default class PluginRepository {
     }
 
     public async deleteAllVulnerabilitiesForPlugin(pluginId: TPluginVulnerability['id']): Promise<void> {
-        await this.db.delete(this.pluginVulnerabilitiesTable).where(eq(this.pluginVulnerabilitiesTable.pluginId, pluginId)).execute();
+        await this.db
+            .delete(this.pluginVulnerabilitiesTable)
+            .where(eq(this.pluginVulnerabilitiesTable.pluginId, pluginId))
+            .execute();
     }
 }

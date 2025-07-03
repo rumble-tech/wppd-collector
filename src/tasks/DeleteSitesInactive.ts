@@ -27,10 +27,13 @@ export default class DeletePluginsUnusedTask extends AbstractTask implements Tas
                             siteName: site.getName(),
                         });
                     } else {
-                        this.logger.scheduler.warn(`Failed to delete inactive site: ${site.getName()} (ID: ${site.getId()})`, {
-                            siteId: site.getId(),
-                            siteName: site.getName(),
-                        });
+                        this.logger.scheduler.warn(
+                            `Failed to delete inactive site: ${site.getName()} (ID: ${site.getId()})`,
+                            {
+                                siteId: site.getId(),
+                                siteName: site.getName(),
+                            }
+                        );
                     }
                 }
             }

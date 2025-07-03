@@ -38,7 +38,12 @@ export default class UpdatePluginsLatestVersionTask extends AbstractTask impleme
     private pluginRepository: PluginRepository;
     private mailResolver: MailResolver;
 
-    constructor(logger: Logger, siteRepository: SiteRepository, pluginRepository: PluginRepository, mailResolver: MailResolver) {
+    constructor(
+        logger: Logger,
+        siteRepository: SiteRepository,
+        pluginRepository: PluginRepository,
+        mailResolver: MailResolver
+    ) {
         super(logger);
         this.siteRepository = siteRepository;
         this.pluginRepository = pluginRepository;
@@ -50,7 +55,12 @@ export default class UpdatePluginsLatestVersionTask extends AbstractTask impleme
         const mailContent = this.buildMailContent(groupedReports);
 
         try {
-            await this.mailResolver.sendMail(Config.get<string>('MAILING_REPORT_SENDER'), Config.get<string>('MAILING_REPORT_RECIPIENT'), 'Rumble WPPD Report', mailContent);
+            await this.mailResolver.sendMail(
+                Config.get<string>('MAILING_REPORT_SENDER'),
+                Config.get<string>('MAILING_REPORT_RECIPIENT'),
+                'Rumble WPPD Report',
+                mailContent
+            );
             this.logger.scheduler.info('Rumble WPPD Report generated and sent via email.');
         } catch (err) {
             this.logger.scheduler.error('Failed to send Rumble WPPD Report via email', { error: err });
@@ -88,7 +98,10 @@ export default class UpdatePluginsLatestVersionTask extends AbstractTask impleme
                     continue;
                 }
 
-                const sitePluginVersionDiffCategory = Tools.categorizeVersionDiff(installedVersion.version, latestVersion.version);
+                const sitePluginVersionDiffCategory = Tools.categorizeVersionDiff(
+                    installedVersion.version,
+                    latestVersion.version
+                );
 
                 if (sitePluginVersionDiffCategory === 'invalid' || sitePluginVersionDiffCategory === 'same') {
                     continue;
@@ -108,7 +121,10 @@ export default class UpdatePluginsLatestVersionTask extends AbstractTask impleme
                     difference: sitePluginVersionDiffCategory,
                     severity: {
                         countVulnerabilities: vulnerabilities.length,
-                        highestScore: vulnerabilities.reduce((max, vulnerability) => Math.max(max, vulnerability.score), 0),
+                        highestScore: vulnerabilities.reduce(
+                            (max, vulnerability) => Math.max(max, vulnerability.score),
+                            0
+                        ),
                     },
                 });
             }

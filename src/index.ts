@@ -41,7 +41,14 @@ const mailResolver = new MailResolver();
 mailResolver.setProvider(new SESMailProvider(Config.getMailingSESConfig()));
 
 const siteRepository = new SiteRepository(db, sitesTable, pluginsTable, sitePluginsTable);
-const pluginRepository = new PluginRepository(db, pluginsTable, sitePluginsTable, pluginVulnerabilitiesTable, latestVersionResolver, vulnerabilitiesResolver);
+const pluginRepository = new PluginRepository(
+    db,
+    pluginsTable,
+    sitePluginsTable,
+    pluginVulnerabilitiesTable,
+    latestVersionResolver,
+    vulnerabilitiesResolver
+);
 
 const indexController = new IndexController(logger);
 const siteController = new SiteController(logger, siteRepository, pluginRepository);
@@ -59,17 +66,29 @@ server
     });
 
 const scheduler = Scheduler.getInstance(logger);
-scheduler.addTask('update-plugins-latest-versions', '0 * * * *', () => new UpdatePluginsLatestVersionTask(logger, pluginRepository).run()); // Every hour
-scheduler.addTask('update-plugins-vulnerabilities', '0 */3 * * *', () => new UpdatePluginsVulnerabilitiesTask(logger, pluginRepository).run()); // Every 3 hours
-scheduler.addTask('delete-plugins-unused', '0 12 * * *', () => new DeletePluginsUnusedTask(logger, pluginRepository).run()); // Every day at 12:00
-scheduler.addTask('delete-sites-inactive', '0 12 */7 * *', () => new DeleteSitesInactiveTask(logger, siteRepository).run()); // Every 7 days at 12:00
-scheduler.addTask('send-report-mail', '0 12 * * *', () => new SendReportMailTask(logger, siteRepository, pluginRepository, mailResolver).run()); // Every day at 12:00
+scheduler.addTask('update-plugins-latest-versions', '0 * * * *', () =>
+    new UpdatePluginsLatestVersionTask(logger, pluginRepository).run()
+); // Every hour
+scheduler.addTask('update-plugins-vulnerabilities', '0 */3 * * *', () =>
+    new UpdatePluginsVulnerabilitiesTask(logger, pluginRepository).run()
+); // Every 3 hours
+scheduler.addTask('delete-plugins-unused', '0 12 * * *', () =>
+    new DeletePluginsUnusedTask(logger, pluginRepository).run()
+); // Every day at 12:00
+scheduler.addTask('delete-sites-inactive', '0 12 */7 * *', () =>
+    new DeleteSitesInactiveTask(logger, siteRepository).run()
+); // Every 7 days at 12:00
+scheduler.addTask('send-report-mail', '0 12 * * *', () =>
+    new SendReportMailTask(logger, siteRepository, pluginRepository, mailResolver).run()
+); // Every day at 12:00
 
 async function main() {
     try {
         await wordFenceApiVulnerabilitiesProvider.fetchVulnerabilities();
     } catch (err) {
-        logger.app.error('Error while fetching vulnerabilities from WordFence API. Exiting application...', { error: err });
+        logger.app.error('Error while fetching vulnerabilities from WordFence API. Exiting application...', {
+            error: err,
+        });
         process.exit(1);
     }
 }

@@ -76,7 +76,10 @@ export default class Logger {
             winston.format.timestamp({
                 format: 'YYYY-MM-DD HH:mm:ss',
             }),
-            winston.format.printf(({ level, message, timestamp, ...meta }) => `${timestamp} [${level}] ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`),
+            winston.format.printf(
+                ({ level, message, timestamp, ...meta }) =>
+                    `${timestamp} [${level}] ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`
+            ),
             winston.format.colorize({ all: true }),
             winston.format.errors({ stack: true })
         );
@@ -87,7 +90,10 @@ export default class Logger {
             winston.format.timestamp({
                 format: 'YYYY-MM-DD HH:mm:ss',
             }),
-            winston.format.printf(({ level, message, timestamp, ...meta }) => `${timestamp} [${level}] ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`),
+            winston.format.printf(
+                ({ level, message, timestamp, ...meta }) =>
+                    `${timestamp} [${level}] ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`
+            ),
             winston.format.errors({ stack: true })
         );
     }
@@ -97,7 +103,10 @@ export default class Logger {
             winston.format.timestamp({
                 format: 'YYYY-MM-DD HH:mm:ss',
             }),
-            winston.format.printf(({ level, message, timestamp, ...meta }) => `${timestamp} [${level}] ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`),
+            winston.format.printf(
+                ({ level, message, timestamp, ...meta }) =>
+                    `${timestamp} [${level}] ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`
+            ),
             winston.format.errors({ stack: true })
         );
     }

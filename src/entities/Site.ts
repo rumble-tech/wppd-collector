@@ -11,7 +11,17 @@ export default class Site {
     private url: string;
     private environment: TSiteEnvironment;
 
-    constructor(id: number, name: string, phpVersion: string | null, wpVersion: string | null, token: string, createdAt: Date, updatedAt: Date, url: string, environment: TSiteEnvironment) {
+    constructor(
+        id: number,
+        name: string,
+        phpVersion: string | null,
+        wpVersion: string | null,
+        token: string,
+        createdAt: Date,
+        updatedAt: Date,
+        url: string,
+        environment: TSiteEnvironment
+    ) {
         this.id = id;
         this.name = name;
         this.phpVersion = phpVersion;
