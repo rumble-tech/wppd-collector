@@ -64,7 +64,12 @@ scheduler.addTask('delete-plugins-unused', '0 12 * * *', () => new DeletePlugins
 scheduler.addTask('delete-sites-inactive', '0 12 */7 * *', () => new DeleteSitesInactiveTask(logger, siteRepository).run()); // Every 7 days at 12:00
 
 async function main() {
-    await wordFenceApiVulnerabilitiesProvider.fetchVulnerabilities();
+    try {
+        await wordFenceApiVulnerabilitiesProvider.fetchVulnerabilities();
+    } catch (err) {
+        logger.app.error('Error while fetching vulnerabilities from WordFence API. Exiting application...', { error: err });
+        process.exit(1);
+    }
 }
 
 main();
