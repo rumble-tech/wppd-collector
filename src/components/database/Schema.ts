@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { integer, numeric, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 const environmentEnum = ['production', 'staging', 'development'] as const;
 
@@ -36,8 +36,21 @@ export const sitePluginsTable = sqliteTable('site_plugins', {
     isActive: integer('is_active').notNull().default(0),
 });
 
+export const pluginVulnerabilitiesTable = sqliteTable('plugin_vulnerabilities', {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    pluginId: integer('plugin_id')
+        .notNull()
+        .references(() => pluginsTable.id, { onDelete: 'cascade' }),
+    from: text('from').notNull(),
+    fromInclusive: integer('from_inclusive').notNull().default(0),
+    to: text('to').notNull(),
+    toInclusive: integer('to_inclusive').notNull().default(0),
+    score: numeric('score').$type<number>().notNull(),
+});
+
 export const schema = {
     sitesTable,
     pluginsTable,
     sitePluginsTable,
+    pluginVulnerabilitiesTable,
 };

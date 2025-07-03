@@ -48,6 +48,10 @@ const schema: ConfigSchema = {
         type: 'string',
         required: false,
     },
+    WORDFENCE_API_URL: {
+        type: 'string',
+        required: false,
+    },
 };
 
 export default schema;

@@ -14,3 +14,19 @@ export type TPluginVersion = {
     requiredPhpVersion: string | null;
     requiredWpVersion: string | null;
 };
+
+export type TPluginVulnerability = {
+    id: number;
+    pluginId: number;
+    from: {
+        version: string;
+        inclusive: boolean;
+    };
+    to: {
+        version: string;
+        inclusive: boolean;
+    };
+    score: number;
+};
+
+export type TNewPluginVulnerability = Omit<TPluginVulnerability, 'id'>;

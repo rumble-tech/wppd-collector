@@ -135,15 +135,23 @@ export default class SiteController extends AbstractController {
                 return;
             }
 
-            const pluginData = sitePlugins.map((sitePlugin) => ({
-                pluginId: sitePlugin.getId(),
-                name: sitePlugin.getName(),
-                slug: sitePlugin.getSlug(),
-                installedVersion: sitePlugin.getInstalledVersion(),
-                latestVersion: sitePlugin.getLatestVersion(),
-                isActive: sitePlugin.getIsActive(),
-                vulnerabilities: [],
-            }));
+            const pluginData = await Promise.all(
+                sitePlugins.map(async (sitePlugin) => ({
+                    pluginId: sitePlugin.getId(),
+                    name: sitePlugin.getName(),
+                    slug: sitePlugin.getSlug(),
+                    installedVersion: sitePlugin.getInstalledVersion(),
+                    latestVersion: sitePlugin.getLatestVersion(),
+                    isActive: sitePlugin.getIsActive(),
+                    vulnerabilities: (
+                        await this.pluginRepository.findVulnerabilities(sitePlugin.getId())
+                    ).map((vulnerabilitiy) => ({
+                        from: vulnerabilitiy.from,
+                        to: vulnerabilitiy.to,
+                        score: vulnerabilitiy.score,
+                    })),
+                }))
+            );
 
             res.status(200).json({
                 message: 'Site Plugins retrieved successfully',
@@ -295,6 +303,27 @@ export default class SiteController extends AbstractController {
                     if (!createdPlugin) {
                         this.logger.app.error('Failed to create new plugin', { slug, name });
                         continue;
+                    }
+
+                    const vulnerabilities = await this.pluginRepository.getVulnerabilities(slug);
+                    if (!vulnerabilities || !Array.isArray(vulnerabilities)) {
+                        this.logger.app.error('Failed to fetch vulnerabilities for plugin', { id: createdPlugin.getId(), slug: createdPlugin.getSlug() });
+                        continue;
+                    }
+
+                    this.logger.app.info(`Found ${vulnerabilities.length} vulnerabilities for plugin. Clearing existing vulnerabilities and inserting new ones`, { plugin: { id: createdPlugin.getId(), slug: createdPlugin.getSlug() } });
+
+                    await this.pluginRepository.deleteAllVulnerabilitiesForPlugin(createdPlugin.getId());
+
+                    this.logger.app.info('Inserting vulnerabilities for plugin', { plugin: { id: createdPlugin.getId(), slug: createdPlugin.getSlug() } });
+
+                    for (const vulnerability of vulnerabilities) {
+                        await this.pluginRepository.createVulnerability({
+                            pluginId: createdPlugin.getId(),
+                            ...vulnerability,
+                        });
+
+                        this.logger.app.info('Vulnerability created successfully', { plugin: { id: createdPlugin.getId(), slug: createdPlugin.getSlug() }, vulnerability });
                     }
                 }
 

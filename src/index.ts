@@ -1,5 +1,5 @@
 import { db } from 'src/components/database/Database';
-import { pluginsTable, sitePluginsTable, sitesTable } from 'src/components/database/Schema';
+import { pluginsTable, sitePluginsTable, sitesTable, pluginVulnerabilitiesTable } from 'src/components/database/Schema';
 import Logger from 'src/components/Logger';
 import Server from 'src/components/server/Server';
 import Config from 'src/config/Config';
@@ -15,6 +15,9 @@ import Scheduler from 'src/components/Scheduler';
 import UpdatePluginsLatestVersionTask from 'src/tasks/UpdatePluginsLatestVersion';
 import DeletePluginsUnusedTask from 'src/tasks/DeletePluginsUnused';
 import DeleteSitesInactiveTask from 'src/tasks/DeleteSitesInactive';
+import WordFenceApiVulnerabilitiesProvider from 'src/services/vulnerabilities/providers/WordFenceApi';
+import VulnerabilitiesResolver from 'src/services/vulnerabilities/VulnerabilitiesResolver';
+import UpdatePluginsVulnerabilitiesTask from 'src/tasks/UpdatePluginsVulnerabilities';
 
 Config.load(ConfigSchema);
 
@@ -27,8 +30,13 @@ const server = Server.getInstance(logger);
 const latestVersionResolver = new LatestVersionResolver();
 latestVersionResolver.addProvider(new WordPressApiLatestVersionProvider());
 
+const wordFenceApiVulnerabilitiesProvider = new WordFenceApiVulnerabilitiesProvider();
+
+const vulnerabilitiesResolver = new VulnerabilitiesResolver();
+vulnerabilitiesResolver.addProvider(wordFenceApiVulnerabilitiesProvider);
+
 const siteRepository = new SiteRepository(db, sitesTable, pluginsTable, sitePluginsTable);
-const pluginRepository = new PluginRepository(db, pluginsTable, sitePluginsTable, latestVersionResolver);
+const pluginRepository = new PluginRepository(db, pluginsTable, sitePluginsTable, pluginVulnerabilitiesTable, latestVersionResolver, vulnerabilitiesResolver);
 
 const indexController = new IndexController(logger);
 const siteController = new SiteController(logger, siteRepository, pluginRepository);
@@ -47,5 +55,12 @@ server
 
 const scheduler = Scheduler.getInstance(logger);
 scheduler.addTask('update-plugins-latest-versions', '0 * * * *', () => new UpdatePluginsLatestVersionTask(logger, pluginRepository).run()); // Every hour
+scheduler.addTask('update-plugins-vulnerabilities', '0 */3 * * *', () => new UpdatePluginsVulnerabilitiesTask(logger, pluginRepository).run()); // Every 3 hours
 scheduler.addTask('delete-plugins-unused', '0 12 */2 * *', () => new DeletePluginsUnusedTask(logger, pluginRepository).run()); // Every 2 days at 12:00
 scheduler.addTask('delete-sites-inactive', '0 12 */7 * *', () => new DeleteSitesInactiveTask(logger, siteRepository).run()); // Every 7 days at 12:00
+
+async function main() {
+    await wordFenceApiVulnerabilitiesProvider.fetchVulnerabilities();
+}
+
+main();

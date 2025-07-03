@@ -1,20 +1,25 @@
 import { eq, notInArray } from 'drizzle-orm';
-import { TDatabase, TPluginsTable, TSitePluginsTable } from 'src/components/database/Types';
+import { TDatabase, TPluginsTable, TPluginVulnerabilitiesTable, TSitePluginsTable } from 'src/components/database/Types';
 import Plugin from 'src/entities/Plugin';
-import { TNewPlugin, TPlugin, TPluginVersion } from 'src/models/Plugin';
+import { TNewPlugin, TNewPluginVulnerability, TPlugin, TPluginVersion, TPluginVulnerability } from 'src/models/Plugin';
 import LatestVersionResolver from 'src/services/latest-version/LatestVersionResolver';
+import VulnerabilitiesResolver from 'src/services/vulnerabilities/VulnerabilitiesResolver';
 
 export default class PluginRepository {
     private db: TDatabase;
     private pluginsTable: TPluginsTable;
     private sitePluginsTable: TSitePluginsTable;
+    private pluginVulnerabilitiesTable: TPluginVulnerabilitiesTable;
     private latestVersionResolver: LatestVersionResolver;
+    private vulnerabilitiesResolver: VulnerabilitiesResolver;
 
-    constructor(db: TDatabase, pluginsTable: TPluginsTable, sitePluginsTable: TSitePluginsTable, latestVersionResolver: LatestVersionResolver) {
+    constructor(db: TDatabase, pluginsTable: TPluginsTable, sitePluginsTable: TSitePluginsTable, pluginVulnerabilitiesTable: TPluginVulnerabilitiesTable, latestVersionResolver: LatestVersionResolver, vulnerabilitiesResolver: VulnerabilitiesResolver) {
         this.db = db;
         this.pluginsTable = pluginsTable;
         this.sitePluginsTable = sitePluginsTable;
+        this.pluginVulnerabilitiesTable = pluginVulnerabilitiesTable; // Assuming plugin vulnerabilities table is part of pluginsTable
         this.latestVersionResolver = latestVersionResolver;
+        this.vulnerabilitiesResolver = vulnerabilitiesResolver;
     }
 
     public async findAll(): Promise<Plugin[]> {
@@ -76,5 +81,46 @@ export default class PluginRepository {
 
     public async getLatestVersion(slug: TPlugin['slug']): Promise<TPluginVersion> {
         return await this.latestVersionResolver.resolve(slug);
+    }
+
+    public async getVulnerabilities(slug: TPlugin['slug']): Promise<Omit<TPluginVulnerability, 'id' | 'pluginId'>[] | null> {
+        return await this.vulnerabilitiesResolver.resolve(slug);
+    }
+
+    public async findVulnerabilities(pluginId: TPlugin['id']): Promise<TPluginVulnerability[]> {
+        const vulnerabilities = await this.db.select().from(this.pluginVulnerabilitiesTable).where(eq(this.pluginVulnerabilitiesTable.pluginId, pluginId)).execute();
+
+        return vulnerabilities.map((vuln) => ({
+            id: vuln.id,
+            pluginId: vuln.pluginId,
+            from: { version: vuln.from, inclusive: Boolean(vuln.fromInclusive) },
+            to: { version: vuln.to, inclusive: Boolean(vuln.toInclusive) },
+            score: vuln.score,
+        }));
+    }
+
+    public async createVulnerability(vulnerability: TNewPluginVulnerability): Promise<boolean> {
+        const [createdVulnerability] = await this.db
+            .insert(this.pluginVulnerabilitiesTable)
+            .values({
+                pluginId: vulnerability.pluginId,
+                from: vulnerability.from.version,
+                fromInclusive: Number(vulnerability.from.inclusive),
+                to: vulnerability.to.version,
+                toInclusive: Number(vulnerability.to.inclusive),
+                score: vulnerability.score,
+            })
+            .returning()
+            .execute();
+
+        if (!createdVulnerability) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public async deleteAllVulnerabilitiesForPlugin(pluginId: TPluginVulnerability['id']): Promise<void> {
+        await this.db.delete(this.pluginVulnerabilitiesTable).where(eq(this.pluginVulnerabilitiesTable.pluginId, pluginId)).execute();
     }
 }
