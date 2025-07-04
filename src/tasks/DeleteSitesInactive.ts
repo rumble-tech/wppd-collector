@@ -1,13 +1,13 @@
-import AbstractTask from 'src/tasks/AbstractTask';
-import Logger from 'src/components/Logger';
+import { LoggerInterface } from 'src/components/logger/LoggerInterface';
 import SiteRepository from 'src/repositories/SiteRepository';
+import AbstractTask from 'src/tasks/AbstractTask';
 import { TaskInterface } from 'src/tasks/TaskInterface';
 
 export default class DeletePluginsUnusedTask extends AbstractTask implements TaskInterface {
     private siteRepository: SiteRepository;
     private MAX_INACTIVE_TIME = 864e5; // 1 day in seconds
 
-    constructor(logger: Logger, siteRepository: SiteRepository) {
+    constructor(logger: LoggerInterface, siteRepository: SiteRepository) {
         super(logger);
         this.siteRepository = siteRepository;
     }
@@ -22,23 +22,20 @@ export default class DeletePluginsUnusedTask extends AbstractTask implements Tas
 
                 if (diff > this.MAX_INACTIVE_TIME) {
                     if (await this.siteRepository.delete(site.getId())) {
-                        this.logger.scheduler.info(`Deleted inactive site: ${site.getName()} (ID: ${site.getId()})`, {
+                        this.logger.info(`Deleted inactive site: ${site.getName()} (ID: ${site.getId()})`, {
                             siteId: site.getId(),
                             siteName: site.getName(),
                         });
                     } else {
-                        this.logger.scheduler.warn(
-                            `Failed to delete inactive site: ${site.getName()} (ID: ${site.getId()})`,
-                            {
-                                siteId: site.getId(),
-                                siteName: site.getName(),
-                            }
-                        );
+                        this.logger.warn(`Failed to delete inactive site: ${site.getName()} (ID: ${site.getId()})`, {
+                            siteId: site.getId(),
+                            siteName: site.getName(),
+                        });
                     }
                 }
             }
         } catch (err) {
-            this.logger.scheduler.error('Error while deleting inactive sites', { error: err });
+            this.logger.error('Error while deleting inactive sites', { error: err });
         }
     }
 }

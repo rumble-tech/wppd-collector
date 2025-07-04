@@ -1,19 +1,19 @@
-import AbstractTask from 'src/tasks/AbstractTask';
-import Logger from 'src/components/Logger';
+import { LoggerInterface } from 'src/components/logger/LoggerInterface';
 import PluginRepository from 'src/repositories/PluginRepository';
+import AbstractTask from 'src/tasks/AbstractTask';
 import { TaskInterface } from 'src/tasks/TaskInterface';
 
 export default class UpdatePluginsVulnerabilitiesTask extends AbstractTask implements TaskInterface {
     private pluginRepository: PluginRepository;
 
-    constructor(logger: Logger, pluginRepository: PluginRepository) {
+    constructor(logger: LoggerInterface, pluginRepository: PluginRepository) {
         super(logger);
         this.pluginRepository = pluginRepository;
     }
 
     public async run(): Promise<void> {
         try {
-            this.logger.scheduler.info('Updating plugins vulnerabilities...');
+            this.logger.info('Updating plugins vulnerabilities...');
 
             const plugins = await this.pluginRepository.findAll();
 
@@ -21,21 +21,21 @@ export default class UpdatePluginsVulnerabilitiesTask extends AbstractTask imple
                 const vulnerabilities = await this.pluginRepository.getVulnerabilities(plugin.getSlug());
 
                 if (!vulnerabilities || !Array.isArray(vulnerabilities)) {
-                    this.logger.app.error('Failed to fetch vulnerabilities for plugin', {
+                    this.logger.error('Failed to fetch vulnerabilities for plugin', {
                         id: plugin.getId(),
                         slug: plugin.getSlug(),
                     });
                     continue;
                 }
 
-                this.logger.app.info(
+                this.logger.info(
                     `Found ${vulnerabilities.length} vulnerabilities for plugin. Clearing existing vulnerabilities and inserting new ones`,
                     { id: plugin.getId(), slug: plugin.getSlug() }
                 );
 
                 await this.pluginRepository.deleteAllVulnerabilitiesForPlugin(plugin.getId());
 
-                this.logger.app.info('Inserting vulnerabilities for plugin', {
+                this.logger.info('Inserting vulnerabilities for plugin', {
                     plugin: { id: plugin.getId(), slug: plugin.getSlug() },
                 });
 
@@ -45,14 +45,14 @@ export default class UpdatePluginsVulnerabilitiesTask extends AbstractTask imple
                         ...vulnerability,
                     });
 
-                    this.logger.app.info('Vulnerability created successfully', {
+                    this.logger.info('Vulnerability created successfully', {
                         plugin: { id: plugin.getId(), slug: plugin.getSlug() },
                         vulnerability,
                     });
                 }
             }
         } catch (err) {
-            this.logger.scheduler.error('Error while updating plugins vulnerabilities', { error: err });
+            this.logger.error('Error while updating plugins vulnerabilities', { error: err });
         }
     }
 }

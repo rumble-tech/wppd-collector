@@ -16,6 +16,7 @@ module.exports = {
         './src/models',
         './src/controllers/AbstractController.ts',
         './src/tasks/AbstractTask.ts',
+        './src/components/logger/AbstractLogger.ts',
         './src/config/Schema.ts',
     ],
     coverageReporters: ['text', 'cobertura'],

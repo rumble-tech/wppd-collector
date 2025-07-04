@@ -1,4 +1,4 @@
-import Logger from 'src/components/Logger';
+import { LoggerInterface } from 'src/components/logger/LoggerInterface';
 import Config from 'src/config/Config';
 import { TPlugin } from 'src/models/Plugin';
 import { siteEnvironments, TSite, TSiteEnvironment } from 'src/models/Site';
@@ -39,7 +39,7 @@ export default class UpdatePluginsLatestVersionTask extends AbstractTask impleme
     private mailResolver: MailResolver;
 
     constructor(
-        logger: Logger,
+        logger: LoggerInterface,
         siteRepository: SiteRepository,
         pluginRepository: PluginRepository,
         mailResolver: MailResolver
@@ -61,9 +61,9 @@ export default class UpdatePluginsLatestVersionTask extends AbstractTask impleme
                 'Rumble WPPD Report',
                 mailContent
             );
-            this.logger.scheduler.info('Rumble WPPD Report generated and sent via email.');
+            this.logger.info('Rumble WPPD Report generated and sent via email.');
         } catch (err) {
-            this.logger.scheduler.error('Failed to send Rumble WPPD Report via email', { error: err });
+            this.logger.error('Failed to send Rumble WPPD Report via email', { error: err });
         }
     }
 
@@ -109,7 +109,7 @@ export default class UpdatePluginsLatestVersionTask extends AbstractTask impleme
 
                 const vulnerabilities = await this.pluginRepository.getVulnerabilities(sitePlugin.getSlug());
                 if (vulnerabilities === null) {
-                    this.logger.app.warn(`Failed to fetch vulnerabilities for plugin ${sitePlugin.getSlug()}.`);
+                    this.logger.warn(`Failed to fetch vulnerabilities for plugin ${sitePlugin.getSlug()}.`);
                     continue;
                 }
 
@@ -227,7 +227,9 @@ export default class UpdatePluginsLatestVersionTask extends AbstractTask impleme
                                 ? `
                         <hr>
                         <div class="environment-wrapper">
-                            <span class="environment-title">${environment.charAt(0).toUpperCase() + environment.slice(1)}</span>
+                            <span class="environment-title">${
+                                environment.charAt(0).toUpperCase() + environment.slice(1)
+                            }</span>
                             ${reports[environment]
                                 .map(
                                     (siteReport) =>
@@ -253,7 +255,11 @@ export default class UpdatePluginsLatestVersionTask extends AbstractTask impleme
                                             <td class="value" colspan="6">${siteReport.plugins.matchingVersions}</td>
                                         </tr>
                                         <tr class="odd">
-                                            <td class="key title" rowspan="${siteReport.plugins.mismatchingVersions.length > 0 ? siteReport.plugins.mismatchingVersions.length + 1 : 1}">Plugins with mismatching versions</td>
+                                            <td class="key title" rowspan="${
+                                                siteReport.plugins.mismatchingVersions.length > 0
+                                                    ? siteReport.plugins.mismatchingVersions.length + 1
+                                                    : 1
+                                            }">Plugins with mismatching versions</td>
                                             ${
                                                 siteReport.plugins.mismatchingVersions.length > 0
                                                     ? `
@@ -275,11 +281,29 @@ export default class UpdatePluginsLatestVersionTask extends AbstractTask impleme
                                                     `
                                         <tr class="${index % 2 === 0 ? 'even' : 'odd'}">
                                             <td>${plugin.slug}</td>
-                                            <td>${plugin.isActive === true ? 'Yes' : plugin.isActive === false ? 'No' : '-'}</td>
+                                            <td>${
+                                                plugin.isActive === true
+                                                    ? 'Yes'
+                                                    : plugin.isActive === false
+                                                    ? 'No'
+                                                    : '-'
+                                            }</td>
                                             <td>${plugin.installedVersion}</td>
                                             <td>${plugin.latestVersion}</td>
-                                            <td style="color: ${plugin.difference === 'major' ? 'red' : plugin.difference === 'minor' ? 'darkorange' : plugin.difference === 'patch' ? 'royalblue' : 'indigo'}">${plugin.difference.toUpperCase()}</td>
-                                            <td>${plugin.severity.countVulnerabilities > 0 ? `${plugin.severity.countVulnerabilities} - ${plugin.severity.highestScore}` : '-'}</td>
+                                            <td style="color: ${
+                                                plugin.difference === 'major'
+                                                    ? 'red'
+                                                    : plugin.difference === 'minor'
+                                                    ? 'darkorange'
+                                                    : plugin.difference === 'patch'
+                                                    ? 'royalblue'
+                                                    : 'indigo'
+                                            }">${plugin.difference.toUpperCase()}</td>
+                                            <td>${
+                                                plugin.severity.countVulnerabilities > 0
+                                                    ? `${plugin.severity.countVulnerabilities} - ${plugin.severity.highestScore}`
+                                                    : '-'
+                                            }</td>
                                         </tr>
                                         `
                                             )

@@ -1,6 +1,7 @@
 import { db } from 'src/components/database/Database';
 import { pluginsTable, pluginVulnerabilitiesTable, sitePluginsTable, sitesTable } from 'src/components/database/Schema';
-import Logger from 'src/components/Logger';
+import AppLogger from 'src/components/logger/AppLogger';
+import SchdulerLogger from 'src/components/logger/SchedulerLogger';
 import Scheduler from 'src/components/Scheduler';
 import Server from 'src/components/server/Server';
 import Config from 'src/config/Config';
@@ -23,11 +24,11 @@ import UpdatePluginsVulnerabilitiesTask from 'src/tasks/UpdatePluginsVulnerabili
 
 Config.load(ConfigSchema);
 
-Logger.setConfig(Config.getLoggerConfig());
-const logger = new Logger();
+const appLogger = new AppLogger(Config.getAppLoggerConfig());
+const schedulerLogger = new SchdulerLogger(Config.getSchedulerLoggerConfig());
 
 Server.setConfig(Config.getServerConfig());
-const server = Server.getInstance(logger);
+const server = Server.getInstance(appLogger);
 
 const latestVersionResolver = new LatestVersionResolver();
 latestVersionResolver.addProvider(new WordPressApiLatestVersionProvider());
@@ -50,43 +51,43 @@ const pluginRepository = new PluginRepository(
     vulnerabilitiesResolver
 );
 
-const indexController = new IndexController(logger);
-const siteController = new SiteController(logger, siteRepository, pluginRepository);
+const indexController = new IndexController(appLogger);
+const siteController = new SiteController(appLogger, siteRepository, pluginRepository);
 
 server.useRouter('/', indexController.getRouter());
 server.useRouter('/site', siteController.getRouter());
 server
     .start()
     .then(() => {
-        logger.app.info('Server started successfully');
+        appLogger.info('Server started successfully');
     })
     .catch((error) => {
-        logger.app.error('Failed to start server:', error);
+        appLogger.error('Failed to start server:', error);
         process.exit(1);
     });
 
-const scheduler = Scheduler.getInstance(logger);
+const scheduler = Scheduler.getInstance(appLogger);
 scheduler.addTask('update-plugins-latest-versions', '0 * * * *', () =>
-    new UpdatePluginsLatestVersionTask(logger, pluginRepository).run()
+    new UpdatePluginsLatestVersionTask(schedulerLogger, pluginRepository).run()
 ); // Every hour
 scheduler.addTask('update-plugins-vulnerabilities', '0 */3 * * *', () =>
-    new UpdatePluginsVulnerabilitiesTask(logger, pluginRepository).run()
+    new UpdatePluginsVulnerabilitiesTask(schedulerLogger, pluginRepository).run()
 ); // Every 3 hours
 scheduler.addTask('delete-plugins-unused', '0 12 * * *', () =>
-    new DeletePluginsUnusedTask(logger, pluginRepository).run()
+    new DeletePluginsUnusedTask(schedulerLogger, pluginRepository).run()
 ); // Every day at 12:00
 scheduler.addTask('delete-sites-inactive', '0 12 */7 * *', () =>
-    new DeleteSitesInactiveTask(logger, siteRepository).run()
+    new DeleteSitesInactiveTask(schedulerLogger, siteRepository).run()
 ); // Every 7 days at 12:00
 scheduler.addTask('send-report-mail', '0 12 * * *', () =>
-    new SendReportMailTask(logger, siteRepository, pluginRepository, mailResolver).run()
+    new SendReportMailTask(schedulerLogger, siteRepository, pluginRepository, mailResolver).run()
 ); // Every day at 12:00
 
 async function main() {
     try {
         await wordFenceApiVulnerabilitiesProvider.fetchVulnerabilities();
     } catch (err) {
-        logger.app.error('Error while fetching vulnerabilities from WordFence API. Exiting application...', {
+        appLogger.error('Error while fetching vulnerabilities from WordFence API. Exiting application...', {
             error: err,
         });
         process.exit(1);

@@ -1,9 +1,9 @@
-import Logger from 'src/components/Logger';
+import { LoggerInterface } from 'src/components/logger/LoggerInterface';
 
 export default abstract class AbstractTask {
-    protected logger: Logger;
+    protected logger: LoggerInterface;
 
-    constructor(logger: Logger) {
+    constructor(logger: LoggerInterface) {
         this.logger = logger;
     }
 

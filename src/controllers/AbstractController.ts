@@ -1,5 +1,5 @@
 import express from 'express';
-import Logger from 'src/components/Logger';
+import { LoggerInterface } from 'src/components/logger/LoggerInterface';
 
 interface ControllerInterface {
     getRouter(): express.Router;
@@ -7,9 +7,9 @@ interface ControllerInterface {
 
 export default abstract class AbstractController implements ControllerInterface {
     protected router: express.Router;
-    protected logger: Logger;
+    protected logger: LoggerInterface;
 
-    constructor(logger: Logger) {
+    constructor(logger: LoggerInterface) {
         this.router = express.Router();
         this.logger = logger;
         this.useRoutes();

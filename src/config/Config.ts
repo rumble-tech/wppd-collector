@@ -5,6 +5,8 @@ export default class Config {
     private static values: Record<string, string | number | boolean | undefined> = {};
 
     public static load(schema: ConfigSchema): void {
+        this.values = {};
+
         for (const key of Object.keys(schema)) {
             const definition = schema[key];
             const rawValue = process.env[key];
@@ -59,10 +61,17 @@ export default class Config {
         return value as T;
     }
 
-    public static getLoggerConfig(): LoggerConfig {
+    public static getAppLoggerConfig(): LoggerConfig {
         return {
             level: Config.get<string>('LOG_LEVEL'),
-            directory: Config.get<string>('LOG_DIRECTORY'),
+            directory: `${Config.get<string>('LOG_DIRECTORY')}/app`,
+        };
+    }
+
+    public static getSchedulerLoggerConfig(): LoggerConfig {
+        return {
+            level: 'info',
+            directory: `${Config.get<string>('LOG_DIRECTORY')}/scheduler`,
         };
     }
 

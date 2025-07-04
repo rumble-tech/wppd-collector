@@ -1,18 +1,18 @@
 import { Job, RecurrenceRule, RecurrenceSpecDateRange, RecurrenceSpecObjLit, scheduleJob } from 'node-schedule';
-import Logger from 'src/components/Logger';
+import { LoggerInterface } from './logger/LoggerInterface';
 
 export default class Scheduler {
     private static instance: Scheduler;
 
     private tasks: Map<string, Job>;
-    private logger: Logger;
+    private logger: LoggerInterface;
 
-    constructor(logger: Logger) {
+    constructor(logger: LoggerInterface) {
         this.logger = logger;
         this.tasks = new Map<string, Job>();
     }
 
-    public static getInstance(logger: Logger): Scheduler {
+    public static getInstance(logger: LoggerInterface): Scheduler {
         if (!Scheduler.instance) {
             Scheduler.instance = new Scheduler(logger);
         }
@@ -26,14 +26,14 @@ export default class Scheduler {
         callback: () => void
     ): boolean {
         if (this.tasks.has(name)) {
-            this.logger.app.warn(`Task with name "${name}" already exists. Skipping addition.`);
+            this.logger.warn(`Task with name "${name}" already exists. Skipping addition.`);
             return false;
         }
 
         const job = scheduleJob(name, rule, callback);
         this.tasks.set(name, job);
 
-        this.logger.app.info(`Task "${name}" scheduled successfully.`);
+        this.logger.info(`Task "${name}" scheduled successfully.`);
 
         return true;
     }

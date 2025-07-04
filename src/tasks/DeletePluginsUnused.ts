@@ -1,12 +1,12 @@
-import AbstractTask from 'src/tasks/AbstractTask';
-import Logger from 'src/components/Logger';
+import { LoggerInterface } from 'src/components/logger/LoggerInterface';
 import PluginRepository from 'src/repositories/PluginRepository';
+import AbstractTask from 'src/tasks/AbstractTask';
 import { TaskInterface } from 'src/tasks/TaskInterface';
 
 export default class DeletePluginsUnusedTask extends AbstractTask implements TaskInterface {
     private pluginRepository: PluginRepository;
 
-    constructor(logger: Logger, pluginRepository: PluginRepository) {
+    constructor(logger: LoggerInterface, pluginRepository: PluginRepository) {
         super(logger);
         this.pluginRepository = pluginRepository;
     }
@@ -16,12 +16,12 @@ export default class DeletePluginsUnusedTask extends AbstractTask implements Tas
             const success = await this.pluginRepository.deleteUnused();
 
             if (success) {
-                this.logger.scheduler.info('Deleted unused plugins successfully');
+                this.logger.info('Deleted unused plugins successfully');
             } else {
-                this.logger.scheduler.warn('No unused plugins found or deletion failed');
+                this.logger.warn('No unused plugins found or deletion failed');
             }
         } catch (err) {
-            this.logger.scheduler.error('Error while deleting unused plugins', { error: err });
+            this.logger.error('Error while deleting unused plugins', { error: err });
         }
     }
 }

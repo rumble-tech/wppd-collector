@@ -1,9 +1,9 @@
-import { ServerConfig } from 'src/config/Types';
-import express from 'express';
 import cors from 'cors';
+import express from 'express';
 import http from 'http';
+import { LoggerInterface } from 'src/components/logger/LoggerInterface';
 import RouteError from 'src/components/server/RouteError';
-import Logger from 'src/components/Logger';
+import { ServerConfig } from 'src/config/Types';
 
 export default class Server {
     private static instance: Server;
@@ -12,9 +12,9 @@ export default class Server {
     private app: express.Application;
     private server: http.Server;
     private router: express.Router;
-    private logger: Logger;
+    private logger: LoggerInterface;
 
-    private constructor(logger: Logger) {
+    private constructor(logger: LoggerInterface) {
         this.app = express();
         this.server = http.createServer(this.app);
         this.router = express.Router();
@@ -27,7 +27,7 @@ export default class Server {
         this.useErrorHandlers();
     }
 
-    public static getInstance(logger: Logger): Server {
+    public static getInstance(logger: LoggerInterface): Server {
         if (!Server.instance) {
             Server.instance = new Server(logger);
         }
@@ -75,7 +75,7 @@ export default class Server {
                     message = err.message;
                 }
 
-                this.logger.app.error(`[${statusCode}] ${message}`);
+                this.logger.error(`[${statusCode}] ${message}`);
 
                 res.status(statusCode).json({ error: message });
             }

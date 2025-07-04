@@ -1,19 +1,19 @@
-import AbstractTask from 'src/tasks/AbstractTask';
-import Logger from 'src/components/Logger';
+import { LoggerInterface } from 'src/components/logger/LoggerInterface';
 import PluginRepository from 'src/repositories/PluginRepository';
+import AbstractTask from 'src/tasks/AbstractTask';
 import { TaskInterface } from 'src/tasks/TaskInterface';
 
 export default class UpdatePluginsLatestVersionTask extends AbstractTask implements TaskInterface {
     private pluginRepository: PluginRepository;
 
-    constructor(logger: Logger, pluginRepository: PluginRepository) {
+    constructor(logger: LoggerInterface, pluginRepository: PluginRepository) {
         super(logger);
         this.pluginRepository = pluginRepository;
     }
 
     public async run(): Promise<void> {
         try {
-            this.logger.scheduler.info('Updating plugins latest version...');
+            this.logger.info('Updating plugins latest version...');
 
             const plugins = await this.pluginRepository.findAll();
 
@@ -30,24 +30,21 @@ export default class UpdatePluginsLatestVersionTask extends AbstractTask impleme
                 });
 
                 if (!updatedPlugin) {
-                    this.logger.scheduler.warn(
+                    this.logger.warn(
                         `Failed to update plugin ${plugin.getSlug()} to latest version ${latestVersion.version}`
                     );
                     continue;
                 }
 
-                this.logger.scheduler.info(
-                    `Updated plugin ${plugin.getSlug()} to latest version ${latestVersion.version}`,
-                    {
-                        pluginId: plugin.getId(),
-                        latestVersion: latestVersion.version,
-                        requiredPhpVersion: latestVersion.requiredPhpVersion,
-                        requiredWpVersion: latestVersion.requiredWpVersion,
-                    }
-                );
+                this.logger.info(`Updated plugin ${plugin.getSlug()} to latest version ${latestVersion.version}`, {
+                    pluginId: plugin.getId(),
+                    latestVersion: latestVersion.version,
+                    requiredPhpVersion: latestVersion.requiredPhpVersion,
+                    requiredWpVersion: latestVersion.requiredWpVersion,
+                });
             }
         } catch (err) {
-            this.logger.scheduler.error('Error while updating plugins latest version', { error: err });
+            this.logger.error('Error while updating plugins latest version', { error: err });
         }
     }
 }
