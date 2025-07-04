@@ -15,7 +15,8 @@
         "outDir": "./dist",
         "baseUrl": "./",
         "paths": {
-            "src/*": ["src/*"]
+            "src/*": ["src/*"],
+            "test-utils/*": ["test-utils/*"]
         },
         "incremental": true,
         "skipLibCheck": true,
@@ -26,5 +27,5 @@
         "noFallthroughCasesInSwitch": false,
         "esModuleInterop": true
     },
-    "include": ["src", "jest.setup.ts", "tests", "**/*.test.ts"]
+    "include": ["src", "test-utils", "**/*.test.ts"]
 }

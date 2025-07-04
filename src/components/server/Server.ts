@@ -59,6 +59,10 @@ export default class Server {
         this.router.use(prefix, router);
     }
 
+    public getApp(): express.Application {
+        return this.app;
+    }
+
     private useErrorHandlers(): void {
         this.app.use((req: express.Request, _res: express.Response, next: express.NextFunction) => {
             const error = new RouteError(404, `Route not found: ${req.method} ${req.originalUrl}`);

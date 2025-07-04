@@ -28,6 +28,7 @@ module.exports = {
     },
     moduleNameMapper: {
         '^src/(.*)$': '<rootDir>/src/$1',
+        '^test-utils/(.*)$': '<rootDir>/test-utils/$1',
     },
-    setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+    setupFiles: ['tsconfig-paths/register'],
 };
