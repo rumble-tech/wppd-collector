@@ -25,5 +25,6 @@
         "strictBindCallApply": false,
         "noFallthroughCasesInSwitch": false,
         "esModuleInterop": true
-    }
+    },
+    "include": ["src", "jest.setup.ts", "tests", "**/*.test.ts"]
 }

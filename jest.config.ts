@@ -1,9 +1,6 @@
-import { createDefaultPreset } from 'ts-jest';
-
-const tsJestTransformCfg = createDefaultPreset().transform;
-
 /** @type {import("jest").Config} **/
 module.exports = {
+    preset: 'ts-jest',
     testEnvironment: 'node',
     testRegex: '.*\\.spec\\.ts$',
     collectCoverage: true,
@@ -22,6 +19,15 @@ module.exports = {
     coverageReporters: ['text', 'cobertura'],
     coverageDirectory: './coverage',
     transform: {
-        ...tsJestTransformCfg,
+        '^.+\\.tsx?$': [
+            'ts-jest',
+            {
+                tsconfig: 'tsconfig.json',
+            },
+        ],
     },
+    moduleNameMapper: {
+        '^src/(.*)$': '<rootDir>/src/$1',
+    },
+    setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 };
