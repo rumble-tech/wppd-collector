@@ -26,3 +26,10 @@ jobs:
         with: 
           name: coverage-report
           path: coverage/cobertura-coverage.xml
+
+      - name: Update code coverage badge
+        run: |
+            curl -X POST https://badges.maxlehmann.dev/project/rumble-tech@wppd-collector/code-coverage \
+            -H "Authorization: Bearer ${{ secrets.BADGES_PROJECT_TOKEN }}" \
+            -H "Content-Type: application/xml" \
+            --data-binary @coverage/cobertura-coverage.xml
