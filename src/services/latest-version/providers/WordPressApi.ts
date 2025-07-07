@@ -24,9 +24,9 @@ export default class WordPressApiLatestVersionProvider implements LatestVersionP
             };
 
             return {
-                version: Tools.formatVersionToMMP(pluginVersionData.version) || null,
-                requiredPhpVersion: Tools.formatVersionToMMP(pluginVersionData.requires_php) || null,
-                requiredWpVersion: Tools.formatVersionToMMP(pluginVersionData.requires) || null,
+                version: Tools.formatVersionToMMP(pluginVersionData.version),
+                requiredPhpVersion: Tools.formatVersionToMMP(pluginVersionData.requires_php),
+                requiredWpVersion: Tools.formatVersionToMMP(pluginVersionData.requires),
             };
         } catch (_) {
             return {
