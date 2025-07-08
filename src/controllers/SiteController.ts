@@ -164,10 +164,9 @@ export default class SiteController extends AbstractController {
 
     private async register(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const { name, url } = req.body;
-
-            if (!name || !url) {
-                throw new RouteError(400, 'Name and URL are required');
+            const { name, url, environment } = req.body;
+            if (!name || !url || !environment) {
+                throw new RouteError(400, 'The fields "name, url and environment" are required');
             }
 
             const token = crypto.randomBytes(32).toString('hex');
@@ -184,7 +183,7 @@ export default class SiteController extends AbstractController {
                     createdAt: existingSite.getCreatedAt().toISOString(),
                     updatedAt: new Date().toISOString(),
                     url: existingSite.getUrl(),
-                    environment: existingSite.getEnvironment(),
+                    environment,
                 });
 
                 if (!updatedSite) {
@@ -217,7 +216,7 @@ export default class SiteController extends AbstractController {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 url,
-                environment: 'production',
+                environment,
             });
 
             if (!createdSite) {
@@ -250,7 +249,7 @@ export default class SiteController extends AbstractController {
                 throw new RouteError(400, 'Invalid site ID provided');
             }
 
-            const { name, environment, phpVersion, wpVersion, url, plugins: sitePlugins } = req.body;
+            const { name, phpVersion, wpVersion, url, plugins: sitePlugins } = req.body;
 
             // TODO: validate request body
 
@@ -269,7 +268,7 @@ export default class SiteController extends AbstractController {
                 createdAt: existingSite.getCreatedAt().toISOString(),
                 updatedAt: new Date().toISOString(),
                 url,
-                environment,
+                environment: existingSite.getEnvironment(),
             });
 
             if (!updatedSite) {
