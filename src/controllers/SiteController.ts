@@ -322,30 +322,29 @@ export default class SiteController extends AbstractController {
                             id: createdPlugin.getId(),
                             slug: createdPlugin.getSlug(),
                         });
-                        continue;
-                    }
+                    } else {
+                        this.logger.info(
+                            `Found ${vulnerabilities.length} vulnerabilities for plugin. Clearing existing vulnerabilities and inserting new ones`,
+                            { plugin: { id: createdPlugin.getId(), slug: createdPlugin.getSlug() } }
+                        );
 
-                    this.logger.info(
-                        `Found ${vulnerabilities.length} vulnerabilities for plugin. Clearing existing vulnerabilities and inserting new ones`,
-                        { plugin: { id: createdPlugin.getId(), slug: createdPlugin.getSlug() } }
-                    );
+                        await this.pluginRepository.deleteAllVulnerabilitiesForPlugin(createdPlugin.getId());
 
-                    await this.pluginRepository.deleteAllVulnerabilitiesForPlugin(createdPlugin.getId());
-
-                    this.logger.info('Inserting vulnerabilities for plugin', {
-                        plugin: { id: createdPlugin.getId(), slug: createdPlugin.getSlug() },
-                    });
-
-                    for (const vulnerability of vulnerabilities) {
-                        await this.pluginRepository.createVulnerability({
-                            pluginId: createdPlugin.getId(),
-                            ...vulnerability,
-                        });
-
-                        this.logger.info('Vulnerability created successfully', {
+                        this.logger.info('Inserting vulnerabilities for plugin', {
                             plugin: { id: createdPlugin.getId(), slug: createdPlugin.getSlug() },
-                            vulnerability,
                         });
+
+                        for (const vulnerability of vulnerabilities) {
+                            await this.pluginRepository.createVulnerability({
+                                pluginId: createdPlugin.getId(),
+                                ...vulnerability,
+                            });
+
+                            this.logger.info('Vulnerability created successfully', {
+                                plugin: { id: createdPlugin.getId(), slug: createdPlugin.getSlug() },
+                                vulnerability,
+                            });
+                        }
                     }
                 }
 
