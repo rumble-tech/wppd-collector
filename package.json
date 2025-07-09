@@ -14,7 +14,7 @@
         "url": "git+https://github.com/rumble-tech/wppd-collector.git"
     },
     "author": "rumble GmbH & Co. KG",
-    "license": "MIT",
+    "license": "GPL v2 (or later)",
     "bugs": {
         "url": "https://github.com/rumble-tech/wppd-collector/issues"
     },
