@@ -165,8 +165,20 @@ export default class SiteController extends AbstractController {
     private async register(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { name, url, environment } = req.body;
-            if (!name || !url || !environment) {
-                throw new RouteError(400, 'The fields "name, url and environment" are required');
+
+            if (!name || typeof name !== 'string' || name.trim() === '') {
+                throw new RouteError(400, 'The field "name" is required and must be a non-empty string');
+            }
+
+            if (!url || typeof url !== 'string' || url.trim() === '') {
+                throw new RouteError(400, 'The field "url" is required and must be a non-empty string');
+            }
+
+            if (!environment || !['production', 'staging', 'development'].includes(environment)) {
+                throw new RouteError(
+                    400,
+                    'The field "environment" is required and must be one of "production", "staging", or "development"'
+                );
             }
 
             const token = crypto.randomBytes(32).toString('hex');
@@ -251,7 +263,95 @@ export default class SiteController extends AbstractController {
 
             const { name, phpVersion, wpVersion, url, plugins: sitePlugins } = req.body;
 
-            // TODO: validate request body
+            if (name === undefined || typeof name !== 'string' || name.trim() === '') {
+                throw new RouteError(400, 'The field "name" is required and must be a non-empty string');
+            }
+
+            if (url === undefined || typeof url !== 'string' || url.trim() === '') {
+                throw new RouteError(400, 'The field "url" is required and must be a non-empty string');
+            }
+
+            if (
+                phpVersion === undefined ||
+                typeof phpVersion !== 'string' ||
+                Tools.formatVersionToMMP(phpVersion) === 'invalid-version-format'
+            ) {
+                throw new RouteError(400, 'The field "phpVersion" is required and must be a valid version string');
+            }
+
+            if (
+                wpVersion === undefined ||
+                typeof wpVersion !== 'string' ||
+                Tools.formatVersionToMMP(wpVersion) === 'invalid-version-format'
+            ) {
+                throw new RouteError(400, 'The field "wpVersion" is required and must be a valid version string');
+            }
+
+            if (!Array.isArray(sitePlugins)) {
+                throw new RouteError(400, 'The field "plugins" is required and must be an array');
+            }
+
+            if (sitePlugins.length > 0) {
+                for (let i = 0; i < sitePlugins.length; i++) {
+                    if (sitePlugins[i].file === undefined || typeof sitePlugins[i].file !== 'string') {
+                        throw new RouteError(400, `The field "plugins[${i}].file" is required and must be a string`);
+                    }
+
+                    if (sitePlugins[i].name === undefined || typeof sitePlugins[i].name !== 'string') {
+                        throw new RouteError(400, `The field "plugins[${i}].name" is required and must be a string`);
+                    }
+
+                    if (sitePlugins[i].active === undefined || typeof sitePlugins[i].active !== 'boolean') {
+                        throw new RouteError(400, `The field "plugins[${i}].active" is required and must be a boolean`);
+                    }
+
+                    if (!sitePlugins[i].version || typeof sitePlugins[i].version !== 'object') {
+                        throw new RouteError(
+                            400,
+                            `The field "plugins[${i}].version" is required and must be an object`
+                        );
+                    }
+
+                    if (
+                        sitePlugins[i].version.installedVersion === undefined ||
+                        (sitePlugins[i].version.installedVersion !== null &&
+                            typeof sitePlugins[i].version.installedVersion !== 'string' &&
+                            Tools.formatVersionToMMP(sitePlugins[i].version.installedVersion) ===
+                                'invalid-version-format')
+                    ) {
+                        throw new RouteError(
+                            400,
+                            `The field "plugins[${i}].version.installedVersion" is required and must be a valid version string or null`
+                        );
+                    }
+
+                    if (
+                        sitePlugins[i].version.requiredPhpVersion === undefined ||
+                        (sitePlugins[i].version.requiredPhpVersion !== null &&
+                            typeof sitePlugins[i].version.requiredPhpVersion !== 'string' &&
+                            Tools.formatVersionToMMP(sitePlugins[i].version.requiredPhpVersion) ===
+                                'invalid-version-format')
+                    ) {
+                        throw new RouteError(
+                            400,
+                            `The field "plugins[${i}].version.requiredPhpVersion" is required and must be a valid version string or null`
+                        );
+                    }
+
+                    if (
+                        sitePlugins[i].version.requiredWpVersion === undefined ||
+                        (sitePlugins[i].version.requiredWpVersion !== null &&
+                            typeof sitePlugins[i].version.requiredWpVersion !== 'string' &&
+                            Tools.formatVersionToMMP(sitePlugins[i].version.requiredWpVersion) ===
+                                'invalid-version-format')
+                    ) {
+                        throw new RouteError(
+                            400,
+                            `The field "plugins[${i}].version.requiredWpVersion" is required and must be a valid version string or null`
+                        );
+                    }
+                }
+            }
 
             const existingSite = await this.siteRepository.findById(Number(siteId));
 
