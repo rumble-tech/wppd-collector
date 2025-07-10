@@ -64,7 +64,7 @@ export default class SiteController extends AbstractController {
             const sites = await this.siteRepository.findAll();
 
             if (sites.length === 0) {
-                res.status(200).json({
+                res.status(404).json({
                     message: 'No sites found',
                     data: null,
                 });
@@ -127,7 +127,7 @@ export default class SiteController extends AbstractController {
             const sitePlugins = await this.siteRepository.findAllSitePlugins(Number(siteId));
 
             if (sitePlugins.length === 0) {
-                res.status(200).json({
+                res.status(404).json({
                     message: 'No plugins found for this site',
                     data: null,
                 });
@@ -536,7 +536,17 @@ export default class SiteController extends AbstractController {
                 }
             }
 
-            res.sendStatus(200);
+            res.status(200).json({
+                message: 'Site updated successfully',
+                data: {
+                    id: updatedSite.getId(),
+                    name: updatedSite.getName(),
+                    url: updatedSite.getUrl(),
+                    phpVersion: updatedSite.getPhpVersion(),
+                    wpVersion: updatedSite.getWpVersion(),
+                    environment: updatedSite.getEnvironment(),
+                },
+            });
         } catch (err) {
             next(err);
         }

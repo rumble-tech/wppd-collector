@@ -72,16 +72,16 @@ export default class Server {
         this.app.use(
             (err: Error | RouteError, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
                 let statusCode = 500;
-                let message = 'Internal server error';
+                let error = 'Internal server error';
 
                 if (err instanceof RouteError) {
                     statusCode = err.getStatusCode();
-                    message = err.message;
+                    error = err.message;
                 }
 
-                this.logger.error(`[${statusCode}] ${message}`);
+                this.logger.error(`[${statusCode}] ${statusCode}`);
 
-                res.status(statusCode).json({ error: message });
+                res.status(statusCode).json({ message: 'Request failed', error });
             }
         );
     }
