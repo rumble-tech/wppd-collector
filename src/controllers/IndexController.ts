@@ -5,7 +5,9 @@ export default class IndexController extends AbstractController {
         this.router.get('/', (req, res) => {
             res.status(200).json({
                 message: 'Welcome to the API',
-                version: process.env.npm_package_version,
+                data: {
+                    version: process.env.npm_package_version,
+                },
             });
         });
     }

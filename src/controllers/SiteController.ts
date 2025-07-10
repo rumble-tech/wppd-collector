@@ -24,7 +24,7 @@ export default class SiteController extends AbstractController {
         this.router.get('/:siteId', this.getSite.bind(this));
         this.router.get('/:siteId/plugins', this.getSitePlugins.bind(this));
         this.router.post('/register', this.register.bind(this));
-        this.router.put('/update/:siteId', this.accessMiddleware.bind(this), this.update.bind(this));
+        this.router.put('/:siteId/update/', this.accessMiddleware.bind(this), this.update.bind(this));
     }
 
     private async accessMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -63,15 +63,6 @@ export default class SiteController extends AbstractController {
         try {
             const sites = await this.siteRepository.findAll();
 
-            if (sites.length === 0) {
-                res.status(404).json({
-                    message: 'No sites found',
-                    data: null,
-                });
-
-                return;
-            }
-
             res.status(200).json({
                 message: 'Sites retrieved successfully',
                 data: sites.map((site) => ({
@@ -90,14 +81,14 @@ export default class SiteController extends AbstractController {
         try {
             const siteId = req.params.siteId;
 
-            if (!siteId || isNaN(Number(siteId))) {
-                throw new RouteError(400, 'Invalid site ID provided');
+            if (siteId === undefined || typeof siteId !== 'string' || isNaN(Number(siteId))) {
+                throw new RouteError(400, 'The parameter "siteId" is required and must be a non-empty number');
             }
 
             const site = await this.siteRepository.findById(Number(siteId));
 
             if (!site) {
-                throw new RouteError(404, 'Site not found');
+                throw new RouteError(404, 'A site with the given ID does not exist');
             }
 
             res.status(200).json({
@@ -120,20 +111,11 @@ export default class SiteController extends AbstractController {
         try {
             const siteId = req.params.siteId;
 
-            if (!siteId || isNaN(Number(siteId))) {
-                throw new RouteError(400, 'Invalid site ID provided');
+            if (siteId === undefined || typeof siteId !== 'string' || isNaN(Number(siteId))) {
+                throw new RouteError(400, 'The parameter "siteId" is required and must be a non-empty number');
             }
 
             const sitePlugins = await this.siteRepository.findAllSitePlugins(Number(siteId));
-
-            if (sitePlugins.length === 0) {
-                res.status(404).json({
-                    message: 'No plugins found for this site',
-                    data: null,
-                });
-
-                return;
-            }
 
             const pluginData = await Promise.all(
                 sitePlugins.map(async (sitePlugin) => ({
@@ -177,7 +159,7 @@ export default class SiteController extends AbstractController {
             if (!environment || !['production', 'staging', 'development'].includes(environment)) {
                 throw new RouteError(
                     400,
-                    'The field "environment" is required and must be one of "production", "staging", or "development"'
+                    'The field "environment" is required and must be either "production", "staging", or "development"'
                 );
             }
 
@@ -199,16 +181,16 @@ export default class SiteController extends AbstractController {
                 });
 
                 if (!updatedSite) {
-                    throw new RouteError(500, 'Failed to update existing site');
+                    throw new RouteError(500, 'Failed to re-register already registered site');
                 }
 
-                this.logger.info('Site updated successfully', {
+                this.logger.info('Site re-registered successfully', {
                     id: updatedSite.getId(),
                     name: updatedSite.getName(),
                 });
 
                 res.status(200).json({
-                    message: 'Site updated successfully',
+                    message: 'Site re-registered successfully',
                     data: {
                         id: updatedSite.getId(),
                         name: updatedSite.getName(),
@@ -232,7 +214,7 @@ export default class SiteController extends AbstractController {
             });
 
             if (!createdSite) {
-                throw new RouteError(500, 'Failed to create new site');
+                throw new RouteError(500, 'Failed to register site');
             }
 
             this.logger.info('Site registered successfully', {
@@ -257,8 +239,8 @@ export default class SiteController extends AbstractController {
     private async update(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const siteId = req.params.siteId;
-            if (!siteId || isNaN(Number(siteId))) {
-                throw new RouteError(400, 'Invalid site ID provided');
+            if (siteId === undefined || typeof siteId !== 'string' || isNaN(Number(siteId))) {
+                throw new RouteError(400, 'The parameter "siteId" is required and must be a non-empty number');
             }
 
             const { name, phpVersion, wpVersion, url, plugins: sitePlugins } = req.body;
@@ -356,7 +338,7 @@ export default class SiteController extends AbstractController {
             const existingSite = await this.siteRepository.findById(Number(siteId));
 
             if (!existingSite) {
-                throw new RouteError(404, 'Site not found');
+                throw new RouteError(404, 'A site with the given ID does not exist');
             }
 
             const updatedSite = await this.siteRepository.update({
