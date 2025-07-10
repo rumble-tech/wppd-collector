@@ -115,6 +115,10 @@ export default class SiteController extends AbstractController {
                 throw new RouteError(400, 'The parameter "siteId" is required and must be a non-empty number');
             }
 
+            if (!(await this.siteRepository.findById(Number(siteId)))) {
+                throw new RouteError(404, 'A site with the given ID does not exist');
+            }
+
             const sitePlugins = await this.siteRepository.findAllSitePlugins(Number(siteId));
 
             const pluginData = await Promise.all(
@@ -238,10 +242,7 @@ export default class SiteController extends AbstractController {
 
     private async update(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const siteId = req.params.siteId;
-            if (siteId === undefined || typeof siteId !== 'string' || isNaN(Number(siteId))) {
-                throw new RouteError(400, 'The parameter "siteId" is required and must be a non-empty number');
-            }
+            const siteId = req.site.getId();
 
             const { name, phpVersion, wpVersion, url, plugins: sitePlugins } = req.body;
 
@@ -297,9 +298,9 @@ export default class SiteController extends AbstractController {
                     if (
                         sitePlugins[i].version.installedVersion === undefined ||
                         (sitePlugins[i].version.installedVersion !== null &&
-                            typeof sitePlugins[i].version.installedVersion !== 'string' &&
-                            Tools.formatVersionToMMP(sitePlugins[i].version.installedVersion) ===
-                                'invalid-version-format')
+                            (typeof sitePlugins[i].version.installedVersion !== 'string' ||
+                                Tools.formatVersionToMMP(sitePlugins[i].version.installedVersion) ===
+                                    'invalid-version-format'))
                     ) {
                         throw new RouteError(
                             400,
@@ -310,9 +311,9 @@ export default class SiteController extends AbstractController {
                     if (
                         sitePlugins[i].version.requiredPhpVersion === undefined ||
                         (sitePlugins[i].version.requiredPhpVersion !== null &&
-                            typeof sitePlugins[i].version.requiredPhpVersion !== 'string' &&
-                            Tools.formatVersionToMMP(sitePlugins[i].version.requiredPhpVersion) ===
-                                'invalid-version-format')
+                            (typeof sitePlugins[i].version.requiredPhpVersion !== 'string' ||
+                                Tools.formatVersionToMMP(sitePlugins[i].version.requiredPhpVersion) ===
+                                    'invalid-version-format'))
                     ) {
                         throw new RouteError(
                             400,
@@ -323,9 +324,9 @@ export default class SiteController extends AbstractController {
                     if (
                         sitePlugins[i].version.requiredWpVersion === undefined ||
                         (sitePlugins[i].version.requiredWpVersion !== null &&
-                            typeof sitePlugins[i].version.requiredWpVersion !== 'string' &&
-                            Tools.formatVersionToMMP(sitePlugins[i].version.requiredWpVersion) ===
-                                'invalid-version-format')
+                            (typeof sitePlugins[i].version.requiredWpVersion !== 'string' ||
+                                Tools.formatVersionToMMP(sitePlugins[i].version.requiredWpVersion) ===
+                                    'invalid-version-format'))
                     ) {
                         throw new RouteError(
                             400,
