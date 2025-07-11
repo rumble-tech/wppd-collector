@@ -6,11 +6,15 @@ export default class MailResolver {
 
     constructor() {}
 
-    public async setProvider(provider: MailProviderInterface): Promise<void> {
+    public setProvider(provider: MailProviderInterface): void {
         this.provider = provider;
     }
 
     public async sendMail(from: string, to: string, subject: string, body: string): Promise<void> {
+        if (!this.provider) {
+            throw new Error('Mail provider is not set');
+        }
+
         const transporter = this.provider.getTransporter();
 
         const mailOptions: SendMailOptions = {
