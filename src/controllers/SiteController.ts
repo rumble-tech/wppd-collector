@@ -6,17 +6,25 @@ import AbstractController from 'src/controllers/AbstractController';
 import { TPluginVersion } from 'src/models/Plugin';
 import PluginRepository from 'src/repositories/PluginRepository';
 import SiteRepository from 'src/repositories/SiteRepository';
+import LatestVersionResolver from 'src/services/latest-version/LatestVersionResolver';
 import Tools from 'src/Tools';
 
 export default class SiteController extends AbstractController {
     private siteRepository: SiteRepository;
     private pluginRepository: PluginRepository;
+    private latestVersionResolver: LatestVersionResolver;
 
-    constructor(logger: LoggerInterface, siteRepository: SiteRepository, pluginRepository: PluginRepository) {
+    constructor(
+        logger: LoggerInterface,
+        siteRepository: SiteRepository,
+        pluginRepository: PluginRepository,
+        latestVersionResolver: LatestVersionResolver
+    ) {
         super(logger);
 
         this.siteRepository = siteRepository;
         this.pluginRepository = pluginRepository;
+        this.latestVersionResolver = latestVersionResolver;
     }
 
     protected useRoutes(): void {
@@ -98,8 +106,14 @@ export default class SiteController extends AbstractController {
                     name: site.getName(),
                     url: site.getUrl(),
                     environment: site.getEnvironment(),
-                    phpVersion: site.getPhpVersion(),
-                    wpVersion: site.getWpVersion(),
+                    phpVersion: {
+                        installed: site.getPhpVersion(),
+                        latest: await this.latestVersionResolver.resolvePhp(),
+                    },
+                    wpVersion: {
+                        installed: site.getWpVersion(),
+                        latest: await this.latestVersionResolver.resolveWp(),
+                    },
                 },
             });
         } catch (err) {
@@ -384,7 +398,7 @@ export default class SiteController extends AbstractController {
                         requiredWpVersion,
                     });
 
-                    const latestVersion: TPluginVersion = await this.pluginRepository.getLatestVersion(slug);
+                    const latestVersion: TPluginVersion = await this.latestVersionResolver.resolvePlugin(slug);
 
                     const createdPlugin = await this.pluginRepository.create({
                         slug,

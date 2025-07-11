@@ -1,14 +1,21 @@
 import { LoggerInterface } from 'src/components/logger/LoggerInterface';
 import PluginRepository from 'src/repositories/PluginRepository';
+import LatestVersionResolver from 'src/services/latest-version/LatestVersionResolver';
 import AbstractTask from 'src/tasks/AbstractTask';
 import { TaskInterface } from 'src/tasks/TaskInterface';
 
 export default class UpdatePluginsLatestVersionTask extends AbstractTask implements TaskInterface {
     private pluginRepository: PluginRepository;
+    private latestVersionResolver: LatestVersionResolver;
 
-    constructor(logger: LoggerInterface, pluginRepository: PluginRepository) {
+    constructor(
+        logger: LoggerInterface,
+        pluginRepository: PluginRepository,
+        latestVersionResolver: LatestVersionResolver
+    ) {
         super(logger);
         this.pluginRepository = pluginRepository;
+        this.latestVersionResolver = latestVersionResolver;
     }
 
     public async run(): Promise<void> {
@@ -18,7 +25,7 @@ export default class UpdatePluginsLatestVersionTask extends AbstractTask impleme
             const plugins = await this.pluginRepository.findAll();
 
             for (const plugin of plugins) {
-                const latestVersion = await this.pluginRepository.getLatestVersion(plugin.getSlug());
+                const latestVersion = await this.latestVersionResolver.resolvePlugin(plugin.getSlug());
 
                 const updatedPlugin = await this.pluginRepository.update({
                     id: plugin.getId(),

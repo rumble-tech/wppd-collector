@@ -1,10 +1,10 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import Config from 'src/config/Config';
 import { TPlugin, TPluginVersion } from 'src/models/Plugin';
-import { LatestVersionProviderInterface } from 'src/services/latest-version/LatestVersionProviderInterface';
 import Tools from 'src/Tools';
+import { LatestPluginVersionProviderInterface } from 'src/services/latest-version/LatestVersionProviderInterface';
 
-export default class WordPressApiLatestVersionProvider implements LatestVersionProviderInterface {
+export default class WordPressApiLatestVersionProvider implements LatestPluginVersionProviderInterface {
     public async getLatestVersion(slug: TPlugin['slug']): Promise<TPluginVersion> {
         try {
             const requestConfig: AxiosRequestConfig = {

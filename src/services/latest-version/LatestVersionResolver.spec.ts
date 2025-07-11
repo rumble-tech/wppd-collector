@@ -1,6 +1,6 @@
 import { TPluginVersion } from 'src/models/Plugin';
 import LatestVersionResolver from './LatestVersionResolver';
-import { LatestVersionProviderInterface } from './LatestVersionProviderInterface';
+import { LatestPluginVersionProviderInterface } from './LatestVersionProviderInterface';
 
 describe('LatestVersionResolver', () => {
     let resolver = new LatestVersionResolver();
@@ -9,7 +9,7 @@ describe('LatestVersionResolver', () => {
         resolver = new LatestVersionResolver();
     });
 
-    const createMockProvider = (response: TPluginVersion): jest.Mocked<LatestVersionProviderInterface> => {
+    const createMockProvider = (response: TPluginVersion): jest.Mocked<LatestPluginVersionProviderInterface> => {
         return {
             getLatestVersion: jest.fn().mockResolvedValue(response),
         };
@@ -23,7 +23,7 @@ describe('LatestVersionResolver', () => {
                 requiredWpVersion: '5.8',
             });
 
-            await resolver.addProvider(mockProvider);
+            await resolver.addPluginProvider(mockProvider);
 
             expect(resolver['providers']).toContain(mockProvider);
         });
@@ -31,7 +31,7 @@ describe('LatestVersionResolver', () => {
 
     describe('LatestVersionResolver.resolve', () => {
         it('should return default null object when no providers are set', async () => {
-            const result = await resolver.resolve('test-plugin');
+            const result = await resolver.resolvePlugin('test-plugin');
 
             expect(result).toEqual({
                 version: null,
@@ -53,10 +53,10 @@ describe('LatestVersionResolver', () => {
                 requiredWpVersion: null,
             });
 
-            await resolver.addProvider(mockProvider1);
-            await resolver.addProvider(mockProvider2);
+            await resolver.addPluginProvider(mockProvider1);
+            await resolver.addPluginProvider(mockProvider2);
 
-            const result = await resolver.resolve('test-plugin');
+            const result = await resolver.resolvePlugin('test-plugin');
             expect(result).toEqual({
                 version: null,
                 requiredPhpVersion: null,
@@ -83,11 +83,11 @@ describe('LatestVersionResolver', () => {
                 requiredWpVersion: '6.0',
             });
 
-            await resolver.addProvider(mockProvider1);
-            await resolver.addProvider(mockProvider2);
-            await resolver.addProvider(mockProvider3);
+            await resolver.addPluginProvider(mockProvider1);
+            await resolver.addPluginProvider(mockProvider2);
+            await resolver.addPluginProvider(mockProvider3);
 
-            const result = await resolver.resolve('test-plugin');
+            const result = await resolver.resolvePlugin('test-plugin');
 
             expect(result).toEqual({
                 version: '1.0.0',

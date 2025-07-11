@@ -1,16 +1,29 @@
 import { TPlugin, TPluginVersion } from 'src/models/Plugin';
-import { LatestVersionProviderInterface } from './LatestVersionProviderInterface';
+import {
+    LatestPluginVersionProviderInterface,
+    LatestPhpOrWpVersionProviderInterface,
+} from './LatestVersionProviderInterface';
 
 export default class LatestVersionResolver {
-    private providers: LatestVersionProviderInterface[] = [];
+    private providers: LatestPluginVersionProviderInterface[] = [];
+    private phpVersionProvider: LatestPhpOrWpVersionProviderInterface | null = null;
+    private wpVersionProvider: LatestPhpOrWpVersionProviderInterface | null = null;
 
     constructor() {}
 
-    public async addProvider(provider: LatestVersionProviderInterface): Promise<void> {
+    public addPluginProvider(provider: LatestPluginVersionProviderInterface): void {
         this.providers.push(provider);
     }
 
-    public async resolve(slug: TPlugin['slug']): Promise<TPluginVersion> {
+    public setPhpProvider(provider: LatestPhpOrWpVersionProviderInterface): void {
+        this.phpVersionProvider = provider;
+    }
+
+    public setWpProvider(provider: LatestPhpOrWpVersionProviderInterface): void {
+        this.wpVersionProvider = provider;
+    }
+
+    public async resolvePlugin(slug: TPlugin['slug']): Promise<TPluginVersion> {
         for (const provider of this.providers) {
             const version = await provider.getLatestVersion(slug);
 
@@ -24,5 +37,21 @@ export default class LatestVersionResolver {
             requiredPhpVersion: null,
             requiredWpVersion: null,
         };
+    }
+
+    public async resolvePhp(): Promise<string | null> {
+        if (!this.phpVersionProvider) {
+            return null;
+        }
+
+        return await this.phpVersionProvider.getLatestVersion();
+    }
+
+    public async resolveWp(): Promise<string | null> {
+        if (!this.wpVersionProvider) {
+            return null;
+        }
+
+        return await this.wpVersionProvider.getLatestVersion();
     }
 }

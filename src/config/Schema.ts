@@ -19,6 +19,16 @@ const schema: ConfigSchema = {
         type: 'string',
         required: true,
     },
+    PHP_VERSION_API: {
+        type: 'string',
+        required: false,
+        defaultValue: 'https://php.watch/api/v1/versions/latest',
+    },
+    WP_VERSION_API: {
+        type: 'string',
+        required: false,
+        defaultValue: 'https://api.wordpress.org/core/version-check/1.7/',
+    },
     WP_PLUGIN_API_URL: {
         type: 'string',
         required: false,

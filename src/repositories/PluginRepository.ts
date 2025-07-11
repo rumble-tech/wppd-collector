@@ -6,8 +6,7 @@ import {
     TSitePluginsTable,
 } from 'src/components/database/Types';
 import Plugin from 'src/entities/Plugin';
-import { TNewPlugin, TNewPluginVulnerability, TPlugin, TPluginVersion, TPluginVulnerability } from 'src/models/Plugin';
-import LatestVersionResolver from 'src/services/latest-version/LatestVersionResolver';
+import { TNewPlugin, TNewPluginVulnerability, TPlugin, TPluginVulnerability } from 'src/models/Plugin';
 import VulnerabilitiesResolver from 'src/services/vulnerabilities/VulnerabilitiesResolver';
 
 export default class PluginRepository {
@@ -15,7 +14,6 @@ export default class PluginRepository {
     private pluginsTable: TPluginsTable;
     private sitePluginsTable: TSitePluginsTable;
     private pluginVulnerabilitiesTable: TPluginVulnerabilitiesTable;
-    private latestVersionResolver: LatestVersionResolver;
     private vulnerabilitiesResolver: VulnerabilitiesResolver;
 
     constructor(
@@ -23,14 +21,12 @@ export default class PluginRepository {
         pluginsTable: TPluginsTable,
         sitePluginsTable: TSitePluginsTable,
         pluginVulnerabilitiesTable: TPluginVulnerabilitiesTable,
-        latestVersionResolver: LatestVersionResolver,
         vulnerabilitiesResolver: VulnerabilitiesResolver
     ) {
         this.db = db;
         this.pluginsTable = pluginsTable;
         this.sitePluginsTable = sitePluginsTable;
         this.pluginVulnerabilitiesTable = pluginVulnerabilitiesTable; // Assuming plugin vulnerabilities table is part of pluginsTable
-        this.latestVersionResolver = latestVersionResolver;
         this.vulnerabilitiesResolver = vulnerabilitiesResolver;
     }
 
@@ -116,10 +112,6 @@ export default class PluginRepository {
             .execute();
 
         return result.changes >= 0;
-    }
-
-    public async getLatestVersion(slug: TPlugin['slug']): Promise<TPluginVersion> {
-        return await this.latestVersionResolver.resolve(slug);
     }
 
     public async getVulnerabilities(
