@@ -99,6 +99,11 @@ export default class SiteController extends AbstractController {
                 throw new RouteError(404, 'A site with the given ID does not exist');
             }
 
+            const sitePhpVersion = site.getPhpVersion();
+            const siteWpVersion = site.getWpVersion();
+            const latestPhpVersion = await this.latestVersionResolver.resolvePhp();
+            const latestWpVersion = await this.latestVersionResolver.resolveWp();
+
             res.status(200).json({
                 message: 'Site retrieved successfully',
                 data: {
@@ -108,11 +113,19 @@ export default class SiteController extends AbstractController {
                     environment: site.getEnvironment(),
                     phpVersion: {
                         installed: site.getPhpVersion(),
-                        latest: await this.latestVersionResolver.resolvePhp(),
+                        latest: latestPhpVersion,
+                        diff:
+                            sitePhpVersion && latestPhpVersion
+                                ? Tools.categorizeVersionDiff(sitePhpVersion, latestPhpVersion)
+                                : null,
                     },
                     wpVersion: {
-                        installed: site.getWpVersion(),
-                        latest: await this.latestVersionResolver.resolveWp(),
+                        installed: siteWpVersion,
+                        latest: latestWpVersion,
+                        diff:
+                            siteWpVersion && latestWpVersion
+                                ? Tools.categorizeVersionDiff(siteWpVersion, latestWpVersion)
+                                : null,
                     },
                 },
             });
@@ -136,21 +149,30 @@ export default class SiteController extends AbstractController {
             const sitePlugins = await this.siteRepository.findAllSitePlugins(Number(siteId));
 
             const pluginData = await Promise.all(
-                sitePlugins.map(async (sitePlugin) => ({
-                    pluginId: sitePlugin.getId(),
-                    name: sitePlugin.getName(),
-                    slug: sitePlugin.getSlug(),
-                    installedVersion: sitePlugin.getInstalledVersion(),
-                    latestVersion: sitePlugin.getLatestVersion(),
-                    isActive: sitePlugin.getIsActive(),
-                    vulnerabilities: (
-                        await this.pluginRepository.findVulnerabilities(sitePlugin.getId())
-                    ).map((vulnerabilitiy) => ({
-                        from: vulnerabilitiy.from,
-                        to: vulnerabilitiy.to,
-                        score: vulnerabilitiy.score,
-                    })),
-                }))
+                sitePlugins.map(async (sitePlugin) => {
+                    const installedVersion = sitePlugin.getInstalledVersion();
+                    const latestVersion = sitePlugin.getLatestVersion();
+
+                    return {
+                        pluginId: sitePlugin.getId(),
+                        name: sitePlugin.getName(),
+                        slug: sitePlugin.getSlug(),
+                        installedVersion: sitePlugin.getInstalledVersion(),
+                        latestVersion: sitePlugin.getLatestVersion(),
+                        versionDiff:
+                            installedVersion['version'] && latestVersion['version']
+                                ? Tools.categorizeVersionDiff(installedVersion['version'], latestVersion['version'])
+                                : null,
+                        isActive: sitePlugin.getIsActive(),
+                        vulnerabilities: (await this.pluginRepository.findVulnerabilities(sitePlugin.getId())).map(
+                            (vulnerabilitiy) => ({
+                                from: vulnerabilitiy.from,
+                                to: vulnerabilitiy.to,
+                                score: vulnerabilitiy.score,
+                            })
+                        ),
+                    };
+                })
             );
 
             res.status(200).json({
@@ -460,9 +482,9 @@ export default class SiteController extends AbstractController {
                     const createdSitePlugin = await this.siteRepository.createSitePlugin({
                         siteId: existingSite.getId(),
                         pluginId: plugin.getId(),
-                        installedVersion,
-                        requiredPhpVersion,
-                        requiredWpVersion,
+                        installedVersion: Tools.formatVersionToMMP(installedVersion),
+                        requiredPhpVersion: Tools.formatVersionToMMP(requiredPhpVersion),
+                        requiredWpVersion: Tools.formatVersionToMMP(requiredWpVersion),
                         isActive: active,
                     });
 
@@ -484,9 +506,9 @@ export default class SiteController extends AbstractController {
                     const updatedSitePlugin = await this.siteRepository.updateSitePlugin({
                         siteId: existingSite.getId(),
                         pluginId: plugin.getId(),
-                        installedVersion,
-                        requiredPhpVersion,
-                        requiredWpVersion,
+                        installedVersion: Tools.formatVersionToMMP(installedVersion),
+                        requiredPhpVersion: Tools.formatVersionToMMP(requiredPhpVersion),
+                        requiredWpVersion: Tools.formatVersionToMMP(requiredWpVersion),
                         isActive: active,
                     });
 
