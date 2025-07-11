@@ -1,6 +1,7 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import Config from 'src/config/Config';
 import { LatestPhpOrWpVersionProviderInterface } from 'src/services/latest-version/LatestVersionProviderInterface';
+import Tools from 'src/Tools';
 
 export default class WordPressLatestVersionProvider implements LatestPhpOrWpVersionProviderInterface {
     private latestVersion: string | null = null;
@@ -24,7 +25,7 @@ export default class WordPressLatestVersionProvider implements LatestPhpOrWpVers
                 offers: { version: string }[];
             };
 
-            this.latestVersion = wpVersionData.offers[0].version;
+            this.latestVersion = Tools.formatVersionToMMP(wpVersionData.offers[0].version);
         } catch (_) {
             this.latestVersion = null;
         }

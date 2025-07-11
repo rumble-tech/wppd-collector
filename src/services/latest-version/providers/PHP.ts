@@ -1,6 +1,7 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import Config from 'src/config/Config';
 import { LatestPhpOrWpVersionProviderInterface } from 'src/services/latest-version/LatestVersionProviderInterface';
+import Tools from 'src/Tools';
 
 export default class PhpLatestVersionProvider implements LatestPhpOrWpVersionProviderInterface {
     private latestVersion: string | null = null;
@@ -24,7 +25,7 @@ export default class PhpLatestVersionProvider implements LatestPhpOrWpVersionPro
                 data: Record<string, { name: string }>;
             };
 
-            this.latestVersion = Object.values(phpVersionData.data)[0].name;
+            this.latestVersion = Tools.formatVersionToMMP(Object.values(phpVersionData.data)[0].name);
         } catch (_) {
             this.latestVersion = null;
         }
