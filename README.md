@@ -30,15 +30,29 @@ Additionally, the `sqlite` and `logs` directories are mounted for data and log p
 
 | Script           | Description |
 | ---------------- | ----------- |
-| `build`          | ...         |
-| `dev`            | ...         |
-| `test`           | ...         |
-| `migrate:create` | ...         |
-| `migrate:apply`  | ...         |
+| `build` | *Build the production docker image* |
+| `dev:start` | *Build the development docker image and run it using the `docker/compose.dev.yml` and `docker/compose.dev.override.yml`* |
+| `dev:stop` | *Stop the running development container* |
+| `test` | *Build the test docker image and run it* |
+| `migrate:create` | *Create a migration based on changes in the `src/components/database/Schema.ts` file* |
 
 ## Migrations
 
+To create and apply database migrations, you have to follow these steps:
+
+1. Make your changes in the `src/components/database/Schema.ts` file
+2. Run `npm run migrate:create`
+    - This will create a SQL file containing the changes in `src/components/database/migrations`.
+3. Kill the running docker container and run `npm run dev` again. This will rebuild the docker image including the new migration.
+
 ## Testing
+
+For testing Jest and Supertest is used. \
+To ensure that the tests behave exactly like a production environment, the tests run inside a docker container. \
+\
+The `<rootDir>/coverage` directory is mounted into the test container, so that the result will be available after the run. \
+\
+By default two coverage reporters are configured (`text` and `coberture`). This is changeable in the `jest.config.ts`.
 
 ## Endpoints
 
@@ -72,7 +86,7 @@ Additionally, the `sqlite` and `logs` directories are mounted for data and log p
 
 | Status | Description | Data |
 | --- | --- | --- |
-| **200 - OK** | *Returns the requested site* | `{ message: "Site retrieved successfully", data: { id: 1, name: "site-1", url: "https://example.com/site-1", environment: "production",  phpVersion: "8.2.29, wpVersion: "6.8.1" } }` |
+| **200 - OK** | *Returns the requested site* | `{ message: "Site retrieved successfully", data: { id: 1, name: "site-1", url: "https://example.com/site-1", environment: "production", phpVersion: { installed: "8.2.29", latest: "8.4.0", diff: "minor" }, wpVersion: { installed: "6.8.1", latest: "6.8.1", diff: "same" } } }` |
 | **400 - Bad Request** | *The siteId request parameter is invalid* | `{ message: "The parameter "siteId" is required and must be a non-empty number", data: null }` |
 | **404 - Not Found** | *The requested site does not exist* | `{ message: "A site with the given ID does not exist", data: null }` |
 | **500 - Internal Server Error** | *Something else went wrong* | - |
@@ -85,7 +99,7 @@ Additionally, the `sqlite` and `logs` directories are mounted for data and log p
 
 | Status | Description | Data |
 | --- | --- | --- |
-| **200 - OK** | *Returns all plugins for the requested site* | `{ message: "Site Plugins retrieved successfully", data: [ { pluginId: 1, name: "The first plugin", slug: "plugin-1", installedVersion: { version: "1.0.0", requiredPhpVersion: "8.0.0", requiredWpVersion: "5.9.0" }, latestVersion: { version: "1.3.0", requiredPhpVersion: "8.1.0", requiredWpVersion: "6.0.0" }, isActive: true, vulnerabilities: [ { from: { version: "1.0.0", inclusive: true }, to: { version: "1.1.0", inclusive: true }, score: 5.0 }, ... ] }, ... ] }` |
+| **200 - OK** | *Returns all plugins for the requested site* | `{ message: "Site Plugins retrieved successfully", data: [ { pluginId: 1, name: "The first plugin", slug: "plugin-1", installedVersion: { version: "1.0.0", requiredPhpVersion: "8.0.0", requiredWpVersion: "5.9.0" }, latestVersion: { version: "1.3.0", requiredPhpVersion: "8.1.0", requiredWpVersion: "6.0.0" }, versionDiff: "minor", isActive: true, vulnerabilities: [ { from: { version: "1.0.0", inclusive: true }, to: { version: "1.1.0", inclusive: true }, score: 5.0 }, ... ] }, ... ] }` |
 | **400 - Bad Request** | *The siteId request parameter is invalid* | `{ message: "The parameter "siteId" is required and must be a non-empty number", data: null }` |
 | **404 - Not Found** | *The requested site does not exist* | `{ message: "A site with the given ID does not exist", data: null }` |
 | **500 - Internal Server Error** | *Something else went wrong* | - |
