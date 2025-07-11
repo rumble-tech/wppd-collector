@@ -3,7 +3,7 @@ import { createTransport, Transporter } from 'nodemailer';
 import { MailingSESConfig } from 'src/config/Types';
 import { MailProviderInterface } from 'src/services/mailing/MailProviderInterface';
 
-export default class SESMailer implements MailProviderInterface {
+export default class SESMailProvider implements MailProviderInterface {
     private config: MailingSESConfig;
 
     constructor(config: MailingSESConfig) {
