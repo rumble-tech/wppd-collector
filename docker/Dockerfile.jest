@@ -5,4 +5,4 @@ RUN npm install --no-cache
 COPY . .
 ENV NODE_ENV=test
 RUN mkdir /app/sqlite
-CMD ["sh", "-c", "npm run migrate:apply && npx jest --color"]
+CMD ["sh", "-c", "npx ts-node src/components/database/Migrate.ts && npx jest --color"]
