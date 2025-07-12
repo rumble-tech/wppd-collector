@@ -111,7 +111,7 @@ export default class SendReportMailTask extends AbstractTask implements TaskInte
 
                 const vulnerabilities = await this.pluginRepository.getVulnerabilities(sitePlugin.getSlug());
                 if (vulnerabilities === null) {
-                    this.logger.warn(`Failed to fetch vulnerabilities for plugin ${sitePlugin.getSlug()}.`);
+                    this.logger.warn(`Failed to fetch vulnerabilities for plugin`, { slug: sitePlugin.getSlug() });
                     continue;
                 }
 
@@ -139,11 +139,9 @@ export default class SendReportMailTask extends AbstractTask implements TaskInte
                     if (priorityA === priorityB) {
                         if (a.slug < b.slug) {
                             return -1;
-                        }
-                        if (a.slug > b.slug) {
+                        } else {
                             return 1;
                         }
-                        return 0;
                     }
 
                     return priorityA - priorityB;
