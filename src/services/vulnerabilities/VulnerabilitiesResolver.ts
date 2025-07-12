@@ -1,7 +1,7 @@
 import { TPlugin, TPluginVulnerability } from 'src/models/Plugin';
 import { VulnerabilitiesProviderInterface } from './VulnerabilitiesProviderInterface';
 
-export default class VulnerabilitiesVersionResolver {
+export default class VulnerabilitiesResolver {
     private providers: VulnerabilitiesProviderInterface[] = [];
 
     constructor() {}
