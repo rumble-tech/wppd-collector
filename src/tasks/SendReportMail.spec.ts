@@ -1,12 +1,11 @@
 import { LoggerInterface } from 'src/components/logger/LoggerInterface';
+import Config from 'src/config/Config';
+import Site from 'src/entities/Site';
+import SitePlugin from 'src/entities/SitePlugin';
 import PluginRepository from 'src/repositories/PluginRepository';
 import SiteRepository from 'src/repositories/SiteRepository';
 import MailResolver from 'src/services/mailing/MailResolver';
 import SendReportMailTask from './SendReportMail';
-import Config from 'src/config/Config';
-import Site from 'src/entities/Site';
-import SitePlugin from 'src/entities/SitePlugin';
-import Tools from 'src/Tools';
 
 jest.mock('src/config/Config');
 const mockedConfigGet = Config.get as jest.MockedFunction<typeof Config.get>;

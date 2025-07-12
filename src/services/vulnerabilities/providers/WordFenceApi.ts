@@ -37,44 +37,48 @@ export default class WordFenceApiVulnerabilitiesProvider implements Vulnerabilit
     }
 
     public async fetchVulnerabilities(): Promise<void> {
-        const requestConfig: AxiosRequestConfig = {
-            method: 'GET',
-            url: Config.get<string>('WORDFENCE_API_URL'),
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        };
+        try {
+            const requestConfig: AxiosRequestConfig = {
+                method: 'GET',
+                url: Config.get<string>('WORDFENCE_API_URL'),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            };
 
-        const response = await axios(requestConfig);
-        const data = response.data as Record<string, TWordFenceApiResponse>;
-        const map: Record<string, Omit<TPluginVulnerability, 'id' | 'pluginId'>[]> = {};
+            const response = await axios(requestConfig);
+            const data = response.data as Record<string, TWordFenceApiResponse>;
+            const map: Record<string, Omit<TPluginVulnerability, 'id' | 'pluginId'>[]> = {};
 
-        Object.entries(data).forEach(([_, vulnData]) => {
-            vulnData.software.forEach((software) => {
-                if (software.type === 'plugin') {
-                    const slug = software.slug;
+            Object.entries(data).forEach(([_, vulnData]) => {
+                vulnData.software.forEach((software) => {
+                    if (software.type === 'plugin') {
+                        const slug = software.slug;
 
-                    if (!map[slug]) {
-                        map[slug] = [];
-                    }
+                        if (!map[slug]) {
+                            map[slug] = [];
+                        }
 
-                    Object.values(software.affected_versions).forEach((affectedVersion) => {
-                        map[slug].push({
-                            from: {
-                                version: affectedVersion.from_version,
-                                inclusive: affectedVersion.from_inclusive,
-                            },
-                            to: {
-                                version: affectedVersion.to_version,
-                                inclusive: affectedVersion.to_inclusive,
-                            },
-                            score: vulnData.cvss.score,
+                        Object.values(software.affected_versions).forEach((affectedVersion) => {
+                            map[slug].push({
+                                from: {
+                                    version: affectedVersion.from_version,
+                                    inclusive: affectedVersion.from_inclusive,
+                                },
+                                to: {
+                                    version: affectedVersion.to_version,
+                                    inclusive: affectedVersion.to_inclusive,
+                                },
+                                score: vulnData.cvss.score,
+                            });
                         });
-                    });
-                }
+                    }
+                });
             });
-        });
 
-        this.vulnerabilities = map;
+            this.vulnerabilities = map;
+        } catch (_) {
+            this.vulnerabilities = {};
+        }
     }
 }
