@@ -13,6 +13,8 @@ export default class UpdateWordFenceVulnerabilitiesProviderTask extends Abstract
 
     public async run(): Promise<void> {
         try {
+            this.logger.info('Updating WordFence vulnerabilities...');
+
             await this.wordfenceVulnerabilitiesProvider.fetchVulnerabilities();
             this.logger.info('WordFence vulnerabilities updated successfully.');
         } catch (err) {

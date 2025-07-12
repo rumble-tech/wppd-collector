@@ -13,6 +13,8 @@ export default class DeletePluginsUnusedTask extends AbstractTask implements Tas
 
     public async run(): Promise<void> {
         try {
+            this.logger.info('Deleting unused plugins...');
+
             const success = await this.pluginRepository.deleteUnused();
 
             if (success) {

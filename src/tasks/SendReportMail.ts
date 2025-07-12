@@ -55,6 +55,8 @@ export default class SendReportMailTask extends AbstractTask implements TaskInte
         const mailContent = this.buildMailContent(groupedReports);
 
         try {
+            this.logger.info('Sending report mail...');
+
             await this.mailResolver.sendMail(
                 Config.get<string>('MAILING_REPORT_SENDER'),
                 Config.get<string>('MAILING_REPORT_RECIPIENT'),

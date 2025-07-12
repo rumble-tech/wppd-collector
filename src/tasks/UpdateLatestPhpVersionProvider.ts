@@ -13,6 +13,8 @@ export default class UpdateLatestPhpVersionProviderTask extends AbstractTask imp
 
     public async run(): Promise<void> {
         try {
+            this.logger.info('Updating latest PHP version...');
+
             await this.phpLatestVersionProvider.fetchLatestVersion();
             this.logger.info('Latest PHP version updated successfully.');
         } catch (err) {

@@ -14,6 +14,8 @@ export default class DeleteSitesInactiveTask extends AbstractTask implements Tas
 
     public async run(): Promise<void> {
         try {
+            this.logger.info('Deleting inactive sites...');
+
             const sites = await this.siteRepository.findAll();
 
             for (const site of sites) {

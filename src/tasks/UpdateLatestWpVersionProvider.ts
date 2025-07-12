@@ -13,6 +13,8 @@ export default class UpdateLatestWpVersionProviderTask extends AbstractTask impl
 
     public async run(): Promise<void> {
         try {
+            this.logger.info('Updating latest WordPress version...');
+
             await this.wpLatestVersionProvider.fetchLatestVersion();
             this.logger.info('Latest WP version updated successfully.');
         } catch (err) {
