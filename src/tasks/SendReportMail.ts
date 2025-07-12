@@ -33,7 +33,7 @@ type TSiteReport = {
 
 type GroupedReport = Record<TSiteEnvironment, TSiteReport[]>;
 
-export default class UpdatePluginsLatestVersionTask extends AbstractTask implements TaskInterface {
+export default class SendReportMailTask extends AbstractTask implements TaskInterface {
     private siteRepository: SiteRepository;
     private pluginRepository: PluginRepository;
     private mailResolver: MailResolver;

@@ -3,7 +3,7 @@ import SiteRepository from 'src/repositories/SiteRepository';
 import AbstractTask from 'src/tasks/AbstractTask';
 import { TaskInterface } from 'src/tasks/TaskInterface';
 
-export default class DeletePluginsUnusedTask extends AbstractTask implements TaskInterface {
+export default class DeleteSitesInactiveTask extends AbstractTask implements TaskInterface {
     private siteRepository: SiteRepository;
     private MAX_INACTIVE_TIME = 864e5; // 1 day in seconds
 
