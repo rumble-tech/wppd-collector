@@ -5,7 +5,7 @@ import { TaskInterface } from 'src/tasks/TaskInterface';
 
 export default class DeleteSitesInactiveTask extends AbstractTask implements TaskInterface {
     private siteRepository: SiteRepository;
-    private MAX_INACTIVE_TIME = 864e5; // 1 day in seconds
+    private MAX_INACTIVE_TIME = 864e5; // 1 day in milli seconds
 
     constructor(logger: LoggerInterface, siteRepository: SiteRepository) {
         super(logger);
@@ -17,8 +17,8 @@ export default class DeleteSitesInactiveTask extends AbstractTask implements Tas
             const sites = await this.siteRepository.findAll();
 
             for (const site of sites) {
-                const now = new Date();
-                const diff = now.getTime() - site.getUpdatedAt().getTime();
+                const now = Date.now();
+                const diff = now - site.getUpdatedAt().getTime();
 
                 if (diff > this.MAX_INACTIVE_TIME) {
                     if (await this.siteRepository.delete(site.getId())) {
