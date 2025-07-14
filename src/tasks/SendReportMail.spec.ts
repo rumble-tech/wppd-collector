@@ -74,11 +74,18 @@ describe('SendReportMail', () => {
 
             const sitePlugins = [
                 {
-                    getSlug: () => 'test-plugin-valid',
-                    getName: () => 'Test Plugin Valid',
+                    getSlug: () => 'test-plugin-valid-active',
+                    getName: () => 'Test Plugin Valid Active',
                     getInstalledVersion: () => ({ version: '1.0.0' }),
                     getLatestVersion: () => ({ version: '2.0.0' }),
                     getIsActive: () => true,
+                },
+                {
+                    getSlug: () => 'test-plugin-valid-inactive',
+                    getName: () => 'Test Plugin Valid Inactive',
+                    getInstalledVersion: () => ({ version: '1.0.0' }),
+                    getLatestVersion: () => ({ version: '2.0.0' }),
+                    getIsActive: () => false,
                 },
                 {
                     getSlug: () => 'test-plugin - skip because null version',
@@ -129,9 +136,13 @@ describe('SendReportMail', () => {
 
             expect(html).toContain('Test Site');
             expect(html).toContain('https://example.com/site-1');
-            expect(html).toContain('test-plugin');
+            expect(html).toContain('test-plugin-valid-active');
+            expect(html).toContain('test-plugin-valid-inactive');
+            expect(html).toContain('Yes');
+            expect(html).toContain('No');
             expect(html).toContain('1.0.0');
             expect(html).toContain('2.0.0');
+            expect(html).toContain('<td style="color: red">MAJOR</td>');
             expect(html).toContain('1 - 5');
 
             expect(html).not.toContain('test-plugin - skip because null version');
@@ -187,6 +198,65 @@ describe('SendReportMail', () => {
             expect(html).toContain('plugin-b');
             expect(html.indexOf('plugin-a')).toBeLessThan(html.indexOf('plugin-b'));
             expect(html.indexOf('plugin-b')).toBeLessThan(html.indexOf('plugin-c'));
+        });
+
+        it('should render the correct colors for version diff categories', async () => {
+            const site = {
+                getId: () => 1,
+                getName: () => 'Test Site 1',
+                getEnvironment: () => 'production',
+                getUrl: () => 'https://example.com/site-1',
+            };
+
+            mockSiteRepository.findAll.mockResolvedValue([site] as Site[]);
+
+            const sitePlugins = [
+                {
+                    getSlug: () => 'plugin-major',
+                    getName: () => 'Test Plugin Major',
+                    getInstalledVersion: () => ({ version: '1.0.0' }),
+                    getLatestVersion: () => ({ version: '2.0.0' }),
+                    getIsActive: () => true,
+                },
+                {
+                    getSlug: () => 'plugin-minor',
+                    getName: () => 'Test Plugin Minor',
+                    getInstalledVersion: () => ({ version: '1.0.0' }),
+                    getLatestVersion: () => ({ version: '1.2.0' }),
+                    getIsActive: () => true,
+                },
+                {
+                    getSlug: () => 'plugin-patch',
+                    getName: () => 'Test Plugin Patch',
+                    getInstalledVersion: () => ({ version: '1.0.0' }),
+                    getLatestVersion: () => ({ version: '1.0.1' }),
+                    getIsActive: () => true,
+                },
+                {
+                    getSlug: () => 'plugin-igl',
+                    getName: () => 'Test Plugin Installed Greater Latest',
+                    getInstalledVersion: () => ({ version: '2.0.0' }),
+                    getLatestVersion: () => ({ version: '1.0.0' }),
+                    getIsActive: () => true,
+                },
+            ];
+
+            mockSiteRepository.findAllSitePlugins.mockResolvedValue(sitePlugins as SitePlugin[]);
+            mockPluginRepository.getVulnerabilities.mockResolvedValue([]);
+
+            await task.run();
+
+            expect(mockMailResolver.sendMail).toHaveBeenCalledTimes(1);
+            const html = mockMailResolver.sendMail.mock.calls[0][3];
+
+            expect(html).toContain('plugin-major');
+            expect(html).toContain('plugin-minor');
+            expect(html).toContain('plugin-patch');
+            expect(html).toContain('plugin-igl');
+            expect(html).toContain('style="color: red">MAJOR</td>');
+            expect(html).toContain('style="color: darkorange">MINOR</td>');
+            expect(html).toContain('style="color: royalblue">PATCH</td>');
+            expect(html).toContain('style="color: indigo">IGL</td>');
         });
 
         it('should skip site plugin when fetching vulnerabilities fails', async () => {
