@@ -482,9 +482,9 @@ export default class SiteController extends AbstractController {
                     const createdSitePlugin = await this.siteRepository.createSitePlugin({
                         siteId: existingSite.getId(),
                         pluginId: plugin.getId(),
-                        installedVersion: Tools.formatVersionToMMP(installedVersion),
-                        requiredPhpVersion: Tools.formatVersionToMMP(requiredPhpVersion),
-                        requiredWpVersion: Tools.formatVersionToMMP(requiredWpVersion),
+                        installedVersion: installedVersion ? Tools.formatVersionToMMP(installedVersion) : null,
+                        requiredPhpVersion: requiredPhpVersion ? Tools.formatVersionToMMP(requiredPhpVersion) : null,
+                        requiredWpVersion: requiredWpVersion ? Tools.formatVersionToMMP(requiredWpVersion) : null,
                         isActive: active,
                     });
 
@@ -506,9 +506,9 @@ export default class SiteController extends AbstractController {
                     const updatedSitePlugin = await this.siteRepository.updateSitePlugin({
                         siteId: existingSite.getId(),
                         pluginId: plugin.getId(),
-                        installedVersion: Tools.formatVersionToMMP(installedVersion),
-                        requiredPhpVersion: Tools.formatVersionToMMP(requiredPhpVersion),
-                        requiredWpVersion: Tools.formatVersionToMMP(requiredWpVersion),
+                        installedVersion: installedVersion ? Tools.formatVersionToMMP(installedVersion) : null,
+                        requiredPhpVersion: requiredPhpVersion ? Tools.formatVersionToMMP(requiredPhpVersion) : null,
+                        requiredWpVersion: requiredWpVersion ? Tools.formatVersionToMMP(requiredWpVersion) : null,
                         isActive: active,
                     });
 
