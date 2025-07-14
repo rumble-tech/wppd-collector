@@ -113,7 +113,7 @@ export default class SiteRepository {
     }
 
     public async update(site: TSite): Promise<Site | null> {
-        await this.db
+        const [updatedSite] = await this.db
             .update(this.sitesTable)
             .set({
                 name: site.name,
@@ -125,15 +125,24 @@ export default class SiteRepository {
                 environment: site.environment,
             })
             .where(eq(this.sitesTable.id, site.id))
+            .returning()
             .execute();
-
-        const updatedSite = await this.findById(site.id);
 
         if (!updatedSite) {
             return null;
         }
 
-        return updatedSite;
+        return new Site(
+            updatedSite.id,
+            updatedSite.name,
+            updatedSite.phpVersion,
+            updatedSite.wpVersion,
+            updatedSite.token,
+            new Date(updatedSite.createdAt),
+            new Date(updatedSite.updatedAt),
+            updatedSite.url,
+            updatedSite.environment
+        );
     }
 
     public async delete(siteId: TSite['id']): Promise<boolean> {
