@@ -281,13 +281,7 @@ export default class SendReportMailTask extends AbstractTask implements TaskInte
                                                     `
                                         <tr class="${index % 2 === 0 ? 'even' : 'odd'}">
                                             <td>${plugin.slug}</td>
-                                            <td>${
-                                                plugin.isActive === true
-                                                    ? 'Yes'
-                                                    : plugin.isActive === false
-                                                    ? 'No'
-                                                    : '-'
-                                            }</td>
+                                            <td>${plugin.isActive === true ? 'Yes' : 'No'}</td>
                                             <td>${plugin.installedVersion}</td>
                                             <td>${plugin.latestVersion}</td>
                                             <td style="color: ${
