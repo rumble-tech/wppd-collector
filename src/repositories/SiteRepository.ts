@@ -245,7 +245,7 @@ export default class SiteRepository {
             .execute();
 
         if (!plugin) {
-            throw new Error(`Plugin with ID: ${sitePlugin.pluginId} not found`);
+            return null;
         }
 
         const [createdSitePlugin] = await this.db
@@ -285,7 +285,7 @@ export default class SiteRepository {
             .execute();
 
         if (!plugin) {
-            throw new Error(`Plugin with ID: ${sitePlugin.pluginId} not found`);
+            return null;
         }
 
         const [updatedSitePlugin] = await this.db
