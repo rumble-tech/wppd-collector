@@ -111,7 +111,7 @@ export default class PluginRepository {
             .where(notInArray(this.pluginsTable.id, usedPluginIds))
             .execute();
 
-        return result.changes >= 0;
+        return result.changes > 0;
     }
 
     public async getVulnerabilities(
