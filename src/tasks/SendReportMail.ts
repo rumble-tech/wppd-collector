@@ -133,8 +133,8 @@ export default class SendReportMailTask extends AbstractTask implements TaskInte
 
             if (sitePluginsWithMismatchingVersions.length > 0) {
                 sitePluginsWithMismatchingVersions.sort((a, b) => {
-                    const priorityA = pluginSortPriority[a.difference] || pluginSortPriority.other;
-                    const priorityB = pluginSortPriority[b.difference] || pluginSortPriority.other;
+                    const priorityA = pluginSortPriority[a.difference];
+                    const priorityB = pluginSortPriority[b.difference];
 
                     if (priorityA === priorityB) {
                         if (a.slug < b.slug) {
