@@ -1,7 +1,8 @@
+import path from 'path';
 import AbstractLogger from 'src/components/logger/AbstractLogger';
 import { LoggerConfig } from 'src/config/Types';
 import winston from 'winston';
-import path from 'path';
+import 'winston-daily-rotate-file';
 
 export default class SchedulerLogger extends AbstractLogger {
     constructor(config: LoggerConfig) {
