@@ -28,11 +28,11 @@ export default class SiteController extends AbstractController {
     }
 
     protected useRoutes(): void {
-        this.router.get('/', this.getSites.bind(this));
-        this.router.get('/:siteId', this.getSite.bind(this));
-        this.router.get('/:siteId/plugins', this.getSitePlugins.bind(this));
-        this.router.post('/register', this.register.bind(this));
-        this.router.put('/:siteId/update/', this.accessMiddleware.bind(this), this.update.bind(this));
+        this.router.get('/', this.getSitesRoute.bind(this));
+        this.router.get('/:siteId', this.getSiteRoute.bind(this));
+        this.router.get('/:siteId/plugins', this.getSitePluginsRoute.bind(this));
+        this.router.post('/register', this.registerRoute.bind(this));
+        this.router.put('/:siteId/update', this.accessMiddleware.bind(this), this.updateRoute.bind(this));
     }
 
     private async accessMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -67,7 +67,7 @@ export default class SiteController extends AbstractController {
         }
     }
 
-    private async getSites(req: Request, res: Response, next: NextFunction): Promise<void> {
+    private async getSitesRoute(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const sites = await this.siteRepository.findAll();
 
@@ -85,7 +85,7 @@ export default class SiteController extends AbstractController {
         }
     }
 
-    private async getSite(req: Request, res: Response, next: NextFunction): Promise<void> {
+    private async getSiteRoute(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const siteId = req.params.siteId;
 
@@ -134,7 +134,7 @@ export default class SiteController extends AbstractController {
         }
     }
 
-    private async getSitePlugins(req: Request, res: Response, next: NextFunction): Promise<void> {
+    private async getSitePluginsRoute(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const siteId = req.params.siteId;
 
@@ -184,7 +184,7 @@ export default class SiteController extends AbstractController {
         }
     }
 
-    private async register(req: Request, res: Response, next: NextFunction): Promise<void> {
+    private async registerRoute(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { name, url, environment } = req.body;
 
@@ -276,7 +276,7 @@ export default class SiteController extends AbstractController {
         }
     }
 
-    private async update(req: Request, res: Response, next: NextFunction): Promise<void> {
+    private async updateRoute(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const siteId = req.site.getId();
 
