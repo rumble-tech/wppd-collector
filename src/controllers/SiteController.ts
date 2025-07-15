@@ -39,25 +39,25 @@ export default class SiteController extends AbstractController {
         try {
             const siteId = req.params.siteId;
 
-            if (!siteId || isNaN(Number(siteId))) {
-                throw new RouteError(400, 'Invalid site ID provided');
+            if (siteId === undefined || typeof siteId !== 'string' || isNaN(Number(siteId))) {
+                throw new RouteError(400, 'The parameter "siteId" is required and must be a non-empty number');
             }
 
             const { authorization } = req.headers;
 
             if (!authorization || typeof authorization !== 'string') {
-                throw new RouteError(401, 'Authorization header is required');
+                throw new RouteError(401, 'The header "Authorization" is required');
             }
 
             const site = await this.siteRepository.findById(Number(siteId));
 
             if (!site) {
-                throw new RouteError(404, 'Site not found');
+                throw new RouteError(404, 'A site with the given ID does not exist');
             }
 
             const token = authorization.split('Bearer ')[1];
             if (site.getToken() !== token) {
-                throw new RouteError(403, 'Access denied: Invalid token');
+                throw new RouteError(403, 'The header "Authorization" is invalid');
             }
 
             req.site = site;
