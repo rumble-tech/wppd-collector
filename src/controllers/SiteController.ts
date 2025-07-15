@@ -372,22 +372,16 @@ export default class SiteController extends AbstractController {
                 }
             }
 
-            const existingSite = await this.siteRepository.findById(Number(siteId));
-
-            if (!existingSite) {
-                throw new RouteError(404, 'A site with the given ID does not exist');
-            }
-
             const updatedSite = await this.siteRepository.update({
-                id: existingSite.getId(),
+                id: req.site.getId(),
                 name,
                 phpVersion: Tools.formatVersionToMMP(phpVersion),
                 wpVersion: Tools.formatVersionToMMP(wpVersion),
-                token: existingSite.getToken(),
-                createdAt: existingSite.getCreatedAt().toISOString(),
+                token: req.site.getToken(),
+                createdAt: req.site.getCreatedAt().toISOString(),
                 updatedAt: new Date().toISOString(),
                 url,
-                environment: existingSite.getEnvironment(),
+                environment: req.site.getEnvironment(),
             });
 
             if (!updatedSite) {
@@ -473,14 +467,14 @@ export default class SiteController extends AbstractController {
                     continue;
                 }
 
-                if (!(await this.siteRepository.findSitePlugin(existingSite.getId(), plugin.getId()))) {
+                if (!(await this.siteRepository.findSitePlugin(req.site.getId(), plugin.getId()))) {
                     this.logger.info('Site plugin not found in database. Inserting new Site Plugin', {
-                        site: { id: existingSite.getId(), name: existingSite.getName() },
+                        site: { id: req.site.getId(), name: req.site.getName() },
                         plugin: { id: plugin.getId(), slug: plugin.getSlug() },
                     });
 
                     const createdSitePlugin = await this.siteRepository.createSitePlugin({
-                        siteId: existingSite.getId(),
+                        siteId: req.site.getId(),
                         pluginId: plugin.getId(),
                         installedVersion: installedVersion ? Tools.formatVersionToMMP(installedVersion) : null,
                         requiredPhpVersion: requiredPhpVersion ? Tools.formatVersionToMMP(requiredPhpVersion) : null,
@@ -490,7 +484,7 @@ export default class SiteController extends AbstractController {
 
                     if (!createdSitePlugin) {
                         this.logger.warn('Failed to create site plugin', {
-                            site: { id: existingSite.getId(), name: existingSite.getName() },
+                            site: { id: req.site.getId(), name: req.site.getName() },
                             plugin: { id: plugin.getId(), slug: plugin.getSlug() },
                         });
                         continue;
@@ -499,12 +493,12 @@ export default class SiteController extends AbstractController {
                     this.logger.info('Site plugin created successfully', { sitePlugin: createdSitePlugin });
                 } else {
                     this.logger.info('Site plugin already exists, updating', {
-                        site: { id: existingSite.getId(), name: existingSite.getName() },
+                        site: { id: req.site.getId(), name: req.site.getName() },
                         plugin: { id: plugin.getId(), slug: plugin.getSlug() },
                     });
 
                     const updatedSitePlugin = await this.siteRepository.updateSitePlugin({
-                        siteId: existingSite.getId(),
+                        siteId: req.site.getId(),
                         pluginId: plugin.getId(),
                         installedVersion: installedVersion ? Tools.formatVersionToMMP(installedVersion) : null,
                         requiredPhpVersion: requiredPhpVersion ? Tools.formatVersionToMMP(requiredPhpVersion) : null,
@@ -514,7 +508,7 @@ export default class SiteController extends AbstractController {
 
                     if (!updatedSitePlugin) {
                         this.logger.warn('Failed to update site plugin', {
-                            site: { id: existingSite.getId(), name: existingSite.getName() },
+                            site: { id: req.site.getId(), name: req.site.getName() },
                             plugin: { id: plugin.getId(), slug: plugin.getSlug() },
                         });
                     }
@@ -533,23 +527,23 @@ export default class SiteController extends AbstractController {
 
             for (const deletableSitePlugin of deletableSitePlugins) {
                 this.logger.info('Removing site plugin that is no longer present in the request', {
-                    site: { id: existingSite.getId(), name: existingSite.getName() },
+                    site: { id: req.site.getId(), name: req.site.getName() },
                     plugin: { id: deletableSitePlugin.getId(), slug: deletableSitePlugin.getSlug() },
                 });
 
                 const isDeleted = await this.siteRepository.deleteSitePlugin(
-                    existingSite.getId(),
+                    req.site.getId(),
                     deletableSitePlugin.getId()
                 );
 
                 if (!isDeleted) {
                     this.logger.warn('Failed to delete site plugin', {
-                        site: { id: existingSite.getId(), name: existingSite.getName() },
+                        site: { id: req.site.getId(), name: req.site.getName() },
                         plugin: { id: deletableSitePlugin.getId(), slug: deletableSitePlugin.getSlug() },
                     });
                 } else {
                     this.logger.info('Site plugin deleted successfully', {
-                        site: { id: existingSite.getId(), name: existingSite.getName() },
+                        site: { id: req.site.getId(), name: req.site.getName() },
                         plugin: { id: deletableSitePlugin.getId(), slug: deletableSitePlugin.getSlug() },
                     });
                 }
