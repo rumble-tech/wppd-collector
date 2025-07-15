@@ -6,7 +6,7 @@ import RouteError from 'src/components/server/RouteError';
 import { ServerConfig } from 'src/config/Types';
 
 export default class Server {
-    private static instance: Server;
+    private static instance?: Server;
     private static config: ServerConfig;
 
     private app: express.Application;
@@ -33,6 +33,10 @@ export default class Server {
         }
 
         return Server.instance;
+    }
+
+    public static resetInstance(): void {
+        Server.instance = undefined;
     }
 
     public static setConfig(config: ServerConfig): void {
