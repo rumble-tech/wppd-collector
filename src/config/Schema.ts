@@ -22,7 +22,7 @@ const schema: ConfigSchema = {
     PHP_VERSION_API: {
         type: 'string',
         required: false,
-        defaultValue: 'https://php.watch/api/v1/versions/latest',
+        defaultValue: 'https://www.php.net/releases/index.php?json',
     },
     WP_VERSION_API: {
         type: 'string',

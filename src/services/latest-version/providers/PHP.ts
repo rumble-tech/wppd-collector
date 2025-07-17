@@ -21,11 +21,14 @@ export default class PhpLatestVersionProvider implements LatestPhpOrWpVersionPro
             };
 
             const response = await axios(requestConfig);
-            const phpVersionData = response.data as {
-                data: Record<string, { name: string }>;
-            };
+            const phpVersionData = response.data as Record<string, { version: string }>;
 
-            this.latestVersion = Tools.formatVersionToMMP(Object.values(phpVersionData.data)[0].name);
+            const latestMajor = Object.keys(phpVersionData)
+                .map((key) => parseInt(key, 10))
+                .reduce((a, b) => Math.max(a, b), -Infinity)
+                .toString();
+
+            this.latestVersion = Tools.formatVersionToMMP(phpVersionData[latestMajor].version);
         } catch (_) {
             this.latestVersion = null;
         }

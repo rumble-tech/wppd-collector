@@ -36,8 +36,11 @@ describe('PHP', () => {
             mockedConfigGet.mockReturnValue(apiUrl);
 
             const phpVersionApiResponse = {
-                data: {
-                    '8.0': { name: '8.0' },
+                '7': {
+                    version: '7.4.0',
+                },
+                '8': {
+                    version: '8.0.0',
                 },
             };
 
