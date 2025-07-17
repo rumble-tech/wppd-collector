@@ -78,6 +78,20 @@ describe('SiteController', () => {
             );
         });
 
+        it('should respond with (400) and { message: "The query parameter "environment" must be either "production", "staging", or "development"", data: null }', async () => {
+            const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
+            const response = await request(app).get('/site?environment=invalid');
+
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    message:
+                        'The query parameter "environment" must be either "production", "staging", or "development"',
+                    data: null,
+                })
+            );
+        });
+
         it('should respond with (500) and { message: "Internal server error", data: null }', async () => {
             mockSiteRepository.findAll.mockRejectedValue(new Error('Database error'));
 
@@ -358,6 +372,13 @@ describe('SiteController', () => {
                     to: { version: '2.0.0', inclusive: false },
                     score: 5,
                 },
+                {
+                    id: 2,
+                    pluginId: 1,
+                    from: { version: '*', inclusive: true },
+                    to: { version: '2.0.0', inclusive: false },
+                    score: 5,
+                },
             ]);
 
             const { app } = await setupTestServer({
@@ -395,8 +416,13 @@ describe('SiteController', () => {
                                         to: { version: '2.0.0', inclusive: false },
                                         score: 5,
                                     },
+                                    {
+                                        from: { version: '*', inclusive: true },
+                                        to: { version: '2.0.0', inclusive: false },
+                                        score: 5,
+                                    },
                                 ]),
-                                count: 1,
+                                count: 2,
                                 highestScore: 5,
                             }),
                         }),
