@@ -307,13 +307,17 @@ describe('SiteController', () => {
                             },
                             versionDiff: 'major',
                             isActive: true,
-                            vulnerabilities: expect.arrayContaining([
-                                {
-                                    from: { version: '1.0.0', inclusive: true },
-                                    to: { version: '2.0.0', inclusive: false },
-                                    score: 5,
-                                },
-                            ]),
+                            vulnerabilities: expect.objectContaining({
+                                list: expect.arrayContaining([
+                                    {
+                                        from: { version: '1.0.0', inclusive: true },
+                                        to: { version: '2.0.0', inclusive: false },
+                                        score: 5,
+                                    },
+                                ]),
+                                count: 1,
+                                highestScore: 5,
+                            }),
                         }),
                     ]),
                 })
@@ -384,13 +388,17 @@ describe('SiteController', () => {
                             },
                             versionDiff: null,
                             isActive: true,
-                            vulnerabilities: expect.arrayContaining([
-                                {
-                                    from: { version: '1.0.0', inclusive: true },
-                                    to: { version: '2.0.0', inclusive: false },
-                                    score: 5,
-                                },
-                            ]),
+                            vulnerabilities: expect.objectContaining({
+                                list: expect.arrayContaining([
+                                    {
+                                        from: { version: '1.0.0', inclusive: true },
+                                        to: { version: '2.0.0', inclusive: false },
+                                        score: 5,
+                                    },
+                                ]),
+                                count: 1,
+                                highestScore: 5,
+                            }),
                         }),
                     ]),
                 })

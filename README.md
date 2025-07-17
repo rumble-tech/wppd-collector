@@ -99,7 +99,7 @@ By default two coverage reporters are configured (`text` and `coberture`). This 
 
 | Status | Description | Data |
 | --- | --- | --- |
-| **200 - OK** | *Returns all plugins for the requested site* | `{ message: "Site Plugins retrieved successfully", data: [ { pluginId: 1, name: "The first plugin", slug: "plugin-1", installedVersion: { version: "1.0.0", requiredPhpVersion: "8.0.0", requiredWpVersion: "5.9.0" }, latestVersion: { version: "1.3.0", requiredPhpVersion: "8.1.0", requiredWpVersion: "6.0.0" }, versionDiff: "minor", isActive: true, vulnerabilities: [ { from: { version: "1.0.0", inclusive: true }, to: { version: "1.1.0", inclusive: true }, score: 5.0 }, ... ] }, ... ] }` |
+| **200 - OK** | *Returns all plugins for the requested site* | `{ message: "Site Plugins retrieved successfully", data: [ { pluginId: 1, name: "The first plugin", slug: "plugin-1", installedVersion: { version: "1.0.0", requiredPhpVersion: "8.0.0", requiredWpVersion: "5.9.0" }, latestVersion: { version: "1.3.0", requiredPhpVersion: "8.1.0", requiredWpVersion: "6.0.0" }, versionDiff: "minor", isActive: true, vulnerabilities: { list: [ { from: { version: "1.0.0", inclusive: true }, to: { version: "1.1.0", inclusive: true }, score: 5.0 }, ... ], count: 1, highestScore: 5.0 } }, ... ] }` |
 | **400 - Bad Request** | *The siteId request parameter is invalid* | `{ message: "The parameter "siteId" is required and must be a non-empty number", data: null }` |
 | **404 - Not Found** | *The requested site does not exist* | `{ message: "A site with the given ID does not exist", data: null }` |
 | **500 - Internal Server Error** | *Something else went wrong* | - |

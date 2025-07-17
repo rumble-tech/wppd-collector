@@ -152,6 +152,13 @@ export default class SiteController extends AbstractController {
                 sitePlugins.map(async (sitePlugin) => {
                     const installedVersion = sitePlugin.getInstalledVersion();
                     const latestVersion = sitePlugin.getLatestVersion();
+                    const vulnerabilities = (await this.pluginRepository.findVulnerabilities(sitePlugin.getId())).map(
+                        (vulnerabilitiy) => ({
+                            from: vulnerabilitiy.from,
+                            to: vulnerabilitiy.to,
+                            score: vulnerabilitiy.score,
+                        })
+                    );
 
                     return {
                         pluginId: sitePlugin.getId(),
@@ -164,13 +171,14 @@ export default class SiteController extends AbstractController {
                                 ? Tools.categorizeVersionDiff(installedVersion['version'], latestVersion['version'])
                                 : null,
                         isActive: sitePlugin.getIsActive(),
-                        vulnerabilities: (await this.pluginRepository.findVulnerabilities(sitePlugin.getId())).map(
-                            (vulnerabilitiy) => ({
-                                from: vulnerabilitiy.from,
-                                to: vulnerabilitiy.to,
-                                score: vulnerabilitiy.score,
-                            })
-                        ),
+                        vulnerabilities: {
+                            list: vulnerabilities,
+                            count: vulnerabilities.length,
+                            highestScore: vulnerabilities.reduce(
+                                (max, vulnerability) => Math.max(max, vulnerability.score),
+                                0
+                            ),
+                        },
                     };
                 })
             );
