@@ -1,7 +1,6 @@
+import { and, eq } from 'drizzle-orm';
 import { TDatabase, TPluginsTable, TSitePluginsTable, TSitesTable } from 'src/components/database/Types';
 import SiteRepository from './SiteRepository';
-import { and, eq } from 'drizzle-orm';
-import { version } from 'winston';
 
 describe('SiteRepository', () => {
     let siteRepository: SiteRepository;
@@ -29,6 +28,7 @@ describe('SiteRepository', () => {
         it('should return all sites', async () => {
             const builder = {
                 from: jest.fn().mockReturnThis(),
+                where: jest.fn().mockReturnThis(),
                 execute: jest.fn().mockResolvedValue([
                     {
                         id: 1,
@@ -50,6 +50,46 @@ describe('SiteRepository', () => {
 
             expect(database.select).toHaveBeenCalled();
             expect(builder.from).toHaveBeenCalledWith(sitesTable);
+            expect(builder.where).toHaveBeenCalled();
+            expect(builder.execute).toHaveBeenCalled();
+
+            expect(sites[0].getId()).toBe(1);
+            expect(sites[0].getName()).toBe('Test Site 1');
+            expect(sites[0].getUrl()).toBe('https://example.com/site-1');
+            expect(sites[0].getPhpVersion()).toBe('7.4');
+            expect(sites[0].getWpVersion()).toBe('5.8');
+            expect(sites[0].getToken()).toBe('site-1-token');
+            expect(sites[0].getEnvironment()).toBe('development');
+            expect(sites[0].getCreatedAt()).toEqual(new Date('2025-01-01T00:00:00Z'));
+            expect(sites[0].getUpdatedAt()).toEqual(new Date('2025-01-02T00:00:00Z'));
+        });
+
+        it('should only return sites with the specified environment', async () => {
+            const builder = {
+                from: jest.fn().mockReturnThis(),
+                where: jest.fn().mockReturnThis(),
+                execute: jest.fn().mockResolvedValue([
+                    {
+                        id: 1,
+                        name: 'Test Site 1',
+                        url: 'https://example.com/site-1',
+                        phpVersion: '7.4',
+                        wpVersion: '5.8',
+                        token: 'site-1-token',
+                        environment: 'development',
+                        createdAt: new Date('2025-01-01T00:00:00Z'),
+                        updatedAt: new Date('2025-01-02T00:00:00Z'),
+                    },
+                ]),
+            };
+
+            (database.select as jest.Mock).mockReturnValueOnce(builder);
+
+            const sites = await siteRepository.findAll('development');
+
+            expect(database.select).toHaveBeenCalled();
+            expect(builder.from).toHaveBeenCalledWith(sitesTable);
+            expect(builder.where).toHaveBeenCalledWith(eq(sitesTable.environment, 'development'));
             expect(builder.execute).toHaveBeenCalled();
 
             expect(sites[0].getId()).toBe(1);
