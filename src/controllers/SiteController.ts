@@ -4,6 +4,7 @@ import { LoggerInterface } from 'src/components/logger/LoggerInterface';
 import RouteError from 'src/components/server/RouteError';
 import AbstractController from 'src/controllers/AbstractController';
 import { TPluginVersion } from 'src/models/Plugin';
+import { TSiteEnvironment } from 'src/models/Site';
 import PluginRepository from 'src/repositories/PluginRepository';
 import SiteRepository from 'src/repositories/SiteRepository';
 import LatestVersionResolver from 'src/services/latest-version/LatestVersionResolver';
@@ -69,7 +70,20 @@ export default class SiteController extends AbstractController {
 
     private async getSitesRoute(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const sites = await this.siteRepository.findAll();
+            const siteEnvironment = req.query.environment;
+
+            if (
+                siteEnvironment !== undefined &&
+                (typeof siteEnvironment !== 'string' ||
+                    !['production', 'staging', 'development'].includes(siteEnvironment as string))
+            ) {
+                throw new RouteError(
+                    400,
+                    'The query parameter "environment" must be either "production", "staging", or "development"'
+                );
+            }
+
+            const sites = await this.siteRepository.findAll(siteEnvironment as TSiteEnvironment | null);
 
             res.status(200).json({
                 message: 'Sites retrieved successfully',

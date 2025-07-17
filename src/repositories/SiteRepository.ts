@@ -1,8 +1,8 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, SQL } from 'drizzle-orm';
 import { TDatabase, TPluginsTable, TSitePluginsTable, TSitesTable } from 'src/components/database/Types';
 import Site from 'src/entities/Site';
 import SitePlugin from 'src/entities/SitePlugin';
-import { TNewSite, TSite } from 'src/models/Site';
+import { TNewSite, TSite, TSiteEnvironment } from 'src/models/Site';
 import { TNewSitePlugin, TSitePlugin } from 'src/models/SitePlugin';
 
 export default class SiteRepository {
@@ -23,8 +23,13 @@ export default class SiteRepository {
         this.sitePluginsTable = sitePluginsTable;
     }
 
-    public async findAll(): Promise<Site[]> {
-        const sites = await this.db.select().from(this.sitesTable).execute();
+    public async findAll(environment: TSiteEnvironment | null = null): Promise<Site[]> {
+        let whereClause: SQL<unknown> | undefined;
+        if (environment) {
+            whereClause = eq(this.sitesTable.environment, environment);
+        }
+
+        const sites = await this.db.select().from(this.sitesTable).where(whereClause).execute();
 
         return sites.map(
             (site) =>
