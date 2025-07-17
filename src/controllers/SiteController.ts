@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { NextFunction, Request, Response } from 'express';
+import semver from 'semver';
 import { LoggerInterface } from 'src/components/logger/LoggerInterface';
 import RouteError from 'src/components/server/RouteError';
 import AbstractController from 'src/controllers/AbstractController';
@@ -166,13 +167,24 @@ export default class SiteController extends AbstractController {
                 sitePlugins.map(async (sitePlugin) => {
                     const installedVersion = sitePlugin.getInstalledVersion();
                     const latestVersion = sitePlugin.getLatestVersion();
-                    const vulnerabilities = (await this.pluginRepository.findVulnerabilities(sitePlugin.getId())).map(
-                        (vulnerabilitiy) => ({
-                            from: vulnerabilitiy.from,
-                            to: vulnerabilitiy.to,
-                            score: vulnerabilitiy.score,
-                        })
-                    );
+                    const allVulnerabilities = await this.pluginRepository.findVulnerabilities(sitePlugin.getId());
+
+                    const filteredVulnerabilities = allVulnerabilities.filter(({ from }) => {
+                        if (from.version === '*') {
+                            return true;
+                        }
+
+                        const fromMMP = Tools.formatVersionToMMP(from.version);
+
+                        const cmp = semver.compare(fromMMP, installedVersion.version);
+                        return cmp > 0 || (cmp === 0 && from.inclusive);
+                    });
+
+                    const vulnerabilities = filteredVulnerabilities.map((vulnerabilitiy) => ({
+                        from: vulnerabilitiy.from,
+                        to: vulnerabilitiy.to,
+                        score: vulnerabilitiy.score,
+                    }));
 
                     return {
                         pluginId: sitePlugin.getId(),
