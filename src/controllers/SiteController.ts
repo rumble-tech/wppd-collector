@@ -174,6 +174,10 @@ export default class SiteController extends AbstractController {
                             return true;
                         }
 
+                        if (!from.version || !installedVersion.version) {
+                            return true;
+                        }
+
                         const fromMMP = Tools.formatVersionToMMP(from.version);
 
                         const cmp = semver.compare(fromMMP, installedVersion.version);
