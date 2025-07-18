@@ -53,4 +53,24 @@ describe('Tools', () => {
             expect(Tools.categorizeVersionDiff('invalid', 'invalid')).toBe('invalid');
         });
     });
+
+    describe('Tools.compareVersions', () => {
+        it('should return a positive number for version1 > version2', () => {
+            expect(Tools.compareVersions('1.0.1', '1.0.0')).toBeGreaterThan(0);
+        });
+
+        it('should return a negative number for version1 < version2', () => {
+            expect(Tools.compareVersions('1.0.0', '1.0.1')).toBeLessThan(0);
+        });
+
+        it('should return 0 for equal versions', () => {
+            expect(Tools.compareVersions('1.0.0', '1.0.0')).toBe(0);
+        });
+
+        it('should return null for invalid version formats', () => {
+            expect(Tools.compareVersions('invalid', '1.0.0')).toBeNull();
+            expect(Tools.compareVersions('1.0.0', 'invalid')).toBeNull();
+            expect(Tools.compareVersions('invalid', 'invalid')).toBeNull();
+        });
+    });
 });

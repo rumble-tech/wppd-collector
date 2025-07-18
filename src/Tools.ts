@@ -55,6 +55,27 @@ export default class Tools {
         return 'same';
     }
 
+    public static compareVersions(version1: string, version2: string): number | null {
+        if (!Tools.isValidVersion(version1) || !Tools.isValidVersion(version2)) {
+            return null;
+        }
+
+        const parts1 = version1.split('.').map((n) => parseInt(n, 10) || 0);
+        const parts2 = version2.split('.').map((n) => parseInt(n, 10) || 0);
+
+        const len = Math.max(parts1.length, parts2.length);
+
+        for (let i = 0; i < len; i++) {
+            const na = parts1[i] || 0;
+            const nb = parts2[i] || 0;
+
+            if (na > nb) return 1;
+            if (na < nb) return -1;
+        }
+
+        return 0;
+    }
+
     private static isValidVersion(version: string): boolean {
         // allow version numbers that have 3 or 4 parts
         return /^\d+\.\d+\.\d+(?:\.\d+)?$/.test(version);

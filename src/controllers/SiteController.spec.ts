@@ -291,6 +291,34 @@ describe('SiteController', () => {
                     to: { version: '2.0.0', inclusive: false },
                     score: 5,
                 },
+                {
+                    id: 2,
+                    pluginId: 1,
+                    from: { version: '1.0.0', inclusive: true },
+                    to: { version: '*', inclusive: false },
+                    score: 5,
+                },
+                {
+                    id: 3,
+                    pluginId: 1,
+                    from: { version: '0.1.0', inclusive: true },
+                    to: { version: '0.2.0', inclusive: false },
+                    score: 5,
+                },
+                {
+                    id: 4,
+                    pluginId: 1,
+                    from: { version: '1.0.0', inclusive: true },
+                    to: { version: 'invalid', inclusive: false },
+                    score: 5,
+                },
+                {
+                    id: 5,
+                    pluginId: 1,
+                    from: { version: '0.1.0', inclusive: true },
+                    to: { version: '1.0.0', inclusive: true },
+                    score: 5,
+                },
             ]);
 
             const { app } = await setupTestServer({
@@ -328,8 +356,18 @@ describe('SiteController', () => {
                                         to: { version: '2.0.0', inclusive: false },
                                         score: 5,
                                     },
+                                    {
+                                        from: { version: '1.0.0', inclusive: true },
+                                        to: { version: '*', inclusive: false },
+                                        score: 5,
+                                    },
+                                    {
+                                        from: { version: '0.1.0', inclusive: true },
+                                        to: { version: '1.0.0', inclusive: true },
+                                        score: 5,
+                                    },
                                 ]),
-                                count: 1,
+                                count: 3,
                                 highestScore: 5,
                             }),
                         }),
