@@ -7,6 +7,7 @@ module.exports = {
     collectCoverageFrom: ['src/**/*.ts'],
     coveragePathIgnorePatterns: [
         '/node_modules/',
+        './src/index.ts',
         './src/@types',
         './src/components/database',
         './src/entities',
