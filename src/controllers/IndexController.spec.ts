@@ -2,14 +2,8 @@ import request from 'supertest';
 import { setupTestServer } from 'test-utils/setup-server';
 
 describe('IndexController', () => {
-    let app: Express.Application;
-
-    beforeAll(async () => {
-        const { app: _app } = await setupTestServer();
-        app = _app;
-    });
-
-    it('should return 200 with welcome message', async () => {
+    it('should respond with (200) and { message: "Welcome to the API", data: { ... } }', async () => {
+        const { app } = await setupTestServer();
         const response = await request(app).get('/');
 
         expect(response.status).toBe(200);
@@ -18,6 +12,17 @@ describe('IndexController', () => {
             data: {
                 version: process.env.npm_package_version,
             },
+        });
+    });
+
+    it('should respond with (404) and { message: "Route not found: GET /invalid", data: null }', async () => {
+        const { app } = await setupTestServer();
+        const response = await request(app).get('/invalid');
+
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({
+            message: 'Route not found: GET /invalid',
+            data: null,
         });
     });
 });
