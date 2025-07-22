@@ -5,6 +5,7 @@ import { siteEnvironments, TSite, TSiteEnvironment } from 'src/models/Site';
 import { TSitePlugin } from 'src/models/SitePlugin';
 import PluginRepository from 'src/repositories/PluginRepository';
 import SiteRepository from 'src/repositories/SiteRepository';
+import LatestVersionResolver from 'src/services/latest-version/LatestVersionResolver';
 import MailResolver from 'src/services/mailing/MailResolver';
 import AbstractTask from 'src/tasks/AbstractTask';
 import { TaskInterface } from 'src/tasks/TaskInterface';
@@ -14,6 +15,16 @@ type TSiteReport = {
     name: TSite['name'];
     url: TSite['url'];
     environment: TSiteEnvironment;
+    phpVersion: {
+        installed: TSite['phpVersion'];
+        latest: string | null;
+        diff: 'major' | 'minor' | 'patch' | 'igl' | 'same' | 'invalid' | null;
+    };
+    wpVersion: {
+        installed: TSite['wpVersion'];
+        latest: string | null;
+        diff: 'major' | 'minor' | 'patch' | 'igl' | 'same' | 'invalid' | null;
+    };
     plugins: {
         total: number;
         matchingVersions: number;
@@ -36,25 +47,33 @@ type GroupedReport = Record<TSiteEnvironment, TSiteReport[]>;
 export default class SendReportMailTask extends AbstractTask implements TaskInterface {
     private siteRepository: SiteRepository;
     private pluginRepository: PluginRepository;
+    private latestVersionResolver: LatestVersionResolver;
     private mailResolver: MailResolver;
 
     constructor(
         logger: LoggerInterface,
         siteRepository: SiteRepository,
         pluginRepository: PluginRepository,
+        latestVersionResolver: LatestVersionResolver,
         mailResolver: MailResolver
     ) {
         super(logger);
         this.siteRepository = siteRepository;
         this.pluginRepository = pluginRepository;
+        this.latestVersionResolver = latestVersionResolver;
         this.mailResolver = mailResolver;
     }
 
     public async run(): Promise<void> {
-        const groupedReports = await this.getGroupedReports();
-        const mailContent = this.buildMailContent(groupedReports);
-
         try {
+            if (!Config.get<boolean>('MAILING_ENABLED')) {
+                this.logger.info('Mailing is disabled, skipping report mail sending.');
+                return;
+            }
+
+            const groupedReports = await this.getGroupedReports();
+            const mailContent = this.buildMailContent(groupedReports);
+
             this.logger.info('Sending report mail...');
 
             await this.mailResolver.sendMail(
@@ -87,6 +106,8 @@ export default class SendReportMailTask extends AbstractTask implements TaskInte
         const siteReports: TSiteReport[] = [];
 
         const sites = await this.siteRepository.findAll();
+        const latestPhpVersion = await this.latestVersionResolver.resolvePhp();
+        const latestWpVersion = await this.latestVersionResolver.resolveWp();
 
         for (const site of sites) {
             const sitePlugins = await this.siteRepository.findAllSitePlugins(site.getId());
@@ -148,10 +169,29 @@ export default class SendReportMailTask extends AbstractTask implements TaskInte
                 });
             }
 
+            const sitePhpVersion = site.getPhpVersion();
+            const siteWpVersion = site.getWpVersion();
+
             siteReports.push({
                 name: site.getName(),
                 url: site.getUrl(),
                 environment: site.getEnvironment(),
+                phpVersion: {
+                    installed: sitePhpVersion,
+                    latest: latestPhpVersion,
+                    diff:
+                        sitePhpVersion && latestPhpVersion
+                            ? Tools.categorizeVersionDiff(sitePhpVersion, latestPhpVersion)
+                            : null,
+                },
+                wpVersion: {
+                    installed: siteWpVersion,
+                    latest: latestWpVersion,
+                    diff:
+                        siteWpVersion && latestWpVersion
+                            ? Tools.categorizeVersionDiff(siteWpVersion, latestWpVersion)
+                            : null,
+                },
                 plugins: {
                     total: sitePlugins.length,
                     matchingVersions: sitePlugins.length - sitePluginsWithMismatchingVersions.length,
@@ -240,19 +280,53 @@ export default class SendReportMailTask extends AbstractTask implements TaskInte
                                     <tbody>
                                         <tr class="odd">
                                             <td class="key title">Site</td>
-                                            <td class="value" colspan="6">${siteReport.name}</td>
+                                            <td colspan="6">${siteReport.name}</td>
                                         </tr>
                                         <tr class="even">
                                             <td class="key title">URL</td>
-                                            <td class="value" colspan="6">${siteReport.url}</td>
+                                            <td colspan="6">${siteReport.url}</td>
+                                        </tr>
+                                        <tr class="odd">
+                                            <td class="key title" rowspan="2">PHP Version</td>
+                                            <td class="title">Installed</td>
+                                            <td class="title">Latest</td>
+                                            <td class="title">Diff</td>
+                                            <td class="title" colspan="3"></td>
+                                        </tr>
+                                        <tr class="even">
+                                            <td>${siteReport.phpVersion.installed}</td>
+                                            <td>${siteReport.phpVersion.latest}</td>
+                                             <td style="color: ${this.getColorForVersionDiff(
+                                                 siteReport.phpVersion.diff
+                                             )}; font-weight: bold;">${
+                                            siteReport.phpVersion.diff ? siteReport.phpVersion.diff.toUpperCase() : '-'
+                                        }</td>
+                                            <td colspan="3"></td>
+                                        </tr>
+                                        <tr class="odd">
+                                            <td class="key title" rowspan="2">WP Version</td>
+                                            <td class="title">Installed</td>
+                                            <td class="title">Latest</td>
+                                            <td class="title">Diff</td>
+                                            <td class="title" colspan="3"></td>
+                                        </tr>
+                                        <tr class="even">
+                                            <td>${siteReport.wpVersion.installed}</td>
+                                            <td>${siteReport.wpVersion.latest}</td>
+                                             <td style="color: ${this.getColorForVersionDiff(
+                                                 siteReport.wpVersion.diff
+                                             )}; font-weight: bold;">${
+                                            siteReport.wpVersion.diff ? siteReport.wpVersion.diff.toUpperCase() : '-'
+                                        }</td>
+                                            <td colspan="3"></td>
                                         </tr>
                                         <tr class="odd">
                                             <td class="key title">Total Plugins</td>
-                                            <td class="value" colspan="6">${siteReport.plugins.total}</td>
+                                            <td colspan="6">${siteReport.plugins.total}</td>
                                         </tr>
                                         <tr class="even">
                                             <td class="key title">Plugins with matching versions</td>
-                                            <td class="value" colspan="6">${siteReport.plugins.matchingVersions}</td>
+                                            <td colspan="6">${siteReport.plugins.matchingVersions}</td>
                                         </tr>
                                         <tr class="odd">
                                             <td class="key title" rowspan="${
@@ -284,15 +358,9 @@ export default class SendReportMailTask extends AbstractTask implements TaskInte
                                             <td>${plugin.isActive === true ? 'Yes' : 'No'}</td>
                                             <td>${plugin.installedVersion}</td>
                                             <td>${plugin.latestVersion}</td>
-                                            <td style="color: ${
-                                                plugin.difference === 'major'
-                                                    ? 'red'
-                                                    : plugin.difference === 'minor'
-                                                    ? 'darkorange'
-                                                    : plugin.difference === 'patch'
-                                                    ? 'royalblue'
-                                                    : 'indigo'
-                                            }">${plugin.difference.toUpperCase()}</td>
+                                            <td style="color: ${this.getColorForVersionDiff(
+                                                plugin.difference
+                                            )}; font-weight: bold;">${plugin.difference.toUpperCase()}</td>
                                             <td>${
                                                 plugin.severity.countVulnerabilities > 0
                                                     ? `${plugin.severity.countVulnerabilities} - ${plugin.severity.highestScore}`
@@ -318,5 +386,24 @@ export default class SendReportMailTask extends AbstractTask implements TaskInte
         `;
 
         return html;
+    }
+
+    private getColorForVersionDiff(diff: 'major' | 'minor' | 'patch' | 'igl' | 'same' | 'invalid' | null): string {
+        switch (diff) {
+            case 'major':
+                return '#f2495d';
+            case 'minor':
+                return '#ff9830';
+            case 'patch':
+                return '#fade2a';
+            case 'igl':
+                return '#0794f2';
+            case 'same':
+                return '#73bf69';
+            case 'invalid':
+                return '#808080';
+            default:
+                return 'black';
+        }
     }
 }

@@ -90,7 +90,7 @@ scheduler.addTask('delete-sites-inactive', '0 12 */7 * *', () =>
     new DeleteSitesInactiveTask(schedulerLogger, siteRepository).run()
 ); // Every 7 days at 12:00
 scheduler.addTask('send-report-mail', '0 12 * * *', () =>
-    new SendReportMailTask(schedulerLogger, siteRepository, pluginRepository, mailResolver).run()
+    new SendReportMailTask(schedulerLogger, siteRepository, pluginRepository, latestVersionResolver, mailResolver).run()
 ); // Every day at 12:00
 scheduler.addTask('update-latest-php-version', '* */30 * * *', () =>
     new UpdateLatestPhpVersionProviderTask(schedulerLogger, phpLatestVersionProvider).run()

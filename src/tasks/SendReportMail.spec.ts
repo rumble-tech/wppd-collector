@@ -6,6 +6,7 @@ import PluginRepository from 'src/repositories/PluginRepository';
 import SiteRepository from 'src/repositories/SiteRepository';
 import MailResolver from 'src/services/mailing/MailResolver';
 import SendReportMailTask from './SendReportMail';
+import LatestVersionResolver from 'src/services/latest-version/LatestVersionResolver';
 
 jest.mock('src/config/Config');
 const mockedConfigGet = Config.get as jest.MockedFunction<typeof Config.get>;
@@ -15,19 +16,11 @@ describe('SendReportMail', () => {
     let mockLogger: jest.Mocked<LoggerInterface>;
     let mockSiteRepository: jest.Mocked<SiteRepository>;
     let mockPluginRepository: jest.Mocked<PluginRepository>;
+    let mockLatestVersionResolver: jest.Mocked<LatestVersionResolver>;
     let mockMailResolver: jest.Mocked<MailResolver>;
 
     beforeEach(() => {
         mockedConfigGet.mockReset();
-        mockedConfigGet.mockImplementation((key: string) => {
-            if (key === 'MAILING_REPORT_SENDER') {
-                return 'sender@example.com';
-            }
-            if (key === 'MAILING_REPORT_RECIPIENT') {
-                return 'recipient@example.com';
-            }
-            return '';
-        });
 
         mockLogger = {
             info: jest.fn(),
@@ -46,27 +39,56 @@ describe('SendReportMail', () => {
             getVulnerabilities: jest.fn(),
         } as unknown as jest.Mocked<PluginRepository>;
 
+        mockLatestVersionResolver = {
+            resolvePhp: jest.fn(),
+            resolveWp: jest.fn(),
+        } as unknown as jest.Mocked<LatestVersionResolver>;
+
         mockMailResolver = {
             sendMail: jest.fn(),
         } as unknown as jest.Mocked<MailResolver>;
 
-        task = new SendReportMailTask(mockLogger, mockSiteRepository, mockPluginRepository, mockMailResolver);
+        task = new SendReportMailTask(
+            mockLogger,
+            mockSiteRepository,
+            mockPluginRepository,
+            mockLatestVersionResolver,
+            mockMailResolver
+        );
     });
 
     describe('SendReportMail.run', () => {
+        it('should skip sending mail if mailing is disabled', async () => {
+            mockedConfigGet.mockReturnValueOnce(false);
+
+            await task.run();
+
+            expect(mockLogger.info).toHaveBeenCalledWith('Mailing is disabled, skipping report mail sending.');
+            expect(mockMailResolver.sendMail).not.toHaveBeenCalled();
+        });
+
         it('should send a report mail with grouped site reports', async () => {
+            mockedConfigGet
+                .mockReturnValueOnce(true)
+                .mockReturnValueOnce('sender@example.com')
+                .mockReturnValueOnce('recipient@example.com');
+
             const sites = [
                 {
                     getId: () => 1,
                     getName: () => 'Test Site 1',
                     getEnvironment: () => 'production',
                     getUrl: () => 'https://example.com/site-1',
+                    getPhpVersion: () => '8.4',
+                    getWpVersion: () => '6.5',
                 },
                 {
                     getId: () => 2,
                     getName: () => 'Test Site 2',
                     getEnvironment: () => 'development',
                     getUrl: () => 'https://example.com/site-2',
+                    getPhpVersion: () => '8.4',
+                    getWpVersion: () => '6.5',
                 },
             ];
 
@@ -142,7 +164,7 @@ describe('SendReportMail', () => {
             expect(html).toContain('No');
             expect(html).toContain('1.0.0');
             expect(html).toContain('2.0.0');
-            expect(html).toContain('<td style="color: red">MAJOR</td>');
+            expect(html).toContain('<td style="color: #f2495d; font-weight: bold;">MAJOR</td>');
             expect(html).toContain('1 - 5');
 
             expect(html).not.toContain('test-plugin - skip because null version');
@@ -153,11 +175,15 @@ describe('SendReportMail', () => {
         });
 
         it('should sort site plugins by slug if version diff category is same', async () => {
+            mockedConfigGet.mockReturnValueOnce(true);
+
             const site = {
                 getId: () => 1,
                 getName: () => 'Test Site 1',
                 getEnvironment: () => 'production',
                 getUrl: () => 'https://example.com/site-1',
+                getPhpVersion: () => '8.4',
+                getWpVersion: () => '6.5',
             };
 
             mockSiteRepository.findAll.mockResolvedValue([site] as Site[]);
@@ -201,11 +227,15 @@ describe('SendReportMail', () => {
         });
 
         it('should render the correct colors for version diff categories', async () => {
+            mockedConfigGet.mockReturnValueOnce(true);
+
             const site = {
                 getId: () => 1,
                 getName: () => 'Test Site 1',
                 getEnvironment: () => 'production',
                 getUrl: () => 'https://example.com/site-1',
+                getPhpVersion: () => '8.4.0',
+                getWpVersion: () => 'invalid',
             };
 
             mockSiteRepository.findAll.mockResolvedValue([site] as Site[]);
@@ -243,6 +273,8 @@ describe('SendReportMail', () => {
 
             mockSiteRepository.findAllSitePlugins.mockResolvedValue(sitePlugins as SitePlugin[]);
             mockPluginRepository.getVulnerabilities.mockResolvedValue([]);
+            mockLatestVersionResolver.resolvePhp.mockResolvedValue('8.4.0');
+            mockLatestVersionResolver.resolveWp.mockResolvedValue('6.5.0');
 
             await task.run();
 
@@ -253,18 +285,24 @@ describe('SendReportMail', () => {
             expect(html).toContain('plugin-minor');
             expect(html).toContain('plugin-patch');
             expect(html).toContain('plugin-igl');
-            expect(html).toContain('style="color: red">MAJOR</td>');
-            expect(html).toContain('style="color: darkorange">MINOR</td>');
-            expect(html).toContain('style="color: royalblue">PATCH</td>');
-            expect(html).toContain('style="color: indigo">IGL</td>');
+            expect(html).toContain('style="color: #f2495d; font-weight: bold;">MAJOR</td>');
+            expect(html).toContain('style="color: #ff9830; font-weight: bold;">MINOR</td>');
+            expect(html).toContain('style="color: #fade2a; font-weight: bold;">PATCH</td>');
+            expect(html).toContain('style="color: #0794f2; font-weight: bold;">IGL</td>');
+            expect(html).toContain('style="color: #73bf69; font-weight: bold;">SAME</td>');
+            expect(html).toContain('style="color: #808080; font-weight: bold;">INVALID</td>');
         });
 
         it('should skip site plugin when fetching vulnerabilities fails', async () => {
+            mockedConfigGet.mockReturnValueOnce(true);
+
             const site = {
                 getId: () => 1,
                 getName: () => 'Test Site',
                 getEnvironment: () => 'production',
                 getUrl: () => 'https://example.com/site-1',
+                getPhpVersion: () => '8.4',
+                getWpVersion: () => '6.5',
             };
 
             mockSiteRepository.findAll.mockResolvedValue([site] as Site[]);
@@ -289,6 +327,8 @@ describe('SendReportMail', () => {
         });
 
         it('should log an error if sending mail fails', async () => {
+            mockedConfigGet.mockReturnValueOnce(true);
+
             mockSiteRepository.findAll.mockResolvedValue([]);
             mockSiteRepository.findAllSitePlugins.mockResolvedValue([]);
             mockPluginRepository.getVulnerabilities.mockResolvedValue([]);
