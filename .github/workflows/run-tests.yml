@@ -1,0 +1,35 @@
+name: Run Tests and Generate Coverage
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Run tests in Docker and generate coverage
+        run: |
+          docker build --no-cache -f ./docker/Dockerfile.jest -t rumble-wppd-collector:jest ./
+          docker run --rm -v ${{ github.workspace }}/src:/app/src -v ${{ github.workspace }}/coverage:/app/coverage rumble-wppd-collector:jest
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with: 
+          name: coverage-report
+          path: coverage/cobertura-coverage.xml
+
+      - name: Update code coverage badge
+        run: |
+            curl -X POST https://badges.maxlehmann.dev/project/rumble-tech@wppd-collector/code-coverage \
+            -H "Authorization: Bearer ${{ secrets.BADGES_PROJECT_TOKEN }}" \
+            -H "Content-Type: application/xml" \
+            --data-binary @coverage/cobertura-coverage.xml

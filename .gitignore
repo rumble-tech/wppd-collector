@@ -1,0 +1,8 @@
+node_modules
+dist
+logs
+sqlite
+coverage
+docker/**override**
+!docker/compose.dev.override.example.yml
+.DS_Store
