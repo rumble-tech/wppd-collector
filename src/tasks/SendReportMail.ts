@@ -136,6 +136,20 @@ export default class SendReportMailTask extends AbstractTask implements TaskInte
                     continue;
                 }
 
+                const filteredVulnerabilities = vulnerabilities.filter(({ to }) => {
+                    if (to.version === '*' || !to.version || !installedVersion.version) {
+                        return true;
+                    }
+
+                    const cmp = Tools.compareVersions(to.version, installedVersion.version);
+
+                    if (cmp === null) {
+                        return false;
+                    }
+
+                    return cmp > 0 || (cmp === 0 && to.inclusive);
+                });
+
                 sitePluginsWithMismatchingVersions.push({
                     slug: sitePlugin.getSlug(),
                     isActive: sitePlugin.getIsActive(),
@@ -143,8 +157,8 @@ export default class SendReportMailTask extends AbstractTask implements TaskInte
                     latestVersion: latestVersion.version,
                     difference: sitePluginVersionDiffCategory,
                     severity: {
-                        countVulnerabilities: vulnerabilities.length,
-                        highestScore: vulnerabilities.reduce(
+                        countVulnerabilities: filteredVulnerabilities.length,
+                        highestScore: filteredVulnerabilities.reduce(
                             (max, vulnerability) => Math.max(max, vulnerability.score),
                             0
                         ),
