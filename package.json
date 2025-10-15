@@ -1,6 +1,6 @@
 {
     "name": "@rumble/wppd-collector",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "scripts": {
         "dev:start": "docker-compose -f ./docker/compose.dev.yml -f ./docker/compose.dev.override.yml up --build",
         "dev:stop": "docker-compose -f ./docker/compose.dev.yml -f ./docker/compose.dev.override.yml down",

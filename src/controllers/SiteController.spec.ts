@@ -799,7 +799,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -877,7 +877,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -967,7 +967,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -1052,7 +1052,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -1141,7 +1141,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -1230,7 +1230,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -1310,7 +1310,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -1408,7 +1408,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -1506,7 +1506,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -1595,7 +1595,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -1685,7 +1685,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -1748,7 +1748,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({});
 
             expect(response.status).toBe(400);
@@ -1781,7 +1781,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({ name: 'Test Site' });
 
             expect(response.status).toBe(400);
@@ -1814,7 +1814,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({ name: 'Test Site', url: 'https://example.com/test-site' });
 
             expect(response.status).toBe(400);
@@ -1847,7 +1847,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({ name: 'Test Site', url: 'https://example.com/test-site', phpVersion: '8.0.0' });
 
             expect(response.status).toBe(400);
@@ -1880,7 +1880,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -1918,7 +1918,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -1957,7 +1957,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -1996,7 +1996,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -2035,7 +2035,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -2074,7 +2074,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -2114,7 +2114,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -2161,7 +2161,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -2187,7 +2187,7 @@ describe('SiteController', () => {
             );
         });
 
-        it('should respond with (401) and { message: "The header "Authorization" is required", data: null }', async () => {
+        it('should respond with (401) and { message: "The header "x-auth-token" is required", data: null }', async () => {
             const { app } = await setupTestServer();
 
             const response = await request(app)
@@ -2198,13 +2198,13 @@ describe('SiteController', () => {
             expect(response.status).toBe(401);
             expect(response.body).toEqual(
                 expect.objectContaining({
-                    message: 'The header "Authorization" is required',
+                    message: 'The header "x-auth-token" is required',
                     data: null,
                 })
             );
         });
 
-        it('should respond with (403) and { message: "The header "Authorization" is invalid", data: null }', async () => {
+        it('should respond with (403) and { message: "The header "x-auth-token" is invalid", data: null }', async () => {
             mockSiteRepository.findById.mockResolvedValue(
                 new Site(
                     1,
@@ -2225,13 +2225,13 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer INVALID' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'INVALID' })
                 .send({});
 
             expect(response.status).toBe(403);
             expect(response.body).toEqual(
                 expect.objectContaining({
-                    message: 'The header "Authorization" is invalid',
+                    message: 'The header "x-auth-token" is invalid',
                     data: null,
                 })
             );
@@ -2246,7 +2246,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({});
 
             expect(response.status).toBe(404);
@@ -2281,7 +2281,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
@@ -2313,7 +2313,7 @@ describe('SiteController', () => {
 
             const response = await request(app)
                 .put('/site/1/update')
-                .set({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' })
+                .set({ 'Content-Type': 'application/json', 'x-auth-token': 'abc' })
                 .send({
                     name: 'Test Site',
                     url: 'https://example.com/test-site',
