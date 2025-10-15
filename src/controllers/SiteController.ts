@@ -44,10 +44,10 @@ export default class SiteController extends AbstractController {
                 throw new RouteError(400, 'The parameter "siteId" is required and must be a non-empty number');
             }
 
-            const { authorization } = req.headers;
+            const { 'x-auth-token': xAuthToken } = req.headers;
 
-            if (!authorization || typeof authorization !== 'string') {
-                throw new RouteError(401, 'The header "Authorization" is required');
+            if (!xAuthToken || typeof xAuthToken !== 'string') {
+                throw new RouteError(401, 'The header "x-auth-token" is required');
             }
 
             const site = await this.siteRepository.findById(Number(siteId));
@@ -56,9 +56,8 @@ export default class SiteController extends AbstractController {
                 throw new RouteError(404, 'A site with the given ID does not exist');
             }
 
-            const token = authorization.split('Bearer ')[1];
-            if (site.getToken() !== token) {
-                throw new RouteError(403, 'The header "Authorization" is invalid');
+            if (site.getToken() !== xAuthToken) {
+                throw new RouteError(403, 'The header "x-auth-token" is invalid');
             }
 
             req.site = site;
