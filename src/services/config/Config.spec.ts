@@ -90,4 +90,20 @@ describe('Config', () => {
             );
         });
     });
+
+    describe('Config.getLoggerConfig', () => {
+        it('should return the correct logger config', () => {
+            process.env.LOG_LEVEL = 'info';
+
+            const schema: TConfigSchema = {
+                LOG_LEVEL: { type: 'string', required: true },
+            };
+
+            expect(() => Config.load(schema)).not.toThrow();
+            expect(Config.getLoggerConfig()).toEqual({
+                level: 'info',
+                directory: '/app/logs',
+            });
+        });
+    });
 });

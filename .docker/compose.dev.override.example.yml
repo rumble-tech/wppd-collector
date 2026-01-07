@@ -2,3 +2,4 @@ services:
   app:
     environment:
       TZ: YOUR_TIMEZONE_HERE
+      LOG_LEVEL: YOUR_LOG_LEVEL_HERE

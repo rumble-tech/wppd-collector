@@ -4,3 +4,4 @@ node_modules
 !.docker/compose.dev.override.example.yml
 coverage
 .DS_Store
+logs

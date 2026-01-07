@@ -9,4 +9,8 @@ export default {
         type: 'string',
         required: true,
     },
+    LOG_LEVEL: {
+        type: 'string',
+        required: true,
+    },
 } as TConfigSchema;

@@ -1,4 +1,4 @@
-import { TConfigSchema } from 'src/services/config/Types';
+import { TConfigSchema, TLoggerConfig } from 'src/services/config/Types';
 
 export default class Config {
     private static values: Record<string, string | number | boolean | undefined> = {};
@@ -58,5 +58,12 @@ export default class Config {
         }
 
         return value as T;
+    }
+
+    public static getLoggerConfig(): TLoggerConfig {
+        return {
+            level: Config.get<string>('LOG_LEVEL'),
+            directory: '/app/logs',
+        };
     }
 }

@@ -3,3 +3,4 @@ node_modules
 .docker
 .gitignore
 .dockerignore
+logs

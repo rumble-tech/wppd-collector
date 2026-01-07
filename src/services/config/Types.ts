@@ -19,4 +19,9 @@ type TConfigSchema = {
     [key: string]: TConfigField;
 };
 
-export type { TConfigSchema };
+type TLoggerConfig = {
+    level: string;
+    directory: string;
+};
+
+export type { TConfigSchema, TLoggerConfig };
