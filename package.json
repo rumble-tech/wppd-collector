@@ -1,18 +1,21 @@
 {
-  "name": "@rumble/wppd-collector",
-  "version": "2.0.0",
-  "description": "",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/rumble-tech/wppd-collector.git"
-  },
-  "author": "rumble GmbH & Co. KG",
-  "license": "GPL v2 (or later)",
-  "bugs": {
-    "url": "https://github.com/rumble-tech/wppd-collector/issues"
-  },
-  "homepage": "https://github.com/rumble-tech/wppd-collector#readme"
+    "name": "@rumble/wppd-collector",
+    "version": "2.0.0",
+    "description": "",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rumble-tech/wppd-collector.git"
+    },
+    "author": "rumble GmbH & Co. KG",
+    "license": "GPL v2 (or later)",
+    "bugs": {
+        "url": "https://github.com/rumble-tech/wppd-collector/issues"
+    },
+    "homepage": "https://github.com/rumble-tech/wppd-collector#readme",
+    "devDependencies": {
+        "prettier": "^3.7.4"
+    }
 }
