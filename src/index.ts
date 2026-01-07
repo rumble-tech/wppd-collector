@@ -2,6 +2,7 @@ import IndexController from 'src/controllers/IndexController';
 import Config from 'src/services/config/Config';
 import configSchema from 'src/services/config/Schema';
 import Logger from 'src/services/logger/Logger';
+import Scheduler from 'src/services/scheduler/Scheduler';
 import Server from 'src/services/server/Server';
 
 Config.load(configSchema);
@@ -21,3 +22,6 @@ server
         logger.error('Failed to start server', { err });
         process.exit(1);
     });
+
+const scheduler = Scheduler.getInstance(logger);
+scheduler.addTask('ExampleTask', '*/5 * * * * *', async () => null);
