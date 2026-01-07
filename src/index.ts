@@ -1,12 +1,23 @@
+import IndexController from 'src/controllers/IndexController';
 import Config from 'src/services/config/Config';
 import configSchema from 'src/services/config/Schema';
 import Logger from 'src/services/logger/Logger';
+import Server from 'src/services/server/Server';
 
 Config.load(configSchema);
 
 const logger = new Logger(Config.getLoggerConfig());
 
-logger.info('Application started', {
-    NODE_NEV: Config.get<string>('NODE_ENV'),
-    TZ: Config.get<string>('TZ'),
-});
+Server.setConfig(Config.getServerConfig());
+const server = Server.getInstance(logger);
+
+server.registerController(new IndexController(logger));
+server
+    .start()
+    .then(() => {
+        logger.info('Successfully started server');
+    })
+    .catch((err) => {
+        logger.error('Failed to start server', { err });
+        process.exit(1);
+    });

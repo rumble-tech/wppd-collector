@@ -10,6 +10,7 @@ module.exports = {
         './src/index.ts',
         './src/services/config/Schema.ts',
         './src/services/database',
+        './src/services/server/AbstractController.ts',
     ],
     coverageReporters: ['text', 'cobertura'],
     coverageDirectory: './coverage',
@@ -23,6 +24,7 @@ module.exports = {
     },
     moduleNameMapper: {
         '^src/(.*)$': '<rootDir>/src/$1',
+        '^test-utils/(.*)$': '<rootDir>/test-utils/$1',
     },
     setupFiles: ['tsconfig-paths/register'],
 };

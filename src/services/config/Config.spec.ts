@@ -106,4 +106,38 @@ describe('Config', () => {
             });
         });
     });
+
+    describe('Config.getServerConfig', () => {
+        it('should return the correct logger config', () => {
+            process.env.CORS_WHITELIST = 'http://example1.com,http://example2.com';
+
+            const schema: TConfigSchema = {
+                CORS_WHITELIST: { type: 'string', required: true },
+            };
+
+            expect(() => Config.load(schema)).not.toThrow();
+
+            const serverConfig = Config.getServerConfig();
+            expect(serverConfig.port).toBe(80);
+            expect(serverConfig.corsOptions).toBeInstanceOf(Object);
+
+            const origin = serverConfig.corsOptions.origin;
+
+            if (typeof origin === 'function') {
+                const allowedCallback = jest.fn();
+                origin('http://example1.com', allowedCallback);
+                expect(allowedCallback).toHaveBeenCalledWith(null, true);
+
+                const disallowedCallback = jest.fn();
+                origin('http://notallowed.com', disallowedCallback);
+                expect(disallowedCallback).toHaveBeenCalledWith(expect.any(Error), false);
+
+                const missingCallback = jest.fn();
+                origin(undefined, missingCallback);
+                expect(missingCallback).toHaveBeenCalledWith(null, true);
+            } else {
+                throw new Error('Expected corsOptions.origin to be a function');
+            }
+        });
+    });
 });

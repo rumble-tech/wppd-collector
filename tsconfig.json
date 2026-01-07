@@ -15,7 +15,8 @@
         "outDir": "./dist",
         "baseUrl": "./",
         "paths": {
-            "src/*": ["src/*"]
+            "src/*": ["./src/*"],
+            "test-utils/*": ["./test-utils/*"]
         },
         "rootDir": "./src",
         "incremental": true,
@@ -27,5 +28,5 @@
         "noFallthroughCasesInSwitch": false,
         "esModuleInterop": true
     },
-    "include": ["src"]
+    "include": ["src", "test-utils"]
 }
