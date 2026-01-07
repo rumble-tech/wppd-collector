@@ -3,7 +3,9 @@
     "version": "2.0.0",
     "description": "",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "dev:start": "docker-compose -f ./.docker/compose.dev.yml -f ./.docker/compose.dev.override.yml up --build",
+        "dev:stop": "docker-compose -f ./.docker/compose.dev.yml -f ./.docker/compose.dev.override.yml down",
+        "dev:stop-v": "docker-compose -f ./.docker/compose.dev.yml -f ./.docker/compose.dev.override.yml down -v"
     },
     "repository": {
         "type": "git",
@@ -16,6 +18,10 @@
     },
     "homepage": "https://github.com/rumble-tech/wppd-collector#readme",
     "devDependencies": {
-        "prettier": "^3.7.4"
+        "prettier": "^3.7.4",
+        "ts-node": "^10.9.2",
+        "tsc-alias": "^1.8.16",
+        "tsconfig-paths": "^4.2.0",
+        "typescript": "^5.9.3"
     }
 }
