@@ -2,3 +2,5 @@ node_modules
 .idea/*
 .docker/*override*
 !.docker/compose.dev.override.example.yml
+coverage
+.DS_Store

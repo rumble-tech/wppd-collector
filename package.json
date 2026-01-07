@@ -5,7 +5,8 @@
     "scripts": {
         "dev:start": "docker-compose -f ./.docker/compose.dev.yml -f ./.docker/compose.dev.override.yml up --build",
         "dev:stop": "docker-compose -f ./.docker/compose.dev.yml -f ./.docker/compose.dev.override.yml down",
-        "dev:stop-v": "docker-compose -f ./.docker/compose.dev.yml -f ./.docker/compose.dev.override.yml down -v"
+        "dev:stop-v": "docker-compose -f ./.docker/compose.dev.yml -f ./.docker/compose.dev.override.yml down -v",
+        "test": "docker build --no-cache -f ./.docker/Dockerfile.jest -t rumble-wppd-collector:jest . && docker run --rm -v ./src/:/app/src -v ./coverage:/app/coverage rumble-wppd-collector:jest"
     },
     "repository": {
         "type": "git",
@@ -19,9 +20,12 @@
     "homepage": "https://github.com/rumble-tech/wppd-collector#readme",
     "devDependencies": {
         "@eslint/js": "^9.39.2",
+        "@types/jest": "^30.0.0",
         "eslint": "^9.39.2",
         "globals": "^17.0.0",
+        "jest": "^30.2.0",
         "prettier": "^3.7.4",
+        "ts-jest": "^29.4.6",
         "ts-node": "^10.9.2",
         "tsc-alias": "^1.8.16",
         "tsconfig-paths": "^4.2.0",

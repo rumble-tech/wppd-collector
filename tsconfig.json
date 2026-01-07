@@ -17,6 +17,7 @@
         "paths": {
             "src/*": ["src/*"]
         },
+        "rootDir": "./src",
         "incremental": true,
         "skipLibCheck": true,
         "strictNullChecks": true,
