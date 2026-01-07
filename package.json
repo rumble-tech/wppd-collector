@@ -6,7 +6,8 @@
         "dev:start": "docker-compose -f ./.docker/compose.dev.yml -f ./.docker/compose.dev.override.yml up --build",
         "dev:stop": "docker-compose -f ./.docker/compose.dev.yml -f ./.docker/compose.dev.override.yml down",
         "dev:stop-v": "docker-compose -f ./.docker/compose.dev.yml -f ./.docker/compose.dev.override.yml down -v",
-        "test": "docker build --no-cache -f ./.docker/Dockerfile.jest -t rumble-wppd-collector:jest . && docker run --rm -v ./src/:/app/src -v ./coverage:/app/coverage rumble-wppd-collector:jest"
+        "test": "docker build --no-cache -f ./.docker/Dockerfile.jest -t rumble-wppd-collector:jest . && docker run --rm -v ./src/:/app/src -v ./coverage:/app/coverage rumble-wppd-collector:jest",
+        "db:migrate": "npx drizzle-kit generate"
     },
     "repository": {
         "type": "git",
@@ -20,7 +21,9 @@
     "homepage": "https://github.com/rumble-tech/wppd-collector#readme",
     "devDependencies": {
         "@eslint/js": "^9.39.2",
+        "@types/better-sqlite3": "^7.6.13",
         "@types/jest": "^30.0.0",
+        "drizzle-kit": "^0.31.8",
         "eslint": "^9.39.2",
         "globals": "^17.0.0",
         "jest": "^30.2.0",
@@ -33,6 +36,8 @@
         "typescript-eslint": "^8.52.0"
     },
     "dependencies": {
+        "better-sqlite3": "^12.5.0",
+        "drizzle-orm": "^0.45.1",
         "winston": "^3.19.0",
         "winston-daily-rotate-file": "^5.0.0"
     }

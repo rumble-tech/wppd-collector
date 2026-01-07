@@ -4,4 +4,4 @@ COPY package*.json ./
 RUN npm install --no-cache
 COPY . .
 ENV NODE_ENV=development
-CMD ["sh", "-c", "npx nodemon"]
+CMD ["sh", "-c", "npx ts-node src/services/database/Migrate.ts && npx nodemon"]

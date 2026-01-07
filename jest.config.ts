@@ -5,7 +5,12 @@ module.exports = {
     testRegex: '.*\\.spec\\.ts$',
     collectCoverage: true,
     collectCoverageFrom: ['src/**/*.ts'],
-    coveragePathIgnorePatterns: ['/node_modules/', './src/index.ts', './src/services/config/Schema.ts'],
+    coveragePathIgnorePatterns: [
+        '/node_modules/',
+        './src/index.ts',
+        './src/services/config/Schema.ts',
+        './src/services/database',
+    ],
     coverageReporters: ['text', 'cobertura'],
     coverageDirectory: './coverage',
     transform: {

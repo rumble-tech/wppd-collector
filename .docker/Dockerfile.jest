@@ -4,4 +4,4 @@ COPY package*.json ./
 RUN npm install --no-cache
 COPY . .
 ENV NODE_ENV=test
-CMD ["sh", "-c", "npx jest --color"]
+CMD ["sh", "-c", "npx ts-node src/services/database/Migrate.ts && npx jest --color"]
