@@ -11,6 +11,8 @@ import { sitesTable } from 'src/services/database/Schema';
 import Logger from 'src/services/logger/Logger';
 import Scheduler from 'src/services/scheduler/Scheduler';
 import Server from 'src/services/server/Server';
+import UpdateLatestPhpVersionTask from 'src/tasks/UpdateLatestPhpVersion';
+import UpdateLatestWordPressVersionTask from 'src/tasks/UpdateLatestWordPressVersion';
 
 Config.load(configSchema);
 
@@ -42,9 +44,9 @@ server
     });
 
 const scheduler = Scheduler.getInstance(logger);
-scheduler.addTask('ExampleTask', '*/5 * * * * *', async () => null);
-
-(async () => {
-    await latestPhpRuntimeVersionProvider.fetch();
-    await latestWordPressRuntimeVersionProvider.fetch();
-})();
+scheduler.addTask('update-latest-php-version', '*/30 * * * *', () =>
+    new UpdateLatestPhpVersionTask(logger, latestPhpRuntimeVersionProvider).run()
+);
+scheduler.addTask('update-latest-wordpress-version', '*/30 * * * *', () =>
+    new UpdateLatestWordPressVersionTask(logger, latestWordPressRuntimeVersionProvider).run()
+);
