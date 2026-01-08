@@ -13,6 +13,7 @@ module.exports = {
         './src/services/server/AbstractController.ts',
         './src/repositories/AbstractRepository.ts',
         './src/entities',
+        './src/resolver/latest-version/providers/runtime/AbstractLatestRuntimeVersionProvider.ts',
     ],
     coverageReporters: ['text', 'cobertura'],
     coverageDirectory: './coverage',

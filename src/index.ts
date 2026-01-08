@@ -1,6 +1,9 @@
 import IndexController from 'src/controllers/IndexController';
 import SiteController from 'src/controllers/SiteController';
 import SiteRepository from 'src/repositories/SiteRepository';
+import LatestVersionResolver from 'src/resolver/latest-version/LatestVersionResolver';
+import LatestPhpRuntimeVersionProvider from 'src/resolver/latest-version/providers/runtime/PHP';
+import LatestWordPressRuntimeVersionProvider from 'src/resolver/latest-version/providers/runtime/WordPress';
 import Config from 'src/services/config/Config';
 import configSchema from 'src/services/config/Schema';
 import { database } from 'src/services/database/Database';
@@ -18,8 +21,16 @@ const server = Server.getInstance(logger);
 
 const siteRepository = new SiteRepository(database, sitesTable);
 
+const latestPhpRuntimeVersionProvider = new LatestPhpRuntimeVersionProvider();
+const latestWordPressRuntimeVersionProvider = new LatestWordPressRuntimeVersionProvider();
+
+const latestVersionResolver = new LatestVersionResolver(
+    latestPhpRuntimeVersionProvider,
+    latestWordPressRuntimeVersionProvider
+);
+
 server.registerController(new IndexController(logger));
-server.registerController(new SiteController(logger, siteRepository));
+server.registerController(new SiteController(logger, siteRepository, latestVersionResolver));
 server
     .start()
     .then(() => {
@@ -32,3 +43,8 @@ server
 
 const scheduler = Scheduler.getInstance(logger);
 scheduler.addTask('ExampleTask', '*/5 * * * * *', async () => null);
+
+(async () => {
+    await latestPhpRuntimeVersionProvider.fetch();
+    await latestWordPressRuntimeVersionProvider.fetch();
+})();

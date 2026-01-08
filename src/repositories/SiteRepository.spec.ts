@@ -33,8 +33,8 @@ describe('SiteRepository', () => {
                         url: 'https://example.com/site1',
                         apiKey: 'api-key-1',
                         environment: 'development',
-                        phpVersion: '8.5',
-                        wpVersion: '6.9',
+                        phpVersion: '8.5.1',
+                        wpVersion: '6.9.0',
                     },
                 ]),
             };
@@ -54,8 +54,8 @@ describe('SiteRepository', () => {
             expect(sites[0].getUrl()).toBe('https://example.com/site1');
             expect(sites[0].getApiKey()).toBe('api-key-1');
             expect(sites[0].getEnvironment()).toBe('development');
-            expect(sites[0].getPhpVersion()).toBe('8.5');
-            expect(sites[0].getWpVersion()).toBe('6.9');
+            expect(sites[0].getPhpVersion()).toBe('8.5.1');
+            expect(sites[0].getWpVersion()).toBe('6.9.0');
         });
     });
 
@@ -74,8 +74,8 @@ describe('SiteRepository', () => {
                         url: 'https://example.com/site1',
                         apiKey: 'api-key-1',
                         environment: 'development',
-                        phpVersion: '8.5',
-                        wpVersion: '6.9',
+                        phpVersion: '8.5.1',
+                        wpVersion: '6.9.0',
                     },
                 ]),
             };
@@ -98,8 +98,8 @@ describe('SiteRepository', () => {
             expect(site?.getUrl()).toBe('https://example.com/site1');
             expect(site?.getApiKey()).toBe('api-key-1');
             expect(site?.getEnvironment()).toBe('development');
-            expect(site?.getPhpVersion()).toBe('8.5');
-            expect(site?.getWpVersion()).toBe('6.9');
+            expect(site?.getPhpVersion()).toBe('8.5.1');
+            expect(site?.getWpVersion()).toBe('6.9.0');
         });
 
         it('should return null if the site could not be found by its id', async () => {
@@ -139,8 +139,8 @@ describe('SiteRepository', () => {
                         url: 'https://example.com/site1',
                         apiKey: 'api-key-1',
                         environment: 'development',
-                        phpVersion: '8.5',
-                        wpVersion: '6.9',
+                        phpVersion: '8.5.1',
+                        wpVersion: '6.9.0',
                     },
                 ]),
             };
@@ -165,8 +165,8 @@ describe('SiteRepository', () => {
             expect(site?.getUrl()).toBe('https://example.com/site1');
             expect(site?.getApiKey()).toBe('api-key-1');
             expect(site?.getEnvironment()).toBe('development');
-            expect(site?.getPhpVersion()).toBe('8.5');
-            expect(site?.getWpVersion()).toBe('6.9');
+            expect(site?.getPhpVersion()).toBe('8.5.1');
+            expect(site?.getWpVersion()).toBe('6.9.0');
         });
 
         it('should return null if the site could not be found by its name and url', async () => {
@@ -288,8 +288,8 @@ describe('SiteRepository', () => {
             url: 'https://example.com/site1',
             apiKey: 'api-key-1',
             environment: 'development',
-            phpVersion: '8.5',
-            wpVersion: '6.9',
+            phpVersion: '8.5.1',
+            wpVersion: '6.9.0',
         } as const;
 
         const fixedSystemTime = new Date('2026-01-01T00:00:00Z');

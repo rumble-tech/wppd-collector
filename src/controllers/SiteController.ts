@@ -1,19 +1,23 @@
 import crypto from 'crypto';
 import { NextFunction, Request, Response } from 'express';
 import SiteRepository from 'src/repositories/SiteRepository';
+import LatestVersionResolver from 'src/resolver/latest-version/LatestVersionResolver';
 import Logger from 'src/services/logger/Logger';
 import AbstractController from 'src/services/server/AbstractController';
 import RouteError from 'src/services/server/RouteError';
+import Utils from 'src/Utils';
 
 export default class SiteController extends AbstractController {
     protected readonly prefix = '/site';
 
     private readonly siteRepository: SiteRepository;
+    private readonly latestVersionResolver: LatestVersionResolver;
 
-    constructor(logger: Logger, siteRepository: SiteRepository) {
+    constructor(logger: Logger, siteRepository: SiteRepository, latestVersionResolver: LatestVersionResolver) {
         super(logger);
 
         this.siteRepository = siteRepository;
+        this.latestVersionResolver = latestVersionResolver;
 
         this.useRoutes();
     }
@@ -56,6 +60,11 @@ export default class SiteController extends AbstractController {
                 throw new RouteError(404, 'Failed to find site with the given Id');
             }
 
+            const installedPhpVersion = site.getPhpVersion();
+            const installedWordPressVersion = site.getWpVersion();
+            const latestPhpVersion = this.latestVersionResolver.resolvePhp();
+            const latestWordPressVersion = this.latestVersionResolver.resolveWordPress();
+
             res.status(200).json({
                 message: 'Successfully retrieved site',
                 data: {
@@ -63,8 +72,22 @@ export default class SiteController extends AbstractController {
                     name: site.getName(),
                     url: site.getUrl(),
                     environment: site.getEnvironment(),
-                    phpVersion: site.getPhpVersion(),
-                    wpVersion: site.getWpVersion(),
+                    phpVersion: {
+                        installed: installedPhpVersion,
+                        latest: latestPhpVersion,
+                        difference:
+                            installedPhpVersion && latestPhpVersion
+                                ? Utils.categorizeVersionDifference(installedPhpVersion, latestPhpVersion)
+                                : null,
+                    },
+                    wpVersion: {
+                        installed: installedWordPressVersion,
+                        latest: latestWordPressVersion,
+                        difference:
+                            installedWordPressVersion && latestWordPressVersion
+                                ? Utils.categorizeVersionDifference(installedWordPressVersion, latestWordPressVersion)
+                                : null,
+                    },
                 },
             });
         } catch (e) {

@@ -10,3 +10,6 @@ services:
       - ../src:/app/src
       - ../logs:/app/logs
       - ../sqlite:/app/sqlite
+    environment:
+      PHP_VERSION_API: 'https://www.php.net/releases/index.php?json'
+      WP_VERSION_API: 'https://api.wordpress.org/core/version-check/1.7/'

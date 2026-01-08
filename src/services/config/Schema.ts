@@ -21,4 +21,12 @@ export default {
         type: 'string',
         required: true,
     },
+    PHP_VERSION_API: {
+        type: 'string',
+        required: true,
+    },
+    WP_VERSION_API: {
+        type: 'string',
+        required: true,
+    },
 } as TConfigSchema;

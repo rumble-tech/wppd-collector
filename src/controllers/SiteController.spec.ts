@@ -1,12 +1,14 @@
 import Site from 'src/entities/Site';
 import SiteRepository from 'src/repositories/SiteRepository';
+import LatestVersionResolver from 'src/resolver/latest-version/LatestVersionResolver';
 import request from 'supertest';
 import { setupTestServer } from 'test-utils/SetupServer';
 
 describe('SiteController', () => {
     let mockSiteRepository: jest.Mocked<SiteRepository>;
+    let mockLatestVersionResolver: jest.Mocked<LatestVersionResolver>;
 
-    beforeEach(async () => {
+    beforeEach(() => {
         mockSiteRepository = {
             findAll: jest.fn(),
             findById: jest.fn(),
@@ -14,6 +16,13 @@ describe('SiteController', () => {
             insert: jest.fn(),
             update: jest.fn(),
         } as unknown as jest.Mocked<SiteRepository>;
+
+        mockLatestVersionResolver = {
+            resolvePhp: jest.fn(),
+            resolveWordPress: jest.fn(),
+        } as unknown as jest.Mocked<LatestVersionResolver>;
+
+        jest.clearAllMocks();
     });
 
     describe('GET /site', () => {
@@ -25,8 +34,8 @@ describe('SiteController', () => {
             url: 'https://example.com/site1',
             apiKey: 'api-key-1',
             environment: 'development',
-            phpVersion: '8.5',
-            wpVersion: '6.9',
+            phpVersion: '8.5.1',
+            wpVersion: '6.9.0',
         } as const;
 
         it('should respond with (200) and { message: "Successfully retrieved all sites", data: [...] }', async () => {
@@ -72,14 +81,22 @@ describe('SiteController', () => {
             url: 'https://example.com/site1',
             apiKey: 'api-key-1',
             environment: 'development',
-            phpVersion: '8.5',
-            wpVersion: '6.9',
+            phpVersion: '8.5.1',
+            wpVersion: '6.9.0',
         } as const;
 
         it('should respond with (200) and { message: "Successfully retrieved site", data: [...] }', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(sitePayload));
+            const latestPhpVersion = '8.5.1';
+            const latestWordPressVersion = '6.9.0';
 
-            const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
+            mockSiteRepository.findById.mockResolvedValue(new Site(sitePayload));
+            mockLatestVersionResolver.resolvePhp.mockReturnValue(latestPhpVersion);
+            mockLatestVersionResolver.resolveWordPress.mockReturnValue(latestWordPressVersion);
+
+            const { app } = await setupTestServer({
+                siteRepository: mockSiteRepository,
+                latestVersionResolver: mockLatestVersionResolver,
+            });
             const response = await request(app).get(`/site/${sitePayload.id}`);
 
             expect(response.status).toBe(200);
@@ -90,8 +107,52 @@ describe('SiteController', () => {
                     name: sitePayload.name,
                     url: sitePayload.url,
                     environment: sitePayload.environment,
-                    phpVersion: sitePayload.phpVersion,
-                    wpVersion: sitePayload.wpVersion,
+                    phpVersion: {
+                        installed: sitePayload.phpVersion,
+                        latest: latestPhpVersion,
+                        difference: 'same',
+                    },
+                    wpVersion: {
+                        installed: sitePayload.wpVersion,
+                        latest: latestWordPressVersion,
+                        difference: 'same',
+                    },
+                },
+            });
+        });
+
+        it('should respond with (200) and { message: "Successfully retrieved site", data: [...] } - versions not categorizable', async () => {
+            const latestPhpVersion = null;
+            const latestWordPressVersion = null;
+
+            mockSiteRepository.findById.mockResolvedValue(new Site(sitePayload));
+            mockLatestVersionResolver.resolvePhp.mockReturnValue(latestPhpVersion);
+            mockLatestVersionResolver.resolveWordPress.mockReturnValue(latestWordPressVersion);
+
+            const { app } = await setupTestServer({
+                siteRepository: mockSiteRepository,
+                latestVersionResolver: mockLatestVersionResolver,
+            });
+            const response = await request(app).get(`/site/${sitePayload.id}`);
+
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual({
+                message: 'Successfully retrieved site',
+                data: {
+                    id: sitePayload.id,
+                    name: sitePayload.name,
+                    url: sitePayload.url,
+                    environment: sitePayload.environment,
+                    phpVersion: {
+                        installed: sitePayload.phpVersion,
+                        latest: latestPhpVersion,
+                        difference: null,
+                    },
+                    wpVersion: {
+                        installed: sitePayload.wpVersion,
+                        latest: latestWordPressVersion,
+                        difference: null,
+                    },
                 },
             });
         });
@@ -143,8 +204,8 @@ describe('SiteController', () => {
             url: 'https://example.com/site1',
             apiKey: 'api-key-1',
             environment: 'development',
-            phpVersion: '8.5',
-            wpVersion: '6.9',
+            phpVersion: '8.5.1',
+            wpVersion: '6.9.0',
         } as const;
 
         it('should respond with (200) and { message: "Successfully registered site", data: { ... } }', async () => {
@@ -262,8 +323,8 @@ describe('SiteController', () => {
                     url: 'https://example.com/site1',
                     apiKey: 'api-key-1',
                     environment: 'development',
-                    phpVersion: '8.5',
-                    wpVersion: '6.9',
+                    phpVersion: '8.5.1',
+                    wpVersion: '6.9.0',
                 })
             );
             mockSiteRepository.update.mockResolvedValue(null);
