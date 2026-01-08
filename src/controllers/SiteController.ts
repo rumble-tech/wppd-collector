@@ -20,6 +20,7 @@ export default class SiteController extends AbstractController {
 
     protected useRoutes(): void {
         this.router.get('/', this.allRoute.bind(this));
+        this.router.get('/:siteId', this.singleRoute.bind(this));
         this.router.post('/', this.registerRoute.bind(this));
     }
 
@@ -35,6 +36,36 @@ export default class SiteController extends AbstractController {
                     url: site.getUrl(),
                     environment: site.getEnvironment(),
                 })),
+            });
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    private async singleRoute(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const siteId = req.params.siteId;
+
+            if (siteId === undefined || isNaN(Number(siteId))) {
+                throw new RouteError(400, 'The parameter "siteId" is required and must be a valid number');
+            }
+
+            const site = await this.siteRepository.findById(Number(siteId));
+
+            if (!site) {
+                throw new RouteError(404, 'Failed to find site with the given Id');
+            }
+
+            res.status(200).json({
+                message: 'Successfully retrieved site',
+                data: {
+                    id: site.getId(),
+                    name: site.getName(),
+                    url: site.getUrl(),
+                    environment: site.getEnvironment(),
+                    phpVersion: site.getPhpVersion(),
+                    wpVersion: site.getWpVersion(),
+                },
             });
         } catch (e) {
             next(e);
