@@ -1,4 +1,6 @@
 import IndexController from 'src/controllers/IndexController';
+import SiteController from 'src/controllers/SiteController';
+import SiteRepository from 'src/repositories/SiteRepository';
 import Config from 'src/services/config/Config';
 import Logger from 'src/services/logger/Logger';
 import Server from 'src/services/server/Server';
@@ -8,8 +10,10 @@ export async function setupTestServer({
         level: 'silly',
         directory: process.cwd() + '/logger',
     }),
+    siteRepository = {} as jest.Mocked<SiteRepository>,
 }: {
     logger?: Logger;
+    siteRepository?: jest.Mocked<SiteRepository>;
 } = {}) {
     logger.info = jest.fn();
     logger.warn = jest.fn();
@@ -33,7 +37,8 @@ export async function setupTestServer({
 
     const serverInstance = Server.getInstance(logger);
     serverInstance.registerController(new IndexController(logger));
+    serverInstance.registerController(new SiteController(logger, siteRepository));
 
     const app = serverInstance.getApp();
-    return { app, server: serverInstance, logger };
+    return { app, server: serverInstance };
 }

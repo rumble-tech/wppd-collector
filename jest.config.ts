@@ -11,6 +11,8 @@ module.exports = {
         './src/services/config/Schema.ts',
         './src/services/database',
         './src/services/server/AbstractController.ts',
+        './src/repositories/AbstractRepository.ts',
+        './src/entities',
     ],
     coverageReporters: ['text', 'cobertura'],
     coverageDirectory: './coverage',
