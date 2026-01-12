@@ -57,7 +57,7 @@ export default class SiteController extends AbstractController {
             const site = await this.siteRepository.findById(Number(siteId));
 
             if (!site) {
-                throw new RouteError(404, 'Failed to find site with the given Id');
+                throw new RouteError(404, 'Failed to find a site with the given Id');
             }
 
             const installedPhpVersion = site.getPhpVersion();

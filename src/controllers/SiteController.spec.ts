@@ -168,7 +168,7 @@ describe('SiteController', () => {
             });
         });
 
-        it('should respond with (404) and { message: "Failed to find site with the given Id", data: null }', async () => {
+        it('should respond with (404) and { message: "Failed to find a site with the given Id", data: null }', async () => {
             mockSiteRepository.findById.mockResolvedValue(null);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
@@ -176,7 +176,7 @@ describe('SiteController', () => {
 
             expect(response.status).toBe(404);
             expect(response.body).toEqual({
-                message: 'Failed to find site with the given Id',
+                message: 'Failed to find a site with the given Id',
                 data: null,
             });
         });
