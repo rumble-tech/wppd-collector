@@ -1,5 +1,6 @@
 import IndexController from 'src/controllers/IndexController';
 import SiteController from 'src/controllers/SiteController';
+import PluginRepository from 'src/repositories/PluginRepository';
 import SiteRepository from 'src/repositories/SiteRepository';
 import LatestVersionResolver from 'src/resolver/latest-version/LatestVersionResolver';
 import LatestPhpRuntimeVersionProvider from 'src/resolver/latest-version/providers/runtime/PHP';
@@ -7,7 +8,7 @@ import LatestWordPressRuntimeVersionProvider from 'src/resolver/latest-version/p
 import Config from 'src/services/config/Config';
 import configSchema from 'src/services/config/Schema';
 import { database } from 'src/services/database/Database';
-import { sitesTable } from 'src/services/database/Schema';
+import { pluginsTable, sitesTable } from 'src/services/database/Schema';
 import Logger from 'src/services/logger/Logger';
 import Scheduler from 'src/services/scheduler/Scheduler';
 import Server from 'src/services/server/Server';
@@ -22,6 +23,7 @@ Server.setConfig(Config.getServerConfig());
 const server = Server.getInstance(logger);
 
 const siteRepository = new SiteRepository(database, sitesTable);
+const pluginRepository = new PluginRepository(database, pluginsTable);
 
 const latestPhpRuntimeVersionProvider = new LatestPhpRuntimeVersionProvider();
 const latestWordPressRuntimeVersionProvider = new LatestWordPressRuntimeVersionProvider();
@@ -32,7 +34,7 @@ const latestVersionResolver = new LatestVersionResolver(
 );
 
 server.registerController(new IndexController(logger));
-server.registerController(new SiteController(logger, siteRepository, latestVersionResolver));
+server.registerController(new SiteController(logger, siteRepository, pluginRepository, latestVersionResolver));
 server
     .start()
     .then(() => {

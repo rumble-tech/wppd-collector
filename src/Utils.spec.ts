@@ -42,3 +42,13 @@ describe('Utils.categorizeVersionDifference', () => {
         expect(Utils.categorizeVersionDifference('invalid', 'invalid')).toBe('invalid');
     });
 });
+
+describe('Utils.getPluginSlugFromFile', () => {
+    it('should return the plugin slug from a valid file path', () => {
+        expect(Utils.getPluginSlugFromFile('plugin-name/plugin-file.php')).toBe('plugin-name');
+    });
+
+    it('should return null for an invalid file path', () => {
+        expect(Utils.getPluginSlugFromFile('invalid-plugin-file-format')).toBeNull();
+    });
+});

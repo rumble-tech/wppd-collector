@@ -45,6 +45,16 @@ export default class Utils {
         return 'same';
     }
 
+    public static getPluginSlugFromFile(file: string): string | null {
+        const split = file.split('/');
+
+        if (split.length !== 2) {
+            return null;
+        }
+
+        return split[0];
+    }
+
     private static isValidVersion(version: string): boolean {
         return /^\d+\.\d+\.\d+(?:\.\d+)?$/.test(version);
     }

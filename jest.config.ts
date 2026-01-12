@@ -15,6 +15,7 @@ module.exports = {
         './src/entities',
         './src/resolver/latest-version/providers/runtime/AbstractLatestRuntimeVersionProvider.ts',
         './src/services/scheduler/AbstractTask.ts',
+        './src/@types',
     ],
     coverageReporters: ['text', 'cobertura'],
     coverageDirectory: './coverage',

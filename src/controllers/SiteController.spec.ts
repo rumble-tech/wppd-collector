@@ -1,12 +1,17 @@
+import Plugin from 'src/entities/Plugin';
 import Site from 'src/entities/Site';
+import PluginRepository from 'src/repositories/PluginRepository';
 import SiteRepository from 'src/repositories/SiteRepository';
 import LatestVersionResolver from 'src/resolver/latest-version/LatestVersionResolver';
+import Logger from 'src/services/logger/Logger';
 import request from 'supertest';
 import { setupTestServer } from 'test-utils/SetupServer';
 
 describe('SiteController', () => {
     let mockSiteRepository: jest.Mocked<SiteRepository>;
+    let mockPluginRepository: jest.Mocked<PluginRepository>;
     let mockLatestVersionResolver: jest.Mocked<LatestVersionResolver>;
+    let mockLogger: jest.Mocked<Logger>;
 
     beforeEach(() => {
         mockSiteRepository = {
@@ -17,10 +22,24 @@ describe('SiteController', () => {
             update: jest.fn(),
         } as unknown as jest.Mocked<SiteRepository>;
 
+        mockPluginRepository = {
+            findById: jest.fn(),
+            findBySlug: jest.fn(),
+            insert: jest.fn(),
+        } as unknown as jest.Mocked<PluginRepository>;
+
         mockLatestVersionResolver = {
             resolvePhp: jest.fn(),
             resolveWordPress: jest.fn(),
         } as unknown as jest.Mocked<LatestVersionResolver>;
+
+        mockLogger = new Logger({ level: 'silly', directory: process.cwd() + '/logger' }) as jest.Mocked<Logger>;
+
+        mockLogger.info = jest.fn();
+        mockLogger.warn = jest.fn();
+        mockLogger.error = jest.fn();
+        mockLogger.debug = jest.fn();
+        mockLogger.silly = jest.fn();
 
         jest.clearAllMocks();
     });
@@ -274,7 +293,7 @@ describe('SiteController', () => {
             });
         });
 
-        it('should respond with (400) and { message: "The Field "name" is required and must be a non-empty string", data: null }', async () => {
+        it('should respond with (400) and { message: "The field "name" is required and must be a non-empty string", data: null }', async () => {
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app).post(requestConfig.url).set(requestConfig.headers).send({});
 
@@ -285,7 +304,7 @@ describe('SiteController', () => {
             });
         });
 
-        it('should respond with (400) and { message: "The Field "url" is required and must be a non-empty string", data: null }', async () => {
+        it('should respond with (400) and { message: "The field "url" is required and must be a non-empty string", data: null }', async () => {
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
 
             const response = await request(app).post(requestConfig.url).set(requestConfig.headers).send({
@@ -355,6 +374,458 @@ describe('SiteController', () => {
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app)
                 .post(requestConfig.url)
+                .set(requestConfig.headers)
+                .send(requestConfig.body);
+
+            expect(response.status).toBe(500);
+            expect(response.body).toEqual({
+                message: 'Database error',
+                data: null,
+            });
+        });
+    });
+
+    describe('PUT /site/{siteId}', () => {
+        const siteDB = {
+            id: 1,
+            createdAt: new Date('2026-01-01T00:00:00Z'),
+            updatedAt: new Date('2026-01-01T00:00:00Z'),
+            name: 'Site1',
+            url: 'https://example.com/site1',
+            apiKey: 'api-key-1',
+            environment: 'development',
+            phpVersion: '8.5.1',
+            wpVersion: '6.9.0',
+        } as const;
+
+        const plugin1DB = {
+            id: 1,
+            createdAt: new Date('2026-01-01T00:00:00Z'),
+            updatedAt: new Date('2026-01-01T00:00:00Z'),
+            slug: 'plugin-1',
+            name: 'Plugin1',
+            latestVersion: '1.0.0',
+            requiredPhpVersion: '8.5.1',
+            requiredWpVersion: '6.9.0',
+        };
+
+        const requestConfig = {
+            url: `/site/${siteDB.id}`,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Auth-Token': siteDB.apiKey,
+            },
+            body: {
+                name: siteDB.name,
+                url: siteDB.url,
+                phpVersion: '8.5.1',
+                wpVersion: '6.9.0',
+                plugins: [
+                    {
+                        file: 'plugin-1/plugin-1.php',
+                        name: plugin1DB.name,
+                        active: true,
+                        version: {
+                            installedVersion: '1.0.0',
+                            requiredPhpVersion: '8.5.1',
+                            requiredWpVersion: '6.9.0',
+                        },
+                    },
+                ],
+            },
+        };
+
+        it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - empty plugin array', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
+
+            const { app } = await setupTestServer({
+                siteRepository: mockSiteRepository,
+                pluginRepository: mockPluginRepository,
+            });
+            const response = await request(app).put(requestConfig.url).set(requestConfig.headers).send({
+                name: requestConfig.body.name,
+                url: requestConfig.body.url,
+                phpVersion: requestConfig.body.phpVersion,
+                wpVersion: requestConfig.body.wpVersion,
+                plugins: [],
+            });
+
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual({
+                message: 'Successfully updated site',
+                data: {
+                    id: siteDB.id,
+                    name: siteDB.name,
+                    url: siteDB.url,
+                    environment: siteDB.environment,
+                    phpVersion: siteDB.phpVersion,
+                    wpVersion: siteDB.wpVersion,
+                },
+            });
+        });
+
+        it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - skip plugins with invalid file format', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
+
+            const { app } = await setupTestServer({
+                siteRepository: mockSiteRepository,
+                pluginRepository: mockPluginRepository,
+                logger: mockLogger,
+            });
+            const response = await request(app)
+                .put(requestConfig.url)
+                .set(requestConfig.headers)
+                .send({
+                    name: requestConfig.body.name,
+                    url: requestConfig.body.url,
+                    phpVersion: requestConfig.body.phpVersion,
+                    wpVersion: requestConfig.body.wpVersion,
+                    plugins: [
+                        {
+                            file: 'invalid-file-format',
+                            name: requestConfig.body.plugins[0].name,
+                            active: requestConfig.body.plugins[0].active,
+                            version: {
+                                installedVersion: requestConfig.body.plugins[0].version.installedVersion,
+                                requiredPhpVersion: requestConfig.body.plugins[0].version.requiredPhpVersion,
+                                requiredWpVersion: requestConfig.body.plugins[0].version.requiredWpVersion,
+                            },
+                        },
+                    ],
+                });
+
+            expect(mockLogger.warn).toHaveBeenCalledWith('Invalid plugin file format', { file: 'invalid-file-format' });
+
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual({
+                message: 'Successfully updated site',
+                data: {
+                    id: siteDB.id,
+                    name: siteDB.name,
+                    url: siteDB.url,
+                    environment: siteDB.environment,
+                    phpVersion: siteDB.phpVersion,
+                    wpVersion: siteDB.wpVersion,
+                },
+            });
+        });
+
+        it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - insert new plugin', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
+            mockPluginRepository.findBySlug.mockResolvedValue(null);
+            mockPluginRepository.insert.mockResolvedValue(new Plugin(plugin1DB));
+
+            const { app } = await setupTestServer({
+                siteRepository: mockSiteRepository,
+                pluginRepository: mockPluginRepository,
+                logger: mockLogger,
+            });
+            const response = await request(app)
+                .put(requestConfig.url)
+                .set(requestConfig.headers)
+                .send(requestConfig.body);
+
+            expect(mockLogger.info).toHaveBeenCalledWith('Plugin not found in database. Creating new plugin entry', {
+                slug: 'plugin-1',
+                name: requestConfig.body.plugins[0].name,
+            });
+
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual({
+                message: 'Successfully updated site',
+                data: {
+                    id: siteDB.id,
+                    name: siteDB.name,
+                    url: siteDB.url,
+                    environment: siteDB.environment,
+                    phpVersion: siteDB.phpVersion,
+                    wpVersion: siteDB.wpVersion,
+                },
+            });
+        });
+
+        it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - insert new plugin fails', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
+            mockPluginRepository.findBySlug.mockResolvedValue(null);
+            mockPluginRepository.insert.mockResolvedValue(null);
+
+            const { app } = await setupTestServer({
+                siteRepository: mockSiteRepository,
+                pluginRepository: mockPluginRepository,
+                logger: mockLogger,
+            });
+            const response = await request(app)
+                .put(requestConfig.url)
+                .set(requestConfig.headers)
+                .send(requestConfig.body);
+
+            expect(mockLogger.info).toHaveBeenCalledWith('Plugin not found in database. Creating new plugin entry', {
+                slug: 'plugin-1',
+                name: requestConfig.body.plugins[0].name,
+            });
+            expect(mockLogger.error).toHaveBeenCalledWith('Failed to create plugin entry', {
+                slug: plugin1DB.slug,
+                name: plugin1DB.name,
+            });
+
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual({
+                message: 'Successfully updated site',
+                data: {
+                    id: siteDB.id,
+                    name: siteDB.name,
+                    url: siteDB.url,
+                    environment: siteDB.environment,
+                    phpVersion: siteDB.phpVersion,
+                    wpVersion: siteDB.wpVersion,
+                },
+            });
+        });
+
+        it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - skip insertion of existing plugin', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
+            mockPluginRepository.findBySlug.mockResolvedValue(new Plugin(plugin1DB));
+
+            const { app } = await setupTestServer({
+                siteRepository: mockSiteRepository,
+                pluginRepository: mockPluginRepository,
+            });
+            const response = await request(app)
+                .put(requestConfig.url)
+                .set(requestConfig.headers)
+                .send(requestConfig.body);
+
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual({
+                message: 'Successfully updated site',
+                data: {
+                    id: siteDB.id,
+                    name: siteDB.name,
+                    url: siteDB.url,
+                    environment: siteDB.environment,
+                    phpVersion: siteDB.phpVersion,
+                    wpVersion: siteDB.wpVersion,
+                },
+            });
+        });
+
+        it('should respond with (400) and { message: "The parameter "siteId" is required and must be a valid number", data: null }', async () => {
+            const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
+            const response = await request(app).put(`/site/abc`).set(requestConfig.headers).send(requestConfig.body);
+
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                message: 'The parameter "siteId" is required and must be a valid number',
+                data: null,
+            });
+        });
+
+        it('should respond with (400) and { message: "The field "name" is required and must be a non-empty string", data: null }', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+
+            const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
+            const response = await request(app).put(requestConfig.url).set(requestConfig.headers).send({});
+
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                message: 'The field "name" is required and must be a non-empty string',
+                data: null,
+            });
+        });
+
+        it('should respond with (400) and { message: "The field "url" is required and must be a non-empty string", data: null }', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+
+            const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
+            const response = await request(app).put(requestConfig.url).set(requestConfig.headers).send({
+                name: requestConfig.body.name,
+            });
+
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                message: 'The field "url" is required and must be a non-empty string',
+                data: null,
+            });
+        });
+
+        it('should respond with (400) and { message: "The field "phpVersion" is required and must be a valid version string", data: null }', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+
+            const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
+            const response = await request(app).put(requestConfig.url).set(requestConfig.headers).send({
+                name: requestConfig.body.name,
+                url: requestConfig.body.url,
+            });
+
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                message: 'The field "phpVersion" is required and must be a valid version string',
+                data: null,
+            });
+        });
+
+        it('should respond with (400) and { message: "The field "wpVersion" is required and must be a valid version string", data: null }', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+
+            const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
+            const response = await request(app).put(requestConfig.url).set(requestConfig.headers).send({
+                name: requestConfig.body.name,
+                url: requestConfig.body.url,
+                phpVersion: requestConfig.body.phpVersion,
+            });
+
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                message: 'The field "wpVersion" is required and must be a valid version string',
+                data: null,
+            });
+        });
+
+        it('should respond with (400) and { message: "The field "plugins" is required and must be an array", data: null }', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+
+            const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
+            const response = await request(app).put(requestConfig.url).set(requestConfig.headers).send({
+                name: requestConfig.body.name,
+                url: requestConfig.body.url,
+                phpVersion: requestConfig.body.phpVersion,
+                wpVersion: requestConfig.body.wpVersion,
+            });
+
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                message: 'The field "plugins" is required and must be an array',
+                data: null,
+            });
+        });
+
+        it('should respond with (400) and { message: "The field "plugins[i].file" is required and must be a string", data: null }', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+
+            const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
+            const response = await request(app)
+                .put(requestConfig.url)
+                .set(requestConfig.headers)
+                .send({
+                    name: requestConfig.body.name,
+                    url: requestConfig.body.url,
+                    phpVersion: requestConfig.body.phpVersion,
+                    wpVersion: requestConfig.body.wpVersion,
+                    plugins: [{}],
+                });
+
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                message: 'The field "plugins[0].file" is required and must be a string',
+                data: null,
+            });
+        });
+
+        it('should respond with (400) and { message: "The field "plugins[i].name" is required and must be a string", data: null }', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+
+            const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
+            const response = await request(app)
+                .put(requestConfig.url)
+                .set(requestConfig.headers)
+                .send({
+                    name: requestConfig.body.name,
+                    url: requestConfig.body.url,
+                    phpVersion: requestConfig.body.phpVersion,
+                    wpVersion: requestConfig.body.wpVersion,
+                    plugins: [
+                        {
+                            file: requestConfig.body.plugins[0].file,
+                        },
+                    ],
+                });
+
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                message: 'The field "plugins[0].name" is required and must be a string',
+                data: null,
+            });
+        });
+
+        it('should respond with (401) and { message: "The "X-Auth-Token" header is required", data: null }', async () => {
+            const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
+            const response = await request(app)
+                .put(requestConfig.url)
+                .set({
+                    'Content-Type': requestConfig.headers['Content-Type'],
+                })
+                .send(requestConfig.body);
+
+            expect(response.status).toBe(401);
+            expect(response.body).toEqual({
+                message: 'The "X-Auth-Token" header is required',
+                data: null,
+            });
+        });
+
+        it('should respond with (403) and { message: "The "X-Auth-Token" header is invalid", data: null }', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+
+            const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
+            const response = await request(app)
+                .put(requestConfig.url)
+                .set({
+                    'Content-Type': requestConfig.headers['Content-Type'],
+                    'X-Auth-Token': 'invalid-api-key',
+                })
+                .send(requestConfig.body);
+
+            expect(response.status).toBe(403);
+            expect(response.body).toEqual({
+                message: 'The "X-Auth-Token" header is invalid',
+                data: null,
+            });
+        });
+
+        it('should respond with (404) and { message: "Failed to find a site with the given Id", data: null }', async () => {
+            mockSiteRepository.findById.mockResolvedValue(null);
+
+            const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
+            const response = await request(app)
+                .put(requestConfig.url)
+                .set(requestConfig.headers)
+                .send(requestConfig.body);
+
+            expect(response.status).toBe(404);
+            expect(response.body).toEqual({
+                message: 'Failed to find a site with the given Id',
+                data: null,
+            });
+        });
+
+        it('should respond with (500) and { message: "Failed to update site", data: null }', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.update.mockResolvedValue(null);
+
+            const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
+            const response = await request(app)
+                .put(requestConfig.url)
+                .set(requestConfig.headers)
+                .send(requestConfig.body);
+
+            expect(response.status).toBe(500);
+            expect(response.body).toEqual({
+                message: 'Failed to update site',
+                data: null,
+            });
+        });
+
+        it('should respond with (500) and { message: "Database Error", data: null }', async () => {
+            mockSiteRepository.findById.mockRejectedValue(new Error('Database error'));
+
+            const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
+            const response = await request(app)
+                .put(requestConfig.url)
                 .set(requestConfig.headers)
                 .send(requestConfig.body);
 

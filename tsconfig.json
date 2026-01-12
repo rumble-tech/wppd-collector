@@ -2,7 +2,7 @@
     "ts-node": {
         "files": true
     },
-    "files": ["src/index.ts"],
+    "files": ["src/index.ts", "src/@types/express/index.d.ts"],
     "compilerOptions": {
         "module": "commonjs",
         "declaration": true,

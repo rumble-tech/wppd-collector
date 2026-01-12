@@ -14,6 +14,18 @@ export const sitesTable = sqliteTable('sites', {
     wpVersion: text('wp_version'),
 });
 
+export const pluginsTable = sqliteTable('plugins', {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+    slug: text('slug').notNull(),
+    name: text('name').notNull(),
+    latestVersion: text('latest_version'),
+    requiredPhpVersion: text('required_php_version'),
+    requiredWpVersion: text('required_wp_version'),
+});
+
 export const dbSchema = {
     sitesTable,
+    pluginsTable,
 };
