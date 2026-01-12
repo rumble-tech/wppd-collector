@@ -97,22 +97,9 @@ export default class SiteController extends AbstractController {
 
     private async registerRoute(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
+            this.registerRouteBodyValidator(req.body);
+
             const { name, url, environment } = req.body;
-
-            if (!name || typeof name !== 'string' || name.trim() === '') {
-                throw new RouteError(400, 'The field "name" is required and must be a non-empty string');
-            }
-
-            if (!url || typeof url !== 'string' || url.trim() === '') {
-                throw new RouteError(400, 'The field "url" is required and must be a non-empty string');
-            }
-
-            if (!environment || !['production', 'staging', 'development'].includes(environment)) {
-                throw new RouteError(
-                    400,
-                    'The field "environment" is required and must either be "production", "staging" or "development"'
-                );
-            }
 
             const apiKey = crypto.randomBytes(32).toString('hex');
 
@@ -165,6 +152,25 @@ export default class SiteController extends AbstractController {
             });
         } catch (e) {
             next(e);
+        }
+    }
+
+    private registerRouteBodyValidator(body: { name: string; url: string; environment: string }): void {
+        const { name, url, environment } = body;
+
+        if (!name || typeof name !== 'string' || name.trim() === '') {
+            throw new RouteError(400, 'The field "name" is required and must be a non-empty string');
+        }
+
+        if (!url || typeof url !== 'string' || url.trim() === '') {
+            throw new RouteError(400, 'The field "url" is required and must be a non-empty string');
+        }
+
+        if (!environment || !['production', 'staging', 'development'].includes(environment)) {
+            throw new RouteError(
+                400,
+                'The field "environment" is required and must either be "production", "staging" or "development"'
+            );
         }
     }
 }
