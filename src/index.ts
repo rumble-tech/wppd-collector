@@ -3,6 +3,7 @@ import SiteController from 'src/controllers/SiteController';
 import PluginRepository from 'src/repositories/PluginRepository';
 import SiteRepository from 'src/repositories/SiteRepository';
 import LatestVersionResolver from 'src/resolver/latest-version/LatestVersionResolver';
+import LatestWordPressApiPluginVersionProvider from 'src/resolver/latest-version/providers/plugin/WordPressApi';
 import LatestPhpRuntimeVersionProvider from 'src/resolver/latest-version/providers/runtime/PHP';
 import LatestWordPressRuntimeVersionProvider from 'src/resolver/latest-version/providers/runtime/WordPress';
 import Config from 'src/services/config/Config';
@@ -27,10 +28,12 @@ const pluginRepository = new PluginRepository(database, pluginsTable);
 
 const latestPhpRuntimeVersionProvider = new LatestPhpRuntimeVersionProvider();
 const latestWordPressRuntimeVersionProvider = new LatestWordPressRuntimeVersionProvider();
+const latestWordPressApiPluginVersionProvider = new LatestWordPressApiPluginVersionProvider();
 
 const latestVersionResolver = new LatestVersionResolver(
     latestPhpRuntimeVersionProvider,
-    latestWordPressRuntimeVersionProvider
+    latestWordPressRuntimeVersionProvider,
+    [latestWordPressApiPluginVersionProvider]
 );
 
 server.registerController(new IndexController(logger));

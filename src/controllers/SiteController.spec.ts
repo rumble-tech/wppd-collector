@@ -31,6 +31,7 @@ describe('SiteController', () => {
         mockLatestVersionResolver = {
             resolvePhp: jest.fn(),
             resolveWordPress: jest.fn(),
+            resolvePlugin: jest.fn(),
         } as unknown as jest.Mocked<LatestVersionResolver>;
 
         mockLogger = new Logger({ level: 'silly', directory: process.cwd() + '/logger' }) as jest.Mocked<Logger>;
@@ -517,11 +518,17 @@ describe('SiteController', () => {
             mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
             mockPluginRepository.findBySlug.mockResolvedValue(null);
             mockPluginRepository.insert.mockResolvedValue(new Plugin(plugin1DB));
+            mockLatestVersionResolver.resolvePlugin.mockResolvedValue({
+                version: '1.0.0',
+                requiredPhpVersion: '8.5.1',
+                requiredWpVersion: '6.9.0',
+            });
 
             const { app } = await setupTestServer({
                 siteRepository: mockSiteRepository,
                 pluginRepository: mockPluginRepository,
                 logger: mockLogger,
+                latestVersionResolver: mockLatestVersionResolver,
             });
             const response = await request(app)
                 .put(requestConfig.url)
@@ -552,11 +559,17 @@ describe('SiteController', () => {
             mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
             mockPluginRepository.findBySlug.mockResolvedValue(null);
             mockPluginRepository.insert.mockResolvedValue(null);
+            mockLatestVersionResolver.resolvePlugin.mockResolvedValue({
+                version: '1.0.0',
+                requiredPhpVersion: '8.5.1',
+                requiredWpVersion: '6.9.0',
+            });
 
             const { app } = await setupTestServer({
                 siteRepository: mockSiteRepository,
                 pluginRepository: mockPluginRepository,
                 logger: mockLogger,
+                latestVersionResolver: mockLatestVersionResolver,
             });
             const response = await request(app)
                 .put(requestConfig.url)

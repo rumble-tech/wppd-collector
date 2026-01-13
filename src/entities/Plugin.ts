@@ -1,12 +1,18 @@
+export type TPluginVersion = {
+    version: string | null;
+    requiredPhpVersion: string | null;
+    requiredWpVersion: string | null;
+};
+
 export type TPlugin = {
     id: number;
     createdAt: Date;
     updatedAt: Date;
     slug: string;
     name: string;
-    latestVersion: string | null;
-    requiredPhpVersion: string | null;
-    requiredWpVersion: string | null;
+    latestVersion: TPluginVersion['version'];
+    requiredPhpVersion: TPluginVersion['requiredPhpVersion'];
+    requiredWpVersion: TPluginVersion['requiredWpVersion'];
 };
 
 export default class Plugin {

@@ -14,6 +14,7 @@ module.exports = {
         './src/repositories/AbstractRepository.ts',
         './src/entities',
         './src/resolver/latest-version/providers/runtime/AbstractLatestRuntimeVersionProvider.ts',
+        './src/resolver/latest-version/providers/plugin/AbstractLatestPluginVersionProvider.ts',
         './src/services/scheduler/AbstractTask.ts',
         './src/@types',
     ],

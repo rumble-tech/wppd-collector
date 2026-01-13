@@ -29,4 +29,8 @@ export default {
         type: 'string',
         required: true,
     },
+    WP_PLUGIN_VERSION_API: {
+        type: 'string',
+        required: true,
+    },
 } as TConfigSchema;

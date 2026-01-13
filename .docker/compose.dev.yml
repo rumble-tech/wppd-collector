@@ -13,3 +13,4 @@ services:
     environment:
       PHP_VERSION_API: 'https://www.php.net/releases/index.php?json'
       WP_VERSION_API: 'https://api.wordpress.org/core/version-check/1.7/'
+      WP_PLUGIN_VERSION_API: 'https://api.wordpress.org/plugins/info/1.0'

@@ -233,13 +233,15 @@ export default class SiteController extends AbstractController {
                         name,
                     });
 
+                    const latestPluginVersion = await this.latestVersionResolver.resolvePlugin(slug);
+
                     if (
                         !(await this.pluginRepository.insert({
                             slug,
                             name,
-                            latestVersion: null,
-                            requiredPhpVersion: null,
-                            requiredWpVersion: null,
+                            latestVersion: latestPluginVersion.version,
+                            requiredPhpVersion: latestPluginVersion.requiredPhpVersion,
+                            requiredWpVersion: latestPluginVersion.requiredWpVersion,
                         }))
                     ) {
                         this.logger.error('Failed to create plugin entry', { slug, name });
