@@ -83,14 +83,14 @@ describe('SiteController', () => {
         });
 
         it('should respond with (500) and { message: "Database Error", data: null }', async () => {
-            mockSiteRepository.findAll.mockRejectedValue(new Error('Database error'));
+            mockSiteRepository.findAll.mockRejectedValue(new Error('Database Error'));
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app).get(requestConfig.url);
 
             expect(response.status).toBe(500);
             expect(response.body).toEqual({
-                message: 'Database error',
+                message: 'Database Error',
                 data: null,
             });
         });
@@ -210,14 +210,14 @@ describe('SiteController', () => {
         });
 
         it('should respond with (500) and { message: "Database Error", data: null }', async () => {
-            mockSiteRepository.findById.mockRejectedValue(new Error('Database error'));
+            mockSiteRepository.findById.mockRejectedValue(new Error('Database Error'));
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app).get(requestConfig.url);
 
             expect(response.status).toBe(500);
             expect(response.body).toEqual({
-                message: 'Database error',
+                message: 'Database Error',
                 data: null,
             });
         });
@@ -370,7 +370,7 @@ describe('SiteController', () => {
         });
 
         it('should respond with (500) and { message: "Database Error", data: null }', async () => {
-            mockSiteRepository.findByNameAndUrl.mockRejectedValue(new Error('Database error'));
+            mockSiteRepository.findByNameAndUrl.mockRejectedValue(new Error('Database Error'));
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app)
@@ -380,7 +380,7 @@ describe('SiteController', () => {
 
             expect(response.status).toBe(500);
             expect(response.body).toEqual({
-                message: 'Database error',
+                message: 'Database Error',
                 data: null,
             });
         });
@@ -834,7 +834,7 @@ describe('SiteController', () => {
         });
 
         it('should respond with (500) and { message: "Database Error", data: null }', async () => {
-            mockSiteRepository.findById.mockRejectedValue(new Error('Database error'));
+            mockSiteRepository.findById.mockRejectedValue(new Error('Database Error'));
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app)
@@ -844,7 +844,7 @@ describe('SiteController', () => {
 
             expect(response.status).toBe(500);
             expect(response.body).toEqual({
-                message: 'Database error',
+                message: 'Database Error',
                 data: null,
             });
         });

@@ -14,6 +14,7 @@ import Logger from 'src/services/logger/Logger';
 import Scheduler from 'src/services/scheduler/Scheduler';
 import Server from 'src/services/server/Server';
 import UpdateLatestPhpVersionTask from 'src/tasks/UpdateLatestPhpVersion';
+import UpdateLatestPluginVersionsTask from 'src/tasks/UpdateLatestPluginVersions';
 import UpdateLatestWordPressVersionTask from 'src/tasks/UpdateLatestWordPressVersion';
 
 Config.load(configSchema);
@@ -54,4 +55,7 @@ scheduler.addTask('update-latest-php-version', '*/30 * * * *', () =>
 );
 scheduler.addTask('update-latest-wordpress-version', '*/30 * * * *', () =>
     new UpdateLatestWordPressVersionTask(logger, latestWordPressRuntimeVersionProvider).run()
+);
+scheduler.addTask('update-latest-plugin-versions', '*/30 * * * *', () =>
+    new UpdateLatestPluginVersionsTask(logger, pluginRepository, latestVersionResolver).run()
 );
