@@ -15,6 +15,13 @@
       "when": 1767936617258,
       "tag": "0001_handy_toad_men",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1768312784069,
+      "tag": "0002_lyrical_cammi",
+      "breakpoints": true
     }
   ]
 }

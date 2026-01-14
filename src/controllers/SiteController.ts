@@ -1,30 +1,35 @@
 import crypto from 'crypto';
 import { NextFunction, Request, Response } from 'express';
 import PluginRepository from 'src/repositories/PluginRepository';
+import SitePluginRepository from 'src/repositories/SitePluginRepository';
 import SiteRepository from 'src/repositories/SiteRepository';
 import LatestVersionResolver from 'src/resolver/latest-version/LatestVersionResolver';
 import Logger from 'src/services/logger/Logger';
 import AbstractController from 'src/services/server/AbstractController';
 import RouteError from 'src/services/server/RouteError';
 import Utils from 'src/Utils';
+import SitePlugin from '../entities/SitePlugin';
 
 export default class SiteController extends AbstractController {
     protected readonly prefix = '/site';
 
     private readonly siteRepository: SiteRepository;
     private readonly pluginRepository: PluginRepository;
+    private readonly sitePluginRepository: SitePluginRepository;
     private readonly latestVersionResolver: LatestVersionResolver;
 
     constructor(
         logger: Logger,
         siteRepository: SiteRepository,
         pluginRepository: PluginRepository,
+        sitePluginRepository: SitePluginRepository,
         latestVersionResolver: LatestVersionResolver
     ) {
         super(logger);
 
         this.siteRepository = siteRepository;
         this.pluginRepository = pluginRepository;
+        this.sitePluginRepository = sitePluginRepository;
         this.latestVersionResolver = latestVersionResolver;
 
         this.useRoutes();
@@ -247,6 +252,120 @@ export default class SiteController extends AbstractController {
                         this.logger.error('Failed to create plugin entry', { slug, name });
                     }
                 }
+
+                const dbPlugin = await this.pluginRepository.findBySlug(slug);
+
+                if (!dbPlugin) {
+                    this.logger.error('Plugin not found after insertion attempt', { slug });
+                    continue;
+                }
+
+                if (!(await this.sitePluginRepository.findBySiteIdAndPluginId(req.site.getId(), dbPlugin.getId()))) {
+                    this.logger.info('Site plugin not found in database. Creating new site plugin entry', {
+                        site: {
+                            id: req.site.getId(),
+                            name: req.site.getName(),
+                        },
+                        plugin: {
+                            id: dbPlugin.getId(),
+                            slug: dbPlugin.getSlug(),
+                        },
+                    });
+
+                    if (
+                        !(await this.sitePluginRepository.insert({
+                            siteId: req.site.getId(),
+                            pluginId: dbPlugin.getId(),
+                            installedVersion: plugin.version.installedVersion,
+                            requiredPhpVersion: plugin.version.requiredPhpVersion,
+                            requiredWpVersion: plugin.version.requiredWpVersion,
+                            isActive: plugin.active,
+                        }))
+                    ) {
+                        this.logger.error('Failed to create site plugin entry', {
+                            siteId: req.site.getId(),
+                            pluginId: dbPlugin.getId(),
+                        });
+
+                        continue;
+                    }
+
+                    this.logger.info('Successfully created site plugin entry', {
+                        siteId: req.site.getId(),
+                        pluginId: dbPlugin.getId(),
+                    });
+                } else {
+                    this.logger.info('Site plugin entry already exists. Updating.', {
+                        site: {
+                            id: req.site.getId(),
+                            name: req.site.getName(),
+                        },
+                        plugin: {
+                            id: dbPlugin.getId(),
+                            slug: dbPlugin.getSlug(),
+                        },
+                    });
+
+                    if (
+                        !(await this.sitePluginRepository.update({
+                            siteId: req.site.getId(),
+                            pluginId: dbPlugin.getId(),
+                            installedVersion: plugin.version.installedVersion,
+                            requiredPhpVersion: plugin.version.requiredPhpVersion,
+                            requiredWpVersion: plugin.version.requiredWpVersion,
+                            isActive: plugin.active,
+                        }))
+                    ) {
+                        this.logger.error('Failed to update site plugin entry', {
+                            siteId: req.site.getId(),
+                            pluginId: dbPlugin.getId(),
+                        });
+
+                        continue;
+                    }
+
+                    this.logger.info('Successfully updated site plugin entry', {
+                        siteId: req.site.getId(),
+                        pluginId: dbPlugin.getId(),
+                    });
+                }
+            }
+
+            const allSitePlugins = await this.sitePluginRepository.findAllBySiteId(req.site.getId());
+            const receivedPluginSlugs = plugins.map((plugin) => Utils.getPluginSlugFromFile(plugin.file));
+
+            const deletableSitePlugins = (
+                await Promise.all(
+                    allSitePlugins.map(async (sitePlugin) => {
+                        const plugin = await this.pluginRepository.findById(sitePlugin.getPluginId());
+                        if (!plugin) {
+                            return undefined; // Return undefined instead of null
+                        }
+
+                        return receivedPluginSlugs.includes(plugin.getSlug()) ? undefined : sitePlugin;
+                    })
+                )
+            ).filter((sitePlugin): sitePlugin is SitePlugin => Boolean(sitePlugin)); // Type guard to ensure only SitePlugin remains
+
+            for (const sitePlugin of deletableSitePlugins) {
+                this.logger.info('Deleting site plugin entry as it was not included in the update payload', {
+                    siteId: req.site.getId(),
+                    pluginId: sitePlugin.getPluginId(),
+                });
+
+                if (!(await this.sitePluginRepository.delete(sitePlugin.getSiteId(), sitePlugin.getPluginId()))) {
+                    this.logger.error('Failed to delete site plugin entry', {
+                        siteId: req.site.getId(),
+                        pluginId: sitePlugin.getPluginId(),
+                    });
+
+                    continue;
+                }
+
+                this.logger.info('Successfully deleted site plugin entry', {
+                    siteId: req.site.getId(),
+                    pluginId: sitePlugin.getPluginId(),
+                });
             }
 
             res.status(200).json({
@@ -292,6 +411,12 @@ export default class SiteController extends AbstractController {
         plugins: {
             file: string;
             name: string;
+            active: boolean;
+            version: {
+                installedVersion: string | null;
+                requiredPhpVersion: string | null;
+                requiredWpVersion: string | null;
+            };
         }[];
     }): void {
         const { name, url, phpVersion, wpVersion, plugins } = body;
@@ -326,6 +451,50 @@ export default class SiteController extends AbstractController {
 
                 if (!plugin.name || typeof plugin.name !== 'string') {
                     throw new RouteError(400, `The field "plugins[${i}].name" is required and must be a string`);
+                }
+
+                if (typeof plugin.active !== 'boolean') {
+                    throw new RouteError(400, `The field "plugins[${i}].active" is required and must be a boolean`);
+                }
+
+                if (!plugin.version || typeof plugin.version !== 'object') {
+                    throw new RouteError(400, `The field "plugins[${i}].version" is required and must be an object`);
+                }
+
+                if (
+                    plugin.version.installedVersion === undefined ||
+                    (plugin.version.installedVersion !== null &&
+                        (typeof plugin.version.installedVersion !== 'string' ||
+                            Utils.formatVersion(plugin.version.installedVersion) === 'invalid-version'))
+                ) {
+                    throw new RouteError(
+                        400,
+                        `The field "plugins[${i}].version.installedVersion" is required and must be a valid version string or null`
+                    );
+                }
+
+                if (
+                    plugin.version.requiredPhpVersion === undefined ||
+                    (plugin.version.requiredPhpVersion !== null &&
+                        (typeof plugin.version.requiredPhpVersion !== 'string' ||
+                            Utils.formatVersion(plugin.version.requiredPhpVersion) === 'invalid-version'))
+                ) {
+                    throw new RouteError(
+                        400,
+                        `The field "plugins[${i}].version.requiredPhpVersion" is required and must be a valid version string or null`
+                    );
+                }
+
+                if (
+                    plugin.version.requiredWpVersion === undefined ||
+                    (plugin.version.requiredWpVersion !== null &&
+                        (typeof plugin.version.requiredWpVersion !== 'string' ||
+                            Utils.formatVersion(plugin.version.requiredWpVersion) === 'invalid-version'))
+                ) {
+                    throw new RouteError(
+                        400,
+                        `The field "plugins[${i}].version.requiredWpVersion" is required and must be a valid version string or null`
+                    );
                 }
             }
         }

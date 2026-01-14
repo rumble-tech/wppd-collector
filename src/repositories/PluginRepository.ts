@@ -30,6 +30,30 @@ export default class PluginRepository extends AbstractRepository {
         );
     }
 
+    public async findById(id: TPlugin['id']): Promise<Plugin | null> {
+        const [plugin] = await this.db
+            .select()
+            .from(this.pluginsTable)
+            .where(eq(this.pluginsTable.id, id))
+            .limit(1)
+            .execute();
+
+        if (!plugin) {
+            return null;
+        }
+
+        return new Plugin({
+            id: plugin.id,
+            createdAt: plugin.createdAt,
+            updatedAt: plugin.updatedAt,
+            slug: plugin.slug,
+            name: plugin.name,
+            latestVersion: plugin.latestVersion,
+            requiredPhpVersion: plugin.requiredPhpVersion,
+            requiredWpVersion: plugin.requiredWpVersion,
+        });
+    }
+
     public async findBySlug(slug: TPlugin['slug']): Promise<Plugin | null> {
         const [plugin] = await this.db
             .select()

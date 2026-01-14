@@ -1,6 +1,7 @@
 import IndexController from 'src/controllers/IndexController';
 import SiteController from 'src/controllers/SiteController';
 import PluginRepository from 'src/repositories/PluginRepository';
+import SitePluginRepository from 'src/repositories/SitePluginRepository';
 import SiteRepository from 'src/repositories/SiteRepository';
 import LatestVersionResolver from 'src/resolver/latest-version/LatestVersionResolver';
 import Config from 'src/services/config/Config';
@@ -14,11 +15,13 @@ export async function setupTestServer({
     }),
     siteRepository = {} as jest.Mocked<SiteRepository>,
     pluginRepository = {} as jest.Mocked<PluginRepository>,
+    sitePluginRepository = {} as jest.Mocked<SitePluginRepository>,
     latestVersionResolver = {} as jest.Mocked<LatestVersionResolver>,
 }: {
     logger?: Logger;
     siteRepository?: jest.Mocked<SiteRepository>;
     pluginRepository?: jest.Mocked<PluginRepository>;
+    sitePluginRepository?: jest.Mocked<SitePluginRepository>;
     latestVersionResolver?: jest.Mocked<LatestVersionResolver>;
 } = {}) {
     logger.info = jest.fn();
@@ -44,7 +47,7 @@ export async function setupTestServer({
     const serverInstance = Server.getInstance(logger);
     serverInstance.registerController(new IndexController(logger));
     serverInstance.registerController(
-        new SiteController(logger, siteRepository, pluginRepository, latestVersionResolver)
+        new SiteController(logger, siteRepository, pluginRepository, sitePluginRepository, latestVersionResolver)
     );
 
     const app = serverInstance.getApp();

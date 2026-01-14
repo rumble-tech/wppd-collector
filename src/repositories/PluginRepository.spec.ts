@@ -78,6 +78,67 @@ describe('PluginRepository', () => {
         });
     });
 
+    describe('PluginRepository.findById', () => {
+        it('should return one plugin by its id', async () => {
+            const builder = {
+                from: jest.fn().mockReturnThis(),
+                where: jest.fn().mockReturnThis(),
+                limit: jest.fn().mockReturnThis(),
+                execute: jest.fn().mockResolvedValue([
+                    {
+                        id: 1,
+                        createdAt: new Date('2026-01-01T00:00:00Z'),
+                        updatedAt: new Date('2026-01-02T00:00:00Z'),
+                        slug: 'plugin-1',
+                        name: 'Plugin1',
+                        latestVersion: '1.0.0',
+                        requiredPhpVersion: '8.5.1',
+                        requiredWpVersion: '6.9.0',
+                    },
+                ]),
+            };
+
+            (database.select as jest.Mock).mockReturnValueOnce(builder);
+
+            const plugin = await pluginRepository.findById(1);
+
+            expect(database.select).toHaveBeenCalled();
+            expect(builder.from).toHaveBeenCalledWith(pluginsTable);
+            expect(builder.where).toHaveBeenCalledWith(eq(pluginsTable.id, 1));
+            expect(builder.limit).toHaveBeenCalledWith(1);
+            expect(builder.execute).toHaveBeenCalled();
+
+            expect(plugin).not.toBeNull();
+            expect(plugin?.getId()).toBe(1);
+            expect(plugin?.getSlug()).toBe('plugin-1');
+            expect(plugin?.getName()).toBe('Plugin1');
+            expect(plugin?.getLatestVersion()).toBe('1.0.0');
+            expect(plugin?.getRequiredPhpVersion()).toBe('8.5.1');
+            expect(plugin?.getRequiredWpVersion()).toBe('6.9.0');
+        });
+
+        it('should return null if the plugin could not be found by its id', async () => {
+            const builder = {
+                from: jest.fn().mockReturnThis(),
+                where: jest.fn().mockReturnThis(),
+                limit: jest.fn().mockReturnThis(),
+                execute: jest.fn().mockResolvedValue([]),
+            };
+
+            (database.select as jest.Mock).mockReturnValueOnce(builder);
+
+            const plugin = await pluginRepository.findById(1);
+
+            expect(database.select).toHaveBeenCalled();
+            expect(builder.from).toHaveBeenCalledWith(pluginsTable);
+            expect(builder.where).toHaveBeenCalledWith(eq(pluginsTable.id, 1));
+            expect(builder.limit).toHaveBeenCalledWith(1);
+            expect(builder.execute).toHaveBeenCalled();
+
+            expect(plugin).toBeNull();
+        });
+    });
+
     describe('PluginRepository.findBySlug', () => {
         it('should return one plugin by its slug', async () => {
             const builder = {
