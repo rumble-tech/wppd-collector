@@ -1,6 +1,7 @@
 import IndexController from 'src/controllers/IndexController';
 import SiteController from 'src/controllers/SiteController';
 import PluginRepository from 'src/repositories/PluginRepository';
+import PluginVulnerabilityRepository from 'src/repositories/PluginVulnerabilityRepository';
 import SitePluginRepository from 'src/repositories/SitePluginRepository';
 import SiteRepository from 'src/repositories/SiteRepository';
 import LatestVersionResolver from 'src/resolver/latest-version/LatestVersionResolver';
@@ -12,7 +13,7 @@ import VulnerabilitiesResolver from 'src/resolver/vulnerabilities/Vulnerabilitie
 import Config from 'src/services/config/Config';
 import configSchema from 'src/services/config/Schema';
 import { database } from 'src/services/database/Database';
-import { pluginsTable, sitePluginsTable, sitesTable } from 'src/services/database/Schema';
+import { pluginsTable, pluginVulnerabilitiesTable, sitePluginsTable, sitesTable } from 'src/services/database/Schema';
 import Logger from 'src/services/logger/Logger';
 import Scheduler from 'src/services/scheduler/Scheduler';
 import Server from 'src/services/server/Server';
@@ -30,6 +31,7 @@ const server = Server.getInstance(logger);
 const siteRepository = new SiteRepository(database, sitesTable);
 const pluginRepository = new PluginRepository(database, pluginsTable);
 const sitePluginRepository = new SitePluginRepository(database, sitePluginsTable);
+const pluginVulnerabilityRepository = new PluginVulnerabilityRepository(database, pluginVulnerabilitiesTable);
 
 const latestPhpRuntimeVersionProvider = new LatestPhpRuntimeVersionProvider();
 const latestWordPressRuntimeVersionProvider = new LatestWordPressRuntimeVersionProvider();
@@ -47,7 +49,15 @@ const vulnerabilitiesResolver = new VulnerabilitiesResolver([wordfenceVulnerabil
 
 server.registerController(new IndexController(logger));
 server.registerController(
-    new SiteController(logger, siteRepository, pluginRepository, sitePluginRepository, latestVersionResolver)
+    new SiteController(
+        logger,
+        siteRepository,
+        pluginRepository,
+        sitePluginRepository,
+        pluginVulnerabilityRepository,
+        latestVersionResolver,
+        vulnerabilitiesResolver
+    )
 );
 server
     .start()
@@ -71,5 +81,5 @@ scheduler.addTask('update-latest-plugin-versions', '*/30 * * * *', () =>
 );
 
 (async () => {
-    await wordfenceVulnerabilitiesProvider.fetchVulnerabilities();
+    await wordfenceVulnerabilitiesProvider.fetch();
 })();

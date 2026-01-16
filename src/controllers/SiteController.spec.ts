@@ -1,10 +1,13 @@
 import Plugin from 'src/entities/Plugin';
+import PluginVulnerability from 'src/entities/PluginVulnerability';
 import Site from 'src/entities/Site';
 import SitePlugin from 'src/entities/SitePlugin';
 import PluginRepository from 'src/repositories/PluginRepository';
+import PluginVulnerabilityRepository from 'src/repositories/PluginVulnerabilityRepository';
 import SitePluginRepository from 'src/repositories/SitePluginRepository';
 import SiteRepository from 'src/repositories/SiteRepository';
 import LatestVersionResolver from 'src/resolver/latest-version/LatestVersionResolver';
+import VulnerabilitiesResolver from 'src/resolver/vulnerabilities/VulnerabilitiesResolver';
 import Logger from 'src/services/logger/Logger';
 import request from 'supertest';
 import { setupTestServer } from 'test-utils/SetupServer';
@@ -13,7 +16,9 @@ describe('SiteController', () => {
     let mockSiteRepository: jest.Mocked<SiteRepository>;
     let mockPluginRepository: jest.Mocked<PluginRepository>;
     let mockSitePluginRepository: jest.Mocked<SitePluginRepository>;
+    let mockPluginVulnerabilityRepository: jest.Mocked<PluginVulnerabilityRepository>;
     let mockLatestVersionResolver: jest.Mocked<LatestVersionResolver>;
+    let mockVulnerabilitiesResolver: jest.Mocked<VulnerabilitiesResolver>;
     let mockLogger: jest.Mocked<Logger>;
 
     beforeEach(() => {
@@ -39,11 +44,21 @@ describe('SiteController', () => {
             delete: jest.fn(),
         } as unknown as jest.Mocked<SitePluginRepository>;
 
+        mockPluginVulnerabilityRepository = {
+            findAllByPluginId: jest.fn(),
+            insert: jest.fn(),
+            deleteAllByPluginId: jest.fn(),
+        } as unknown as jest.Mocked<PluginVulnerabilityRepository>;
+
         mockLatestVersionResolver = {
             resolvePhp: jest.fn(),
             resolveWordPress: jest.fn(),
             resolvePlugin: jest.fn(),
         } as unknown as jest.Mocked<LatestVersionResolver>;
+
+        mockVulnerabilitiesResolver = {
+            resolvePlugin: jest.fn(),
+        } as unknown as jest.Mocked<VulnerabilitiesResolver>;
 
         mockLogger = new Logger({ level: 'silly', directory: process.cwd() + '/logger' }) as jest.Mocked<Logger>;
 
@@ -199,6 +214,159 @@ describe('SiteController', () => {
         it('should respond with (400) and { message: "The parameter "siteId" is required and must be a valid number", data: null }', async () => {
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app).get(`/site/abc`);
+
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                message: 'The parameter "siteId" is required and must be a valid number',
+                data: null,
+            });
+        });
+
+        it('should respond with (404) and { message: "Failed to find a site with the given Id", data: null }', async () => {
+            mockSiteRepository.findById.mockResolvedValue(null);
+
+            const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
+            const response = await request(app).get(requestConfig.url);
+
+            expect(response.status).toBe(404);
+            expect(response.body).toEqual({
+                message: 'Failed to find a site with the given Id',
+                data: null,
+            });
+        });
+
+        it('should respond with (500) and { message: "Database Error", data: null }', async () => {
+            mockSiteRepository.findById.mockRejectedValue(new Error('Database Error'));
+
+            const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
+            const response = await request(app).get(requestConfig.url);
+
+            expect(response.status).toBe(500);
+            expect(response.body).toEqual({
+                message: 'Database Error',
+                data: null,
+            });
+        });
+    });
+
+    describe('GET /site/{siteId}/plugins', () => {
+        const siteDB = {
+            id: 1,
+            createdAt: new Date('2026-01-01T00:00:00Z'),
+            updatedAt: new Date('2026-01-02T00:00:00Z'),
+            name: 'Site1',
+            url: 'https://example.com/site1',
+            apiKey: 'api-key-1',
+            environment: 'development',
+            phpVersion: '8.5.1',
+            wpVersion: '6.9.0',
+        } as const;
+
+        const plugin1DB = {
+            id: 1,
+            createdAt: new Date('2026-01-01T00:00:00Z'),
+            updatedAt: new Date('2026-01-01T00:00:00Z'),
+            slug: 'plugin-1',
+            name: 'Plugin1',
+            latestVersion: '1.0.0',
+            requiredPhpVersion: '8.5.1',
+            requiredWpVersion: '6.9.0',
+        };
+
+        const sitePlugin1DB = {
+            createdAt: new Date('2026-01-01T00:00:00Z'),
+            updatedAt: new Date('2026-01-01T00:00:00Z'),
+            siteId: 1,
+            pluginId: 1,
+            installedVersion: '1.0.0',
+            requiredPhpVersion: '8.5.1',
+            requiredWpVersion: '6.9.0',
+            isActive: true,
+        };
+
+        const pluginVulnerability1DB = {
+            id: 1,
+            createdAt: new Date('2026-01-01T00:00:00Z'),
+            pluginId: 1,
+            description: 'Vulnerability in Plugin1',
+            publishedAt: new Date('2025-12-01T00:00:00Z'),
+            severity: 5,
+            references: 'https://example.com/vuln1',
+            fromVersion: {
+                version: '1.0.0',
+                inclusive: true,
+            },
+            toVersion: {
+                version: '2.0.0',
+                inclusive: true,
+            },
+        };
+
+        const requestConfig = {
+            url: `/site/${siteDB.id}/plugins`,
+        };
+
+        it('should respond with (200) and { message: "Successfully retrieved site plugins", data: [ ... ] }', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSitePluginRepository.findAllBySiteId.mockResolvedValue([new SitePlugin(sitePlugin1DB)]);
+            mockPluginRepository.findById.mockResolvedValue(new Plugin(plugin1DB));
+            mockPluginVulnerabilityRepository.findAllByPluginId.mockResolvedValue([
+                new PluginVulnerability(pluginVulnerability1DB),
+            ]);
+
+            const { app } = await setupTestServer({
+                siteRepository: mockSiteRepository,
+                pluginRepository: mockPluginRepository,
+                sitePluginRepository: mockSitePluginRepository,
+                pluginVulnerabilityRepository: mockPluginVulnerabilityRepository,
+            });
+
+            const response = await request(app).get(requestConfig.url);
+
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual({
+                message: 'Successfully retrieved site plugins',
+                data: [
+                    {
+                        id: plugin1DB.id,
+                        slug: plugin1DB.slug,
+                        name: plugin1DB.name,
+                        installedVersion: {
+                            version: sitePlugin1DB.installedVersion,
+                            requiredPhpVersion: sitePlugin1DB.requiredPhpVersion,
+                            requiredWpVersion: sitePlugin1DB.requiredWpVersion,
+                        },
+                        latestVersion: {
+                            version: plugin1DB.latestVersion,
+                            requiredPhpVersion: plugin1DB.requiredPhpVersion,
+                            requiredWpVersion: plugin1DB.requiredWpVersion,
+                        },
+                        versionDifference: 'same',
+                        isActive: sitePlugin1DB.isActive,
+                        vulnerabilities: {
+                            count: 1,
+                            maxSeverity: pluginVulnerability1DB.severity,
+                            details: [
+                                {
+                                    description: pluginVulnerability1DB.description,
+                                    publishedAt: pluginVulnerability1DB.publishedAt.toISOString(),
+                                    severity: pluginVulnerability1DB.severity,
+                                    references: pluginVulnerability1DB.references,
+                                    fromVersion: pluginVulnerability1DB.fromVersion,
+                                    toVersion: pluginVulnerability1DB.toVersion,
+                                },
+                            ],
+                        },
+                    },
+                ],
+            });
+        });
+
+        //it('should respond with (200) and { message: "Successfully retrieved site plugins", data: [ ... ] } - versions not categorizable', async () => {});
+
+        it('should respond with (400) and { message: "The parameter "siteId" is required and must be a valid number", data: null }', async () => {
+            const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
+            const response = await request(app).get(`/site/abc/plugins`);
 
             expect(response.status).toBe(400);
             expect(response.body).toEqual({
@@ -432,6 +600,21 @@ describe('SiteController', () => {
             isActive: true,
         };
 
+        const pluginVulnerability1Resolver = {
+            description: 'Vulnerability in Plugin1',
+            publishedAt: new Date('2025-12-01T00:00:00Z'),
+            severity: 5,
+            references: 'https://example.com/vuln1',
+            fromVersion: {
+                version: '1.0.0',
+                inclusive: true,
+            },
+            toVersion: {
+                version: '2.0.0',
+                inclusive: true,
+            },
+        };
+
         const requestConfig = {
             url: `/site/${siteDB.id}`,
             headers: {
@@ -539,6 +722,175 @@ describe('SiteController', () => {
             });
         });
 
+        it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - insert new plugin + inserting vulnerabilities', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
+            mockPluginRepository.findBySlug.mockResolvedValueOnce(null).mockResolvedValue(new Plugin(plugin1DB));
+            mockPluginRepository.insert.mockResolvedValue(new Plugin(plugin1DB));
+            mockLatestVersionResolver.resolvePlugin.mockResolvedValue({
+                version: '1.0.0',
+                requiredPhpVersion: '8.5.1',
+                requiredWpVersion: '6.9.0',
+            });
+            mockVulnerabilitiesResolver.resolvePlugin.mockResolvedValue([pluginVulnerability1Resolver]);
+            mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(null);
+            mockSitePluginRepository.insert.mockResolvedValue(null);
+            mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
+            mockPluginVulnerabilityRepository.deleteAllByPluginId.mockResolvedValue(true);
+            mockPluginVulnerabilityRepository.insert.mockResolvedValue(
+                new PluginVulnerability({
+                    id: 1,
+                    createdAt: new Date('2026-01-01T00:00:00Z'),
+                    pluginId: 1,
+                    ...pluginVulnerability1Resolver,
+                })
+            );
+
+            const { app } = await setupTestServer({
+                siteRepository: mockSiteRepository,
+                pluginRepository: mockPluginRepository,
+                sitePluginRepository: mockSitePluginRepository,
+                pluginVulnerabilityRepository: mockPluginVulnerabilityRepository,
+                logger: mockLogger,
+                latestVersionResolver: mockLatestVersionResolver,
+                vulnerabilitiesResolver: mockVulnerabilitiesResolver,
+            });
+
+            const response = await request(app)
+                .put(requestConfig.url)
+                .set(requestConfig.headers)
+                .send(requestConfig.body);
+
+            expect(mockLogger.info).toHaveBeenCalledWith('Plugin not found in database. Creating new plugin entry', {
+                slug: 'plugin-1',
+                name: requestConfig.body.plugins[0].name,
+            });
+            expect(mockLogger.info).toHaveBeenCalledWith('Successfully inserted plugin vulnerability', {
+                slug: 'plugin-1',
+                vulnerability: pluginVulnerability1Resolver,
+            });
+
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual({
+                message: 'Successfully updated site',
+                data: {
+                    id: siteDB.id,
+                    name: siteDB.name,
+                    url: siteDB.url,
+                    environment: siteDB.environment,
+                    phpVersion: siteDB.phpVersion,
+                    wpVersion: siteDB.wpVersion,
+                },
+            });
+        });
+
+        it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - insert new plugin + inserting vulnerabilities fails', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
+            mockPluginRepository.findBySlug.mockResolvedValueOnce(null).mockResolvedValue(new Plugin(plugin1DB));
+            mockPluginRepository.insert.mockResolvedValue(new Plugin(plugin1DB));
+            mockLatestVersionResolver.resolvePlugin.mockResolvedValue({
+                version: '1.0.0',
+                requiredPhpVersion: '8.5.1',
+                requiredWpVersion: '6.9.0',
+            });
+            mockVulnerabilitiesResolver.resolvePlugin.mockResolvedValue([pluginVulnerability1Resolver]);
+            mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(null);
+            mockSitePluginRepository.insert.mockResolvedValue(null);
+            mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
+            mockPluginVulnerabilityRepository.deleteAllByPluginId.mockResolvedValue(true);
+            mockPluginVulnerabilityRepository.insert.mockResolvedValue(null);
+
+            const { app } = await setupTestServer({
+                siteRepository: mockSiteRepository,
+                pluginRepository: mockPluginRepository,
+                sitePluginRepository: mockSitePluginRepository,
+                pluginVulnerabilityRepository: mockPluginVulnerabilityRepository,
+                logger: mockLogger,
+                latestVersionResolver: mockLatestVersionResolver,
+                vulnerabilitiesResolver: mockVulnerabilitiesResolver,
+            });
+
+            const response = await request(app)
+                .put(requestConfig.url)
+                .set(requestConfig.headers)
+                .send(requestConfig.body);
+
+            expect(mockLogger.info).toHaveBeenCalledWith('Plugin not found in database. Creating new plugin entry', {
+                slug: 'plugin-1',
+                name: requestConfig.body.plugins[0].name,
+            });
+            expect(mockLogger.error).toHaveBeenCalledWith('Failed to insert plugin vulnerability', {
+                slug: 'plugin-1',
+                vulnerability: pluginVulnerability1Resolver,
+            });
+
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual({
+                message: 'Successfully updated site',
+                data: {
+                    id: siteDB.id,
+                    name: siteDB.name,
+                    url: siteDB.url,
+                    environment: siteDB.environment,
+                    phpVersion: siteDB.phpVersion,
+                    wpVersion: siteDB.wpVersion,
+                },
+            });
+        });
+
+        it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - insert new plugin + fetching vulnerabilities fails', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
+            mockPluginRepository.findBySlug.mockResolvedValueOnce(null).mockResolvedValue(new Plugin(plugin1DB));
+            mockPluginRepository.insert.mockResolvedValue(new Plugin(plugin1DB));
+            mockLatestVersionResolver.resolvePlugin.mockResolvedValue({
+                version: '1.0.0',
+                requiredPhpVersion: '8.5.1',
+                requiredWpVersion: '6.9.0',
+            });
+            mockVulnerabilitiesResolver.resolvePlugin.mockResolvedValue(null);
+            mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(null);
+            mockSitePluginRepository.insert.mockResolvedValue(null);
+            mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
+
+            const { app } = await setupTestServer({
+                siteRepository: mockSiteRepository,
+                pluginRepository: mockPluginRepository,
+                sitePluginRepository: mockSitePluginRepository,
+                pluginVulnerabilityRepository: mockPluginVulnerabilityRepository,
+                logger: mockLogger,
+                latestVersionResolver: mockLatestVersionResolver,
+                vulnerabilitiesResolver: mockVulnerabilitiesResolver,
+            });
+
+            const response = await request(app)
+                .put(requestConfig.url)
+                .set(requestConfig.headers)
+                .send(requestConfig.body);
+
+            expect(mockLogger.info).toHaveBeenCalledWith('Plugin not found in database. Creating new plugin entry', {
+                slug: 'plugin-1',
+                name: requestConfig.body.plugins[0].name,
+            });
+            expect(mockLogger.error).toHaveBeenCalledWith('Failed to fetch vulnerabilities for plugin after creation', {
+                slug: 'plugin-1',
+            });
+
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual({
+                message: 'Successfully updated site',
+                data: {
+                    id: siteDB.id,
+                    name: siteDB.name,
+                    url: siteDB.url,
+                    environment: siteDB.environment,
+                    phpVersion: siteDB.phpVersion,
+                    wpVersion: siteDB.wpVersion,
+                },
+            });
+        });
+
         it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - insert new plugin + insert site plugin', async () => {
             mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
             mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
@@ -549,6 +901,7 @@ describe('SiteController', () => {
                 requiredPhpVersion: '8.5.1',
                 requiredWpVersion: '6.9.0',
             });
+            mockVulnerabilitiesResolver.resolvePlugin.mockResolvedValue([]);
             mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(null);
             mockSitePluginRepository.insert.mockResolvedValue(new SitePlugin(sitePlugin1DB));
             mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
@@ -557,8 +910,10 @@ describe('SiteController', () => {
                 siteRepository: mockSiteRepository,
                 pluginRepository: mockPluginRepository,
                 sitePluginRepository: mockSitePluginRepository,
+                pluginVulnerabilityRepository: mockPluginVulnerabilityRepository,
                 logger: mockLogger,
                 latestVersionResolver: mockLatestVersionResolver,
+                vulnerabilitiesResolver: mockVulnerabilitiesResolver,
             });
             const response = await request(app)
                 .put(requestConfig.url)
@@ -598,6 +953,7 @@ describe('SiteController', () => {
                 requiredPhpVersion: '8.5.1',
                 requiredWpVersion: '6.9.0',
             });
+            mockVulnerabilitiesResolver.resolvePlugin.mockResolvedValue([]);
             mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(null);
             mockSitePluginRepository.insert.mockResolvedValue(null);
             mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
@@ -606,8 +962,10 @@ describe('SiteController', () => {
                 siteRepository: mockSiteRepository,
                 pluginRepository: mockPluginRepository,
                 sitePluginRepository: mockSitePluginRepository,
+                pluginVulnerabilityRepository: mockPluginVulnerabilityRepository,
                 logger: mockLogger,
                 latestVersionResolver: mockLatestVersionResolver,
+                vulnerabilitiesResolver: mockVulnerabilitiesResolver,
             });
             const response = await request(app)
                 .put(requestConfig.url)
@@ -621,6 +979,56 @@ describe('SiteController', () => {
             expect(mockLogger.error).toHaveBeenCalledWith('Failed to create site plugin entry', {
                 siteId: siteDB.id,
                 pluginId: plugin1DB.id,
+            });
+
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual({
+                message: 'Successfully updated site',
+                data: {
+                    id: siteDB.id,
+                    name: siteDB.name,
+                    url: siteDB.url,
+                    environment: siteDB.environment,
+                    phpVersion: siteDB.phpVersion,
+                    wpVersion: siteDB.wpVersion,
+                },
+            });
+        });
+
+        it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - insert new plugin + plugin not found after insertion', async () => {
+            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
+            mockPluginRepository.findBySlug.mockResolvedValue(null);
+            mockPluginRepository.insert.mockResolvedValue(new Plugin(plugin1DB));
+            mockLatestVersionResolver.resolvePlugin.mockResolvedValue({
+                version: '1.0.0',
+                requiredPhpVersion: '8.5.1',
+                requiredWpVersion: '6.9.0',
+            });
+            mockVulnerabilitiesResolver.resolvePlugin.mockResolvedValue(null);
+            mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(null);
+            mockSitePluginRepository.insert.mockResolvedValue(null);
+            mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
+
+            const { app } = await setupTestServer({
+                siteRepository: mockSiteRepository,
+                pluginRepository: mockPluginRepository,
+                sitePluginRepository: mockSitePluginRepository,
+                logger: mockLogger,
+                latestVersionResolver: mockLatestVersionResolver,
+                vulnerabilitiesResolver: mockVulnerabilitiesResolver,
+            });
+            const response = await request(app)
+                .put(requestConfig.url)
+                .set(requestConfig.headers)
+                .send(requestConfig.body);
+
+            expect(mockLogger.info).toHaveBeenCalledWith('Plugin not found in database. Creating new plugin entry', {
+                slug: 'plugin-1',
+                name: requestConfig.body.plugins[0].name,
+            });
+            expect(mockLogger.error).toHaveBeenCalledWith('Plugin not found after insertion attempt', {
+                slug: 'plugin-1',
             });
 
             expect(response.status).toBe(200);

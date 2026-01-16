@@ -115,6 +115,20 @@ describe('WordFenceApiVulnerabilitiesProvider', () => {
                     inclusive: false,
                 },
             },
+            {
+                description: 'sample-description',
+                publishedAt: new Date('2026-01-01T00:00:00Z'),
+                severity: 5,
+                references: null,
+                fromVersion: {
+                    version: '1.0.0',
+                    inclusive: true,
+                },
+                toVersion: {
+                    version: '2.0.0',
+                    inclusive: true,
+                },
+            },
         ] as const;
 
         it('should set the vulnerabilities on successful API call', async () => {
@@ -187,6 +201,28 @@ describe('WordFenceApiVulnerabilitiesProvider', () => {
                                     from_inclusive: true,
                                     to_version: '2.0.0',
                                     to_inclusive: false,
+                                },
+                            },
+                        },
+                    ],
+                    cvss: {
+                        score: 5,
+                    },
+                },
+                'vulnerability-2': {
+                    description: 'sample-description',
+                    published: '2026-01-01T00:00:00Z',
+                    references: [],
+                    software: [
+                        {
+                            type: 'plugin',
+                            slug: 'sample-plugin',
+                            affected_versions: {
+                                '1.0.0-2.0.0': {
+                                    from_version: '1.0.0',
+                                    from_inclusive: true,
+                                    to_version: '2.0.0',
+                                    to_inclusive: true,
                                 },
                             },
                         },

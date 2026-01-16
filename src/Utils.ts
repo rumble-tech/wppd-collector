@@ -55,6 +55,28 @@ export default class Utils {
         return split[0];
     }
 
+    public static compareVersions(versionA: string, versionB: string): 'less' | 'equal' | 'greater' | 'invalid' {
+        if (!Utils.isValidVersion(versionA) || !Utils.isValidVersion(versionB)) {
+            return 'invalid';
+        }
+
+        const partsA = versionA.split('.').map(Number);
+        const partsB = versionB.split('.').map(Number);
+
+        for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
+            const partA = partsA[i] || 0;
+            const partB = partsB[i] || 0;
+
+            if (partA < partB) {
+                return 'less';
+            } else if (partA > partB) {
+                return 'greater';
+            }
+        }
+
+        return 'equal';
+    }
+
     private static isValidVersion(version: string): boolean {
         return /^\d+\.\d+\.\d+(?:\.\d+)?$/.test(version);
     }

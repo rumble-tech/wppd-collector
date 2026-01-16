@@ -17,6 +17,7 @@ module.exports = {
         './src/resolver/latest-version/providers/plugin/AbstractLatestPluginVersionProvider.ts',
         './src/services/scheduler/AbstractTask.ts',
         './src/@types',
+        './src/resolver/vulnerabilities/providers/plugin/AbstractPluginVulnerabilitiesProvider.ts',
     ],
     coverageReporters: ['text', 'cobertura'],
     coverageDirectory: './coverage',

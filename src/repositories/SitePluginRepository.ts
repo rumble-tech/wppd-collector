@@ -72,7 +72,7 @@ export default class SitePluginRepository extends AbstractRepository {
                 installedVersion: sitePlugin.installedVersion,
                 requiredPhpVersion: sitePlugin.requiredPhpVersion,
                 requiredWpVersion: sitePlugin.requiredWpVersion,
-                isActive: sitePlugin.isActive ? 1 : 0,
+                isActive: Number(sitePlugin.isActive),
             })
             .returning()
             .execute();
@@ -101,7 +101,7 @@ export default class SitePluginRepository extends AbstractRepository {
                 installedVersion: sitePlugin.installedVersion,
                 requiredPhpVersion: sitePlugin.requiredPhpVersion,
                 requiredWpVersion: sitePlugin.requiredWpVersion,
-                isActive: sitePlugin.isActive ? 1 : 0,
+                isActive: Number(sitePlugin.isActive),
             })
             .where(
                 and(

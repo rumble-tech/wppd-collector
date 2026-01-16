@@ -22,6 +22,13 @@
       "when": 1768312784069,
       "tag": "0002_lyrical_cammi",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1768554067750,
+      "tag": "0003_sparkling_smasher",
+      "breakpoints": true
     }
   ]
 }

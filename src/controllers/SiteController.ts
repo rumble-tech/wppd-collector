@@ -1,9 +1,11 @@
 import crypto from 'crypto';
 import { NextFunction, Request, Response } from 'express';
 import PluginRepository from 'src/repositories/PluginRepository';
+import PluginVulnerabilityRepository from 'src/repositories/PluginVulnerabilityRepository';
 import SitePluginRepository from 'src/repositories/SitePluginRepository';
 import SiteRepository from 'src/repositories/SiteRepository';
 import LatestVersionResolver from 'src/resolver/latest-version/LatestVersionResolver';
+import VulnerabilitiesResolver from 'src/resolver/vulnerabilities/VulnerabilitiesResolver';
 import Logger from 'src/services/logger/Logger';
 import AbstractController from 'src/services/server/AbstractController';
 import RouteError from 'src/services/server/RouteError';
@@ -16,21 +18,27 @@ export default class SiteController extends AbstractController {
     private readonly siteRepository: SiteRepository;
     private readonly pluginRepository: PluginRepository;
     private readonly sitePluginRepository: SitePluginRepository;
+    private readonly pluginVulnerabilityRepository: PluginVulnerabilityRepository;
     private readonly latestVersionResolver: LatestVersionResolver;
+    private readonly vulnerabilitiesResolver: VulnerabilitiesResolver;
 
     constructor(
         logger: Logger,
         siteRepository: SiteRepository,
         pluginRepository: PluginRepository,
         sitePluginRepository: SitePluginRepository,
-        latestVersionResolver: LatestVersionResolver
+        pluginVulnerabilityRepository: PluginVulnerabilityRepository,
+        latestVersionResolver: LatestVersionResolver,
+        vulnerabilitiesResolver: VulnerabilitiesResolver
     ) {
         super(logger);
 
         this.siteRepository = siteRepository;
         this.pluginRepository = pluginRepository;
         this.sitePluginRepository = sitePluginRepository;
+        this.pluginVulnerabilityRepository = pluginVulnerabilityRepository;
         this.latestVersionResolver = latestVersionResolver;
+        this.vulnerabilitiesResolver = vulnerabilitiesResolver;
 
         this.useRoutes();
     }
@@ -38,6 +46,7 @@ export default class SiteController extends AbstractController {
     protected useRoutes(): void {
         this.router.get('/', this.allRoute.bind(this));
         this.router.get('/:siteId', this.singleRoute.bind(this));
+        this.router.get('/:siteId/plugins', this.singlePluginsRoute.bind(this));
         this.router.post('/', this.registerRoute.bind(this));
         this.router.put('/:siteId', this.accessMiddleware.bind(this), this.updateRoute.bind(this));
     }
@@ -135,6 +144,128 @@ export default class SiteController extends AbstractController {
                                 : null,
                     },
                 },
+            });
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    private async singlePluginsRoute(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const siteId = req.params.siteId;
+
+            if (siteId === undefined || isNaN(Number(siteId))) {
+                throw new RouteError(400, 'The parameter "siteId" is required and must be a valid number');
+            }
+
+            const site = await this.siteRepository.findById(Number(siteId));
+
+            if (!site) {
+                throw new RouteError(404, 'Failed to find a site with the given Id');
+            }
+
+            const sitePlugins = await this.sitePluginRepository.findAllBySiteId(Number(siteId));
+            const pluginsData = (
+                await Promise.all(
+                    sitePlugins.map(async (sitePlugin) => {
+                        const plugin = await this.pluginRepository.findById(sitePlugin.getPluginId());
+                        if (!plugin) {
+                            return null;
+                        }
+
+                        const installedVersion = sitePlugin.getInstalledVersion();
+                        const latestVersion = plugin.getLatestVersion();
+                        const vulnerabilities = await this.pluginVulnerabilityRepository.findAllByPluginId(
+                            plugin.getId()
+                        );
+
+                        const filteredVulnerabilities = vulnerabilities.filter((vulnerability) => {
+                            if (installedVersion === null) {
+                                return true;
+                            }
+
+                            const fromVersion = vulnerability.getFromVersion();
+                            const toVersion = vulnerability.getToVersion();
+
+                            let satisfiesLowerBound = true;
+                            if (fromVersion.version !== '*') {
+                                const cmpFrom = Utils.compareVersions(installedVersion, fromVersion.version);
+
+                                if (cmpFrom === 'invalid') {
+                                    satisfiesLowerBound = true;
+                                } else if (cmpFrom === 'greater') {
+                                    satisfiesLowerBound = true;
+                                } else if (cmpFrom === 'equal') {
+                                    satisfiesLowerBound = fromVersion.inclusive;
+                                } else if (cmpFrom === 'less') {
+                                    satisfiesLowerBound = false;
+                                }
+                            }
+
+                            let satisfiesUpperBound = true;
+                            if (toVersion.version !== '*') {
+                                const cmpTo = Utils.compareVersions(installedVersion, toVersion.version);
+
+                                if (cmpTo === 'invalid') {
+                                    satisfiesUpperBound = true;
+                                } else if (cmpTo === 'less') {
+                                    satisfiesUpperBound = true;
+                                } else if (cmpTo === 'equal') {
+                                    satisfiesUpperBound = toVersion.inclusive;
+                                } else if (cmpTo === 'greater') {
+                                    satisfiesUpperBound = false;
+                                }
+                            }
+
+                            return satisfiesLowerBound && satisfiesUpperBound;
+                        });
+
+                        return {
+                            id: plugin.getId(),
+                            slug: plugin.getSlug(),
+                            name: plugin.getName(),
+                            installedVersion: {
+                                version: sitePlugin.getInstalledVersion(),
+                                requiredPhpVersion: sitePlugin.getRequiredPhpVersion(),
+                                requiredWpVersion: sitePlugin.getRequiredWpVersion(),
+                            },
+                            latestVersion: {
+                                version: plugin.getLatestVersion(),
+                                requiredPhpVersion: plugin.getRequiredPhpVersion(),
+                                requiredWpVersion: plugin.getRequiredWpVersion(),
+                            },
+                            versionDifference:
+                                installedVersion && latestVersion
+                                    ? Utils.categorizeVersionDifference(installedVersion, latestVersion)
+                                    : null,
+                            isActive: sitePlugin.getIsActive(),
+                            vulnerabilities: {
+                                count: filteredVulnerabilities.length,
+                                maxSeverity: filteredVulnerabilities.reduce(
+                                    (max, vulnerability) => Math.max(max, vulnerability.getSeverity()),
+                                    0
+                                ),
+                                details: filteredVulnerabilities
+                                    .map((vulnerability) => ({
+                                        description: vulnerability.getDescription(),
+                                        publishedAt: vulnerability.getPublishedAt(),
+                                        severity: vulnerability.getSeverity(),
+                                        references: vulnerability.getReferences(),
+                                        fromVersion: vulnerability.getFromVersion(),
+                                        toVersion: vulnerability.getToVersion(),
+                                    }))
+                                    .sort(
+                                        (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+                                    ),
+                            },
+                        };
+                    })
+                )
+            ).filter((plugin) => plugin !== null);
+
+            res.status(200).json({
+                message: 'Successfully retrieved site plugins',
+                data: pluginsData,
             });
         } catch (e) {
             next(e);
@@ -240,16 +371,43 @@ export default class SiteController extends AbstractController {
 
                     const latestPluginVersion = await this.latestVersionResolver.resolvePlugin(slug);
 
-                    if (
-                        !(await this.pluginRepository.insert({
-                            slug,
-                            name,
-                            latestVersion: latestPluginVersion.version,
-                            requiredPhpVersion: latestPluginVersion.requiredPhpVersion,
-                            requiredWpVersion: latestPluginVersion.requiredWpVersion,
-                        }))
-                    ) {
+                    const createdPlugin = await this.pluginRepository.insert({
+                        slug,
+                        name,
+                        latestVersion: latestPluginVersion.version,
+                        requiredPhpVersion: latestPluginVersion.requiredPhpVersion,
+                        requiredWpVersion: latestPluginVersion.requiredWpVersion,
+                    });
+
+                    if (!createdPlugin) {
                         this.logger.error('Failed to create plugin entry', { slug, name });
+                        continue;
+                    }
+
+                    const vulnerabilities = await this.vulnerabilitiesResolver.resolvePlugin(slug);
+
+                    if (!vulnerabilities || !Array.isArray(vulnerabilities)) {
+                        this.logger.error('Failed to fetch vulnerabilities for plugin after creation', { slug });
+                    } else {
+                        await this.pluginVulnerabilityRepository.deleteAllByPluginId(createdPlugin.getId());
+
+                        for (const vulnerability of vulnerabilities) {
+                            if (
+                                !(await this.pluginVulnerabilityRepository.insert({
+                                    pluginId: createdPlugin.getId(),
+                                    description: vulnerability.description,
+                                    publishedAt: vulnerability.publishedAt,
+                                    severity: vulnerability.severity,
+                                    references: vulnerability.references,
+                                    fromVersion: vulnerability.fromVersion,
+                                    toVersion: vulnerability.toVersion,
+                                }))
+                            ) {
+                                this.logger.error('Failed to insert plugin vulnerability', { slug, vulnerability });
+                            } else {
+                                this.logger.info('Successfully inserted plugin vulnerability', { slug, vulnerability });
+                            }
+                        }
                     }
                 }
 

@@ -52,3 +52,29 @@ describe('Utils.getPluginSlugFromFile', () => {
         expect(Utils.getPluginSlugFromFile('invalid-plugin-file-format')).toBeNull();
     });
 });
+
+describe('Utils.compareVersions', () => {
+    it('should return "less" when versionA is less than versionB', () => {
+        expect(Utils.compareVersions('1.0.0', '2.0.0')).toBe('less');
+        expect(Utils.compareVersions('1.1.0', '1.2.0')).toBe('less');
+        expect(Utils.compareVersions('1.0.1', '1.0.2')).toBe('less');
+    });
+
+    it('should return "equal" when versionA is equal to versionB', () => {
+        expect(Utils.compareVersions('1.0.0', '1.0.0')).toBe('equal');
+        expect(Utils.compareVersions('1.1.0', '1.1.0')).toBe('equal');
+        expect(Utils.compareVersions('1.0.1', '1.0.1')).toBe('equal');
+    });
+
+    it('should return "greater" when versionA is greater than versionB', () => {
+        expect(Utils.compareVersions('2.0.0', '1.0.0')).toBe('greater');
+        expect(Utils.compareVersions('1.2.0', '1.1.0')).toBe('greater');
+        expect(Utils.compareVersions('1.0.2', '1.0.1')).toBe('greater');
+    });
+
+    it('should return "invalid" for invalid version formats', () => {
+        expect(Utils.compareVersions('invalid', '1.0.0')).toBe('invalid');
+        expect(Utils.compareVersions('1.0.0', 'invalid')).toBe('invalid');
+        expect(Utils.compareVersions('invalid', 'invalid')).toBe('invalid');
+    });
+});

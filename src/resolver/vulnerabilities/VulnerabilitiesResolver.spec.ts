@@ -47,8 +47,7 @@ describe('VulnerabilitiesResolver', () => {
 
         it('should return vulnerabilities from the second provider', async () => {
             (pluginProviders[0].get as jest.Mock).mockResolvedValue(null);
-
-            (pluginProviders[1].get as jest.Mock).mockResolvedValue([]);
+            (pluginProviders[1].get as jest.Mock).mockResolvedValue([vulnerabilitySample]);
 
             const vulnerabilities = await resolver.resolvePlugin('sample-plugin');
 
@@ -57,7 +56,7 @@ describe('VulnerabilitiesResolver', () => {
             expect(pluginProviders[1].get).toHaveBeenCalledWith('sample-plugin');
         });
 
-        it('should return nul when no plugin provider got any vulnerabilities', async () => {
+        it('should return null when no plugin provider got any vulnerabilities', async () => {
             (pluginProviders[0].get as jest.Mock).mockResolvedValue(null);
             (pluginProviders[1].get as jest.Mock).mockResolvedValue(null);
 
