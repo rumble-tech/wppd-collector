@@ -33,4 +33,8 @@ export default {
         type: 'string',
         required: true,
     },
+    WORDFENCE_VULNERABILITIES_API: {
+        type: 'string',
+        required: true,
+    },
 } as TConfigSchema;

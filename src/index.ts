@@ -7,6 +7,8 @@ import LatestVersionResolver from 'src/resolver/latest-version/LatestVersionReso
 import LatestWordPressApiPluginVersionProvider from 'src/resolver/latest-version/providers/plugin/WordPressApi';
 import LatestPhpRuntimeVersionProvider from 'src/resolver/latest-version/providers/runtime/PHP';
 import LatestWordPressRuntimeVersionProvider from 'src/resolver/latest-version/providers/runtime/WordPress';
+import WordFenceApiVulnerabilitiesProvider from 'src/resolver/vulnerabilities/providers/plugin/WordFenceApi';
+import VulnerabilitiesResolver from 'src/resolver/vulnerabilities/VulnerabilitiesResolver';
 import Config from 'src/services/config/Config';
 import configSchema from 'src/services/config/Schema';
 import { database } from 'src/services/database/Database';
@@ -39,6 +41,10 @@ const latestVersionResolver = new LatestVersionResolver(
     [latestWordPressApiPluginVersionProvider]
 );
 
+const wordfenceVulnerabilitiesProvider = new WordFenceApiVulnerabilitiesProvider();
+
+const vulnerabilitiesResolver = new VulnerabilitiesResolver([wordfenceVulnerabilitiesProvider]);
+
 server.registerController(new IndexController(logger));
 server.registerController(
     new SiteController(logger, siteRepository, pluginRepository, sitePluginRepository, latestVersionResolver)
@@ -63,3 +69,7 @@ scheduler.addTask('update-latest-wordpress-version', '*/30 * * * *', () =>
 scheduler.addTask('update-latest-plugin-versions', '*/30 * * * *', () =>
     new UpdateLatestPluginVersionsTask(logger, pluginRepository, latestVersionResolver).run()
 );
+
+(async () => {
+    await wordfenceVulnerabilitiesProvider.fetchVulnerabilities();
+})();
