@@ -36,9 +36,9 @@ describe('VulnerabilitiesResolver', () => {
         } as const;
 
         it('should return vulnerabilities from the first provider', async () => {
-            (pluginProviders[0].get as jest.Mock).mockResolvedValue([vulnerabilitySample]);
+            (pluginProviders[0].get as jest.Mock).mockReturnValue([vulnerabilitySample]);
 
-            const vulnerabilities = await resolver.resolvePlugin('sample-plugin');
+            const vulnerabilities = resolver.resolvePlugin('sample-plugin');
 
             expect(vulnerabilities).toEqual([vulnerabilitySample]);
             expect(pluginProviders[0].get).toHaveBeenCalledWith('sample-plugin');
@@ -46,10 +46,10 @@ describe('VulnerabilitiesResolver', () => {
         });
 
         it('should return vulnerabilities from the second provider', async () => {
-            (pluginProviders[0].get as jest.Mock).mockResolvedValue(null);
-            (pluginProviders[1].get as jest.Mock).mockResolvedValue([vulnerabilitySample]);
+            (pluginProviders[0].get as jest.Mock).mockReturnValue(null);
+            (pluginProviders[1].get as jest.Mock).mockReturnValue([vulnerabilitySample]);
 
-            const vulnerabilities = await resolver.resolvePlugin('sample-plugin');
+            const vulnerabilities = resolver.resolvePlugin('sample-plugin');
 
             expect(vulnerabilities).toEqual([vulnerabilitySample]);
             expect(pluginProviders[0].get).toHaveBeenCalledWith('sample-plugin');
@@ -57,10 +57,10 @@ describe('VulnerabilitiesResolver', () => {
         });
 
         it('should return null when no plugin provider got any vulnerabilities', async () => {
-            (pluginProviders[0].get as jest.Mock).mockResolvedValue(null);
-            (pluginProviders[1].get as jest.Mock).mockResolvedValue(null);
+            (pluginProviders[0].get as jest.Mock).mockReturnValue(null);
+            (pluginProviders[1].get as jest.Mock).mockReturnValue(null);
 
-            const vulnerabilities = await resolver.resolvePlugin('sample-plugin');
+            const vulnerabilities = resolver.resolvePlugin('sample-plugin');
 
             expect(vulnerabilities).toEqual(null);
             expect(pluginProviders[0].get).toHaveBeenCalledWith('sample-plugin');

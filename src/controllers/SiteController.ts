@@ -384,7 +384,7 @@ export default class SiteController extends AbstractController {
                         continue;
                     }
 
-                    const vulnerabilities = await this.vulnerabilitiesResolver.resolvePlugin(slug);
+                    const vulnerabilities = this.vulnerabilitiesResolver.resolvePlugin(slug);
 
                     if (!vulnerabilities || !Array.isArray(vulnerabilities)) {
                         this.logger.error('Failed to fetch vulnerabilities for plugin after creation', { slug });

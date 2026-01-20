@@ -9,11 +9,9 @@ export default class VulnerabilitiesResolver {
         this.pluginProviders = pluginProviders;
     }
 
-    public async resolvePlugin(
-        slug: TPlugin['slug']
-    ): Promise<Omit<TPluginVulnerability, 'id' | 'createdAt' | 'pluginId'>[] | null> {
+    public resolvePlugin(slug: TPlugin['slug']): Omit<TPluginVulnerability, 'id' | 'createdAt' | 'pluginId'>[] | null {
         for (const provider of this.pluginProviders) {
-            const vulnerabilitiesData = await provider.get(slug);
+            const vulnerabilitiesData = provider.get(slug);
 
             if (vulnerabilitiesData) {
                 return vulnerabilitiesData;

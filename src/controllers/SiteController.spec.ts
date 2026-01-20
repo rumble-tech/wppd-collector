@@ -732,7 +732,7 @@ describe('SiteController', () => {
                 requiredPhpVersion: '8.5.1',
                 requiredWpVersion: '6.9.0',
             });
-            mockVulnerabilitiesResolver.resolvePlugin.mockResolvedValue([pluginVulnerability1Resolver]);
+            mockVulnerabilitiesResolver.resolvePlugin.mockReturnValue([pluginVulnerability1Resolver]);
             mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(null);
             mockSitePluginRepository.insert.mockResolvedValue(null);
             mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
@@ -794,7 +794,7 @@ describe('SiteController', () => {
                 requiredPhpVersion: '8.5.1',
                 requiredWpVersion: '6.9.0',
             });
-            mockVulnerabilitiesResolver.resolvePlugin.mockResolvedValue([pluginVulnerability1Resolver]);
+            mockVulnerabilitiesResolver.resolvePlugin.mockReturnValue([pluginVulnerability1Resolver]);
             mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(null);
             mockSitePluginRepository.insert.mockResolvedValue(null);
             mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
@@ -849,7 +849,7 @@ describe('SiteController', () => {
                 requiredPhpVersion: '8.5.1',
                 requiredWpVersion: '6.9.0',
             });
-            mockVulnerabilitiesResolver.resolvePlugin.mockResolvedValue(null);
+            mockVulnerabilitiesResolver.resolvePlugin.mockReturnValue(null);
             mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(null);
             mockSitePluginRepository.insert.mockResolvedValue(null);
             mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
@@ -901,7 +901,7 @@ describe('SiteController', () => {
                 requiredPhpVersion: '8.5.1',
                 requiredWpVersion: '6.9.0',
             });
-            mockVulnerabilitiesResolver.resolvePlugin.mockResolvedValue([]);
+            mockVulnerabilitiesResolver.resolvePlugin.mockReturnValue([]);
             mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(null);
             mockSitePluginRepository.insert.mockResolvedValue(new SitePlugin(sitePlugin1DB));
             mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
@@ -953,7 +953,7 @@ describe('SiteController', () => {
                 requiredPhpVersion: '8.5.1',
                 requiredWpVersion: '6.9.0',
             });
-            mockVulnerabilitiesResolver.resolvePlugin.mockResolvedValue([]);
+            mockVulnerabilitiesResolver.resolvePlugin.mockReturnValue([]);
             mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(null);
             mockSitePluginRepository.insert.mockResolvedValue(null);
             mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
@@ -1005,7 +1005,7 @@ describe('SiteController', () => {
                 requiredPhpVersion: '8.5.1',
                 requiredWpVersion: '6.9.0',
             });
-            mockVulnerabilitiesResolver.resolvePlugin.mockResolvedValue(null);
+            mockVulnerabilitiesResolver.resolvePlugin.mockReturnValue(null);
             mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(null);
             mockSitePluginRepository.insert.mockResolvedValue(null);
             mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
