@@ -175,50 +175,11 @@ export default class SiteController extends AbstractController {
 
                         const installedVersion = sitePlugin.getInstalledVersion();
                         const latestVersion = plugin.getLatestVersion();
-                        const vulnerabilities = await this.pluginVulnerabilityRepository.findAllByPluginId(
-                            plugin.getId()
-                        );
-
-                        const filteredVulnerabilities = vulnerabilities.filter((vulnerability) => {
-                            if (installedVersion === null) {
-                                return true;
-                            }
-
-                            const fromVersion = vulnerability.getFromVersion();
-                            const toVersion = vulnerability.getToVersion();
-
-                            let satisfiesLowerBound = true;
-                            if (fromVersion.version !== '*') {
-                                const cmpFrom = Utils.compareVersions(installedVersion, fromVersion.version);
-
-                                if (cmpFrom === 'invalid') {
-                                    satisfiesLowerBound = true;
-                                } else if (cmpFrom === 'greater') {
-                                    satisfiesLowerBound = true;
-                                } else if (cmpFrom === 'equal') {
-                                    satisfiesLowerBound = fromVersion.inclusive;
-                                } else if (cmpFrom === 'less') {
-                                    satisfiesLowerBound = false;
-                                }
-                            }
-
-                            let satisfiesUpperBound = true;
-                            if (toVersion.version !== '*') {
-                                const cmpTo = Utils.compareVersions(installedVersion, toVersion.version);
-
-                                if (cmpTo === 'invalid') {
-                                    satisfiesUpperBound = true;
-                                } else if (cmpTo === 'less') {
-                                    satisfiesUpperBound = true;
-                                } else if (cmpTo === 'equal') {
-                                    satisfiesUpperBound = toVersion.inclusive;
-                                } else if (cmpTo === 'greater') {
-                                    satisfiesUpperBound = false;
-                                }
-                            }
-
-                            return satisfiesLowerBound && satisfiesUpperBound;
-                        });
+                        const vulnerabilities =
+                            await this.pluginVulnerabilityRepository.findAllByPluginIdAndInstalledVersion(
+                                plugin.getId(),
+                                sitePlugin.getInstalledVersion()
+                            );
 
                         return {
                             id: plugin.getId(),
@@ -240,12 +201,12 @@ export default class SiteController extends AbstractController {
                                     : null,
                             isActive: sitePlugin.getIsActive(),
                             vulnerabilities: {
-                                count: filteredVulnerabilities.length,
-                                maxSeverity: filteredVulnerabilities.reduce(
+                                count: vulnerabilities.length,
+                                maxSeverity: vulnerabilities.reduce(
                                     (max, vulnerability) => Math.max(max, vulnerability.getSeverity()),
                                     0
                                 ),
-                                details: filteredVulnerabilities
+                                details: vulnerabilities
                                     .map((vulnerability) => ({
                                         description: vulnerability.getDescription(),
                                         publishedAt: vulnerability.getPublishedAt(),

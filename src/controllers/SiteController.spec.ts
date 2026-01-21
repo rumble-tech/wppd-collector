@@ -46,6 +46,7 @@ describe('SiteController', () => {
 
         mockPluginVulnerabilityRepository = {
             findAllByPluginId: jest.fn(),
+            findAllByPluginIdAndInstalledVersion: jest.fn(),
             insert: jest.fn(),
             deleteAllByPluginId: jest.fn(),
         } as unknown as jest.Mocked<PluginVulnerabilityRepository>;
@@ -310,7 +311,7 @@ describe('SiteController', () => {
             mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
             mockSitePluginRepository.findAllBySiteId.mockResolvedValue([new SitePlugin(sitePlugin1DB)]);
             mockPluginRepository.findById.mockResolvedValue(new Plugin(plugin1DB));
-            mockPluginVulnerabilityRepository.findAllByPluginId.mockResolvedValue([
+            mockPluginVulnerabilityRepository.findAllByPluginIdAndInstalledVersion.mockResolvedValue([
                 new PluginVulnerability(pluginVulnerability1DB),
             ]);
 
