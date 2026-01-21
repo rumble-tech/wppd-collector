@@ -139,4 +139,10 @@ export default class PluginRepository extends AbstractRepository {
             requiredWpVersion: updatedPlugin.requiredWpVersion,
         });
     }
+
+    public async delete(pluginId: TPlugin['id']): Promise<boolean> {
+        const result = await this.db.delete(this.pluginsTable).where(eq(this.pluginsTable.id, pluginId)).execute();
+
+        return result.changes > 0;
+    }
 }

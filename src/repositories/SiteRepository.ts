@@ -148,4 +148,10 @@ export default class SiteRepository extends AbstractRepository {
             wpVersion: updatedSite.wpVersion,
         });
     }
+
+    public async delete(siteId: TSite['id']): Promise<boolean> {
+        const result = await this.db.delete(this.sitesTable).where(eq(this.sitesTable.id, siteId)).execute();
+
+        return result.changes > 0;
+    }
 }

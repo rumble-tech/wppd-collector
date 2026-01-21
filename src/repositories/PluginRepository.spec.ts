@@ -372,4 +372,42 @@ describe('PluginRepository', () => {
             expect(updatedPlugin).toBeNull();
         });
     });
+
+    describe('PluginRepository.delete', () => {
+        it('should delete a plugin and return true', async () => {
+            const builder = {
+                set: jest.fn().mockReturnThis(),
+                where: jest.fn().mockReturnThis(),
+                execute: jest.fn().mockResolvedValue({ changes: 1 }),
+            };
+
+            (database.delete as jest.Mock).mockReturnValueOnce(builder);
+
+            const isDeleted = await pluginRepository.delete(1);
+
+            expect(database.delete).toHaveBeenCalledWith(pluginsTable);
+            expect(builder.where).toHaveBeenCalledWith(eq(pluginsTable.id, 1));
+            expect(builder.execute).toHaveBeenCalled();
+
+            expect(isDeleted).toBeTruthy();
+        });
+
+        it('should fail to delete a plugin and return false', async () => {
+            const builder = {
+                set: jest.fn().mockReturnThis(),
+                where: jest.fn().mockReturnThis(),
+                execute: jest.fn().mockResolvedValue({ changes: 0 }),
+            };
+
+            (database.delete as jest.Mock).mockReturnValueOnce(builder);
+
+            const isDeleted = await pluginRepository.delete(1);
+
+            expect(database.delete).toHaveBeenCalledWith(pluginsTable);
+            expect(builder.where).toHaveBeenCalledWith(eq(pluginsTable.id, 1));
+            expect(builder.execute).toHaveBeenCalled();
+
+            expect(isDeleted).toBeFalsy();
+        });
+    });
 });

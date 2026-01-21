@@ -376,4 +376,42 @@ describe('SiteRepository', () => {
             expect(updatedSite).toBeNull();
         });
     });
+
+    describe('SiteRepository.delete', () => {
+        it('should delete a site and return true', async () => {
+            const builder = {
+                set: jest.fn().mockReturnThis(),
+                where: jest.fn().mockReturnThis(),
+                execute: jest.fn().mockResolvedValue({ changes: 1 }),
+            };
+
+            (database.delete as jest.Mock).mockReturnValueOnce(builder);
+
+            const isDeleted = await siteRepository.delete(1);
+
+            expect(database.delete).toHaveBeenCalledWith(sitesTable);
+            expect(builder.where).toHaveBeenCalledWith(eq(sitesTable.id, 1));
+            expect(builder.execute).toHaveBeenCalled();
+
+            expect(isDeleted).toBeTruthy();
+        });
+
+        it('should fail to delete a site and return false', async () => {
+            const builder = {
+                set: jest.fn().mockReturnThis(),
+                where: jest.fn().mockReturnThis(),
+                execute: jest.fn().mockResolvedValue({ changes: 0 }),
+            };
+
+            (database.delete as jest.Mock).mockReturnValueOnce(builder);
+
+            const isDeleted = await siteRepository.delete(1);
+
+            expect(database.delete).toHaveBeenCalledWith(sitesTable);
+            expect(builder.where).toHaveBeenCalledWith(eq(sitesTable.id, 1));
+            expect(builder.execute).toHaveBeenCalled();
+
+            expect(isDeleted).toBeFalsy();
+        });
+    });
 });

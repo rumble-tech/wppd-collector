@@ -12,6 +12,24 @@ export default class SitePluginRepository extends AbstractRepository {
         this.sitePluginsTable = sitePluginsTable;
     }
 
+    public async findAll(): Promise<SitePlugin[]> {
+        const sitePlugins = await this.db.select().from(this.sitePluginsTable).execute();
+
+        return sitePlugins.map(
+            (sitePlugin) =>
+                new SitePlugin({
+                    createdAt: sitePlugin.createdAt,
+                    updatedAt: sitePlugin.updatedAt,
+                    siteId: sitePlugin.siteId,
+                    pluginId: sitePlugin.pluginId,
+                    installedVersion: sitePlugin.installedVersion,
+                    requiredPhpVersion: sitePlugin.requiredPhpVersion,
+                    requiredWpVersion: sitePlugin.requiredWpVersion,
+                    isActive: Boolean(sitePlugin.isActive),
+                })
+        );
+    }
+
     public async findAllBySiteId(siteId: TSitePlugin['siteId']): Promise<SitePlugin[]> {
         const sitePlugins = await this.db
             .select()

@@ -17,6 +17,8 @@ import { pluginsTable, pluginVulnerabilitiesTable, sitePluginsTable, sitesTable 
 import Logger from 'src/services/logger/Logger';
 import Scheduler from 'src/services/scheduler/Scheduler';
 import Server from 'src/services/server/Server';
+import DeleteInactiveSitesTask from 'src/tasks/DeleteInactiveSites';
+import DeleteUnusedPluginsTask from 'src/tasks/DeleteUnusedPlugins';
 import UpdateLatestPhpVersionTask from 'src/tasks/UpdateLatestPhpVersion';
 import UpdateLatestPluginVersionsTask from 'src/tasks/UpdateLatestPluginVersions';
 import UpdateLatestWordPressVersionTask from 'src/tasks/UpdateLatestWordPressVersion';
@@ -91,6 +93,12 @@ scheduler.addTask('update-plugin-vulnerabilities', '*/30 * * * *', () =>
         pluginVulnerabilityRepository,
         vulnerabilitiesResolver
     ).run()
+);
+scheduler.addTask('delete-inactive-sites', '0 12 */7 * *', () =>
+    new DeleteInactiveSitesTask(logger, siteRepository).run()
+);
+scheduler.addTask('delete-unused-plugins', '0 12 * * *', () =>
+    new DeleteUnusedPluginsTask(logger, pluginRepository, sitePluginRepository).run()
 );
 
 (async () => {
