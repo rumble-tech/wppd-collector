@@ -21,6 +21,7 @@ import Scheduler from 'src/services/scheduler/Scheduler';
 import Server from 'src/services/server/Server';
 import DeleteInactiveSitesTask from 'src/tasks/DeleteInactiveSites';
 import DeleteUnusedPluginsTask from 'src/tasks/DeleteUnusedPlugins';
+import SendReportMailTask from 'src/tasks/SendReportMail';
 import UpdateLatestPhpVersionTask from 'src/tasks/UpdateLatestPhpVersion';
 import UpdateLatestPluginVersionsTask from 'src/tasks/UpdateLatestPluginVersions';
 import UpdateLatestWordPressVersionTask from 'src/tasks/UpdateLatestWordPressVersion';
@@ -79,6 +80,7 @@ server
     });
 
 const scheduler = Scheduler.getInstance(logger);
+
 scheduler.addTask('update-latest-php-version', '*/30 * * * *', () =>
     new UpdateLatestPhpVersionTask(logger, latestPhpRuntimeVersionProvider).run()
 );
@@ -105,6 +107,20 @@ scheduler.addTask('delete-inactive-sites', '0 12 */7 * *', () =>
 scheduler.addTask('delete-unused-plugins', '0 12 * * *', () =>
     new DeleteUnusedPluginsTask(logger, pluginRepository, sitePluginRepository).run()
 );
+
+if (Config.get<boolean>('MAILING_REPORT_ENABLED')) {
+    scheduler.addTask('send-report-mail', '0 12 * * *', () =>
+        new SendReportMailTask(
+            logger,
+            siteRepository,
+            pluginRepository,
+            sitePluginRepository,
+            pluginVulnerabilityRepository,
+            latestVersionResolver,
+            mailingResolver
+        ).run()
+    );
+}
 
 (async () => {
     await latestPhpRuntimeVersionProvider.fetch();

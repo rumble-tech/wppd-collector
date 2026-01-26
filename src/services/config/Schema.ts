@@ -49,4 +49,16 @@ export default {
         type: 'string',
         required: false,
     },
+    MAILING_REPORT_ENABLED: {
+        type: 'boolean',
+        required: true,
+    },
+    MAILING_REPORT_SENDER: {
+        type: 'string',
+        required: false,
+    },
+    MAILING_REPORT_RECIPIENT: {
+        type: 'string',
+        required: false,
+    },
 } as TConfigSchema;

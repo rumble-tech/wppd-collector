@@ -1,3 +1,5 @@
+export type TVersionDiffCategory = 'major' | 'minor' | 'patch' | 'same' | 'igl' | 'invalid';
+
 export default class Utils {
     public static formatVersion(version: string): string {
         const parts = version.split('.');
@@ -15,10 +17,7 @@ export default class Utils {
         return combined;
     }
 
-    public static categorizeVersionDifference(
-        installedVersion: string,
-        latestVersion: string
-    ): 'major' | 'minor' | 'patch' | 'same' | 'igl' | 'invalid' {
+    public static categorizeVersionDifference(installedVersion: string, latestVersion: string): TVersionDiffCategory {
         if (!Utils.isValidVersion(installedVersion) || !Utils.isValidVersion(latestVersion)) {
             return 'invalid';
         }
