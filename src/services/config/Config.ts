@@ -1,5 +1,5 @@
 import { CorsOptions } from 'cors';
-import { TConfigSchema, TLoggerConfig, TServerConfig } from 'src/services/config/Types';
+import { TConfigSchema, TLoggerConfig, TMailingSESConfig, TServerConfig } from 'src/services/config/Types';
 
 export default class Config {
     private static values: Record<string, string | number | boolean | undefined> = {};
@@ -72,6 +72,14 @@ export default class Config {
         return {
             port: 80,
             corsOptions: Config.getCorsOptions(),
+        };
+    }
+
+    public static getMailingSESConfig(): TMailingSESConfig {
+        return {
+            region: Config.get<string>('MAILING_SES_REGION'),
+            accessKeyId: Config.get<string>('MAILING_SES_ACCESS_KEY_ID'),
+            secretAccessKey: Config.get<string>('MAILING_SES_SECRET_ACCESS_KEY'),
         };
     }
 

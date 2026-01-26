@@ -31,4 +31,10 @@ type TServerConfig = {
     corsOptions: CorsOptions;
 };
 
-export type { TConfigSchema, TLoggerConfig, TServerConfig };
+type TMailingSESConfig = {
+    region: string;
+    accessKeyId: string;
+    secretAccessKey: string;
+};
+
+export type { TConfigSchema, TLoggerConfig, TServerConfig, TMailingSESConfig };

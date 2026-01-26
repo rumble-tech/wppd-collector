@@ -8,6 +8,8 @@ import LatestVersionResolver from 'src/resolver/latest-version/LatestVersionReso
 import LatestWordPressApiPluginVersionProvider from 'src/resolver/latest-version/providers/plugin/WordPressApi';
 import LatestPhpRuntimeVersionProvider from 'src/resolver/latest-version/providers/runtime/PHP';
 import LatestWordPressRuntimeVersionProvider from 'src/resolver/latest-version/providers/runtime/WordPress';
+import MailingResolver from 'src/resolver/mailing/MailingResolver';
+import SESMailingProvider from 'src/resolver/mailing/providers/SES';
 import WordFenceApiVulnerabilitiesProvider from 'src/resolver/vulnerabilities/providers/plugin/WordFenceApi';
 import VulnerabilitiesResolver from 'src/resolver/vulnerabilities/VulnerabilitiesResolver';
 import Config from 'src/services/config/Config';
@@ -50,6 +52,9 @@ const latestVersionResolver = new LatestVersionResolver(
 const wordfenceVulnerabilitiesProvider = new WordFenceApiVulnerabilitiesProvider();
 
 const vulnerabilitiesResolver = new VulnerabilitiesResolver([wordfenceVulnerabilitiesProvider]);
+
+const sesMailingProvider = new SESMailingProvider(Config.getMailingSESConfig());
+const mailingResolver = new MailingResolver(sesMailingProvider);
 
 server.registerController(new IndexController(logger));
 server.registerController(

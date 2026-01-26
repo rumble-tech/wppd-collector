@@ -37,4 +37,16 @@ export default {
         type: 'string',
         required: true,
     },
+    MAILING_SES_REGION: {
+        type: 'string',
+        required: false,
+    },
+    MAILING_SES_ACCESS_KEY_ID: {
+        type: 'string',
+        required: false,
+    },
+    MAILING_SES_SECRET_ACCESS_KEY: {
+        type: 'string',
+        required: false,
+    },
 } as TConfigSchema;
