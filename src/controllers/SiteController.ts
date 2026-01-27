@@ -395,9 +395,18 @@ export default class SiteController extends AbstractController {
                         !(await this.sitePluginRepository.insert({
                             siteId: req.site.getId(),
                             pluginId: dbPlugin.getId(),
-                            installedVersion: plugin.version.installedVersion,
-                            requiredPhpVersion: plugin.version.requiredPhpVersion,
-                            requiredWpVersion: plugin.version.requiredWpVersion,
+                            installedVersion:
+                                plugin.version.installedVersion !== null
+                                    ? Utils.formatVersion(plugin.version.installedVersion)
+                                    : null,
+                            requiredPhpVersion:
+                                plugin.version.requiredPhpVersion !== null
+                                    ? Utils.formatVersion(plugin.version.requiredPhpVersion)
+                                    : plugin.version.requiredPhpVersion,
+                            requiredWpVersion:
+                                plugin.version.requiredWpVersion !== null
+                                    ? Utils.formatVersion(plugin.version.requiredWpVersion)
+                                    : null,
                             isActive: plugin.active,
                         }))
                     ) {
@@ -429,9 +438,18 @@ export default class SiteController extends AbstractController {
                         !(await this.sitePluginRepository.update({
                             siteId: req.site.getId(),
                             pluginId: dbPlugin.getId(),
-                            installedVersion: plugin.version.installedVersion,
-                            requiredPhpVersion: plugin.version.requiredPhpVersion,
-                            requiredWpVersion: plugin.version.requiredWpVersion,
+                            installedVersion:
+                                plugin.version.installedVersion !== null
+                                    ? Utils.formatVersion(plugin.version.installedVersion)
+                                    : null,
+                            requiredPhpVersion:
+                                plugin.version.requiredPhpVersion !== null
+                                    ? Utils.formatVersion(plugin.version.requiredPhpVersion)
+                                    : plugin.version.requiredPhpVersion,
+                            requiredWpVersion:
+                                plugin.version.requiredWpVersion !== null
+                                    ? Utils.formatVersion(plugin.version.requiredWpVersion)
+                                    : null,
                             isActive: plugin.active,
                         }))
                     ) {
