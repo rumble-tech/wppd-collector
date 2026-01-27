@@ -27,7 +27,7 @@ export default class LatestVersionResolver {
 
     public async resolvePlugin(slug: TPlugin['slug']): Promise<TPluginVersion> {
         for (const provider of this.pluginProviders) {
-            const versionData = await provider.fetchVersion(slug);
+            const versionData = await provider.get(slug);
 
             if (versionData.version) {
                 return versionData;

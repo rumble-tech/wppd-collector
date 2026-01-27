@@ -16,7 +16,7 @@ describe('WordPressApiLatestPluginVersionProvider', () => {
         jest.clearAllMocks();
     });
 
-    describe('WordPressApiLatestPluginVersionProvider.fetchVersion', () => {
+    describe('WordPressApiLatestPluginVersionProvider.get', () => {
         it('should return the latest plugin version on successful API call', async () => {
             const apiUrl = 'https://example.com/plugin-version';
             mockedConfigGet.mockReturnValue(apiUrl);
@@ -29,7 +29,7 @@ describe('WordPressApiLatestPluginVersionProvider', () => {
 
             mockedAxios.mockResolvedValue({ data: pluginVersionApiResponse });
 
-            const latestPluginVersion = await provider.fetchVersion('plugin-slug');
+            const latestPluginVersion = await provider.get('plugin-slug');
 
             expect(mockedConfigGet).toHaveBeenCalledWith('WP_PLUGIN_VERSION_API');
             expect(mockedAxios).toHaveBeenCalledWith({
@@ -50,7 +50,7 @@ describe('WordPressApiLatestPluginVersionProvider', () => {
 
             mockedAxios.mockRejectedValue(new Error('Network Error'));
 
-            const latestPluginVersion = await provider.fetchVersion('plugin-slug');
+            const latestPluginVersion = await provider.get('plugin-slug');
 
             expect(mockedConfigGet).toHaveBeenCalledWith('WP_PLUGIN_VERSION_API');
             expect(mockedAxios).toHaveBeenCalledWith({

@@ -22,10 +22,10 @@ describe('LatestVersionResolver', () => {
 
         pluginProviders = [
             {
-                fetchVersion: jest.fn(),
+                get: jest.fn(),
             },
             {
-                fetchVersion: jest.fn(),
+                get: jest.fn(),
             },
         ] as unknown as AbstractLatestPluginVersionProvider[];
 
@@ -71,7 +71,7 @@ describe('LatestVersionResolver', () => {
 
     describe('LatestVersionResolver.resolvePlugin', () => {
         it('should return version from the first provider', async () => {
-            (pluginProviders[0].fetchVersion as jest.Mock).mockResolvedValue({
+            (pluginProviders[0].get as jest.Mock).mockResolvedValue({
                 version: '1.0.0',
                 requiredPhpVersion: '8.5.1',
                 requiredWpVersion: '6.9.0',
@@ -80,18 +80,18 @@ describe('LatestVersionResolver', () => {
             const version = await resolver.resolvePlugin('sample-plugin');
 
             expect(version).toEqual({ version: '1.0.0', requiredPhpVersion: '8.5.1', requiredWpVersion: '6.9.0' });
-            expect(pluginProviders[0].fetchVersion).toHaveBeenCalledWith('sample-plugin');
-            expect(pluginProviders[1].fetchVersion).not.toHaveBeenCalled();
+            expect(pluginProviders[0].get).toHaveBeenCalledWith('sample-plugin');
+            expect(pluginProviders[1].get).not.toHaveBeenCalled();
         });
 
         it('should return version from the second provider', async () => {
-            (pluginProviders[0].fetchVersion as jest.Mock).mockResolvedValue({
+            (pluginProviders[0].get as jest.Mock).mockResolvedValue({
                 version: null,
                 requiredPhpVersion: null,
                 requiredWpVersion: null,
             });
 
-            (pluginProviders[1].fetchVersion as jest.Mock).mockResolvedValue({
+            (pluginProviders[1].get as jest.Mock).mockResolvedValue({
                 version: '1.0.0',
                 requiredPhpVersion: '8.5.1',
                 requiredWpVersion: '6.9.0',
@@ -100,18 +100,18 @@ describe('LatestVersionResolver', () => {
             const version = await resolver.resolvePlugin('sample-plugin');
 
             expect(version).toEqual({ version: '1.0.0', requiredPhpVersion: '8.5.1', requiredWpVersion: '6.9.0' });
-            expect(pluginProviders[0].fetchVersion).toHaveBeenCalledWith('sample-plugin');
-            expect(pluginProviders[1].fetchVersion).toHaveBeenCalledWith('sample-plugin');
+            expect(pluginProviders[0].get).toHaveBeenCalledWith('sample-plugin');
+            expect(pluginProviders[1].get).toHaveBeenCalledWith('sample-plugin');
         });
 
         it('should return null values when no plugin provider got a version', async () => {
-            (pluginProviders[0].fetchVersion as jest.Mock).mockResolvedValue({
+            (pluginProviders[0].get as jest.Mock).mockResolvedValue({
                 version: null,
                 requiredPhpVersion: null,
                 requiredWpVersion: null,
             });
 
-            (pluginProviders[1].fetchVersion as jest.Mock).mockResolvedValue({
+            (pluginProviders[1].get as jest.Mock).mockResolvedValue({
                 version: null,
                 requiredPhpVersion: null,
                 requiredWpVersion: null,
@@ -120,8 +120,8 @@ describe('LatestVersionResolver', () => {
             const version = await resolver.resolvePlugin('sample-plugin');
 
             expect(version).toEqual({ version: null, requiredPhpVersion: null, requiredWpVersion: null });
-            expect(pluginProviders[0].fetchVersion).toHaveBeenCalledWith('sample-plugin');
-            expect(pluginProviders[1].fetchVersion).toHaveBeenCalledWith('sample-plugin');
+            expect(pluginProviders[0].get).toHaveBeenCalledWith('sample-plugin');
+            expect(pluginProviders[1].get).toHaveBeenCalledWith('sample-plugin');
         });
     });
 });
