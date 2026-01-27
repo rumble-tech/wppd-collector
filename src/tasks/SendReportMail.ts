@@ -112,7 +112,7 @@ export default class SendReportMailTask extends AbstractTask {
         const latestWpVersion = this.latestVersionResolver.resolveWordPress();
 
         for (const site of sites) {
-            const sitePlugins = await this.sitePluginRepository.findAll();
+            const sitePlugins = await this.sitePluginRepository.findAllBySiteId(site.getId());
             const sitePluginsMismatchingVersions: TSiteReport['plugins']['mismatchingVersions'] = [];
 
             for (const sitePlugin of sitePlugins) {
@@ -272,8 +272,9 @@ export default class SendReportMailTask extends AbstractTask {
                                 <hr>
                                 <div>
                                     <span class="environment-title">${environment.charAt(0).toUpperCase() + environment.slice(1)}</span>
-                                    ${groupedReports[environment].map(
-                                        (report: TSiteReport) => `
+                                    ${groupedReports[environment]
+                                        .map(
+                                            (report: TSiteReport) => `
                                         <hr>
                                         <div>
                                             <table>
@@ -348,8 +349,9 @@ export default class SendReportMailTask extends AbstractTask {
                                                     `
                                                     }
                                                 </tr>
-                                                ${report.plugins.mismatchingVersions.map(
-                                                    (plugin, index) => `
+                                                ${report.plugins.mismatchingVersions
+                                                    .map(
+                                                        (plugin, index) => `
                                                     <tr class="${index % 2 === 0 ? 'even' : 'odd'}">
                                                         <td>${plugin.slug}</td>
                                                         <td>${plugin.isActive ? 'Yes' : 'No'}</td>
@@ -359,11 +361,13 @@ export default class SendReportMailTask extends AbstractTask {
                                                         <td>${plugin.vulnerabilities.count === 0 ? '-' : `${plugin.vulnerabilities.count} - ${plugin.vulnerabilities.highestSeverity}`}</td>
                                                     </tr>
                                                 `
-                                                )}
+                                                    )
+                                                    .join('')}
                                             </table>
                                         </div>
                                     `
-                                    )}
+                                        )
+                                        .join('')}
                                 </div>
                             `
                         )
