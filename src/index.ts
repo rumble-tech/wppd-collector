@@ -5,12 +5,12 @@ import PluginVulnerabilityRepository from 'src/repositories/PluginVulnerabilityR
 import SitePluginRepository from 'src/repositories/SitePluginRepository';
 import SiteRepository from 'src/repositories/SiteRepository';
 import LatestVersionResolver from 'src/resolver/latest-version/LatestVersionResolver';
-import LatestWordPressApiPluginVersionProvider from 'src/resolver/latest-version/providers/plugin/WordPressApi';
+import WordPressApiLatestPluginVersionProvider from 'src/resolver/latest-version/providers/plugin/WordPressApi';
 import LatestPhpRuntimeVersionProvider from 'src/resolver/latest-version/providers/runtime/PHP';
 import LatestWordPressRuntimeVersionProvider from 'src/resolver/latest-version/providers/runtime/WordPress';
 import MailingResolver from 'src/resolver/mailing/MailingResolver';
 import SESMailingProvider from 'src/resolver/mailing/providers/SES';
-import WordFenceApiVulnerabilitiesProvider from 'src/resolver/vulnerabilities/providers/plugin/WordFenceApi';
+import WordFenceApiPluginVulnerabilitiesProvider from 'src/resolver/vulnerabilities/providers/plugin/WordFenceApi';
 import VulnerabilitiesResolver from 'src/resolver/vulnerabilities/VulnerabilitiesResolver';
 import Config from 'src/services/config/Config';
 import configSchema from 'src/services/config/Schema';
@@ -26,7 +26,7 @@ import UpdateLatestPhpVersionTask from 'src/tasks/UpdateLatestPhpVersion';
 import UpdateLatestPluginVersionsTask from 'src/tasks/UpdateLatestPluginVersions';
 import UpdateLatestWordPressVersionTask from 'src/tasks/UpdateLatestWordPressVersion';
 import UpdatePluginVulnerabilitiesTask from 'src/tasks/UpdatePluginVulnerabilities';
-import UpdateWordFenceVulnerabilitiesTask from 'src/tasks/UpdateWordFenceVulnerabilities';
+import UpdateWordFencePluginVulnerabilitiesTask from 'src/tasks/UpdateWordFencePluginVulnerabilities';
 
 Config.load(configSchema);
 
@@ -42,17 +42,17 @@ const pluginVulnerabilityRepository = new PluginVulnerabilityRepository(database
 
 const latestPhpRuntimeVersionProvider = new LatestPhpRuntimeVersionProvider();
 const latestWordPressRuntimeVersionProvider = new LatestWordPressRuntimeVersionProvider();
-const latestWordPressApiPluginVersionProvider = new LatestWordPressApiPluginVersionProvider();
+const wordPressApiLatestPluginVersionProvider = new WordPressApiLatestPluginVersionProvider();
 
 const latestVersionResolver = new LatestVersionResolver(
     latestPhpRuntimeVersionProvider,
     latestWordPressRuntimeVersionProvider,
-    [latestWordPressApiPluginVersionProvider]
+    [wordPressApiLatestPluginVersionProvider]
 );
 
-const wordfenceVulnerabilitiesProvider = new WordFenceApiVulnerabilitiesProvider();
+const wordFenceApiPluginVulnerabilitiesProvider = new WordFenceApiPluginVulnerabilitiesProvider();
 
-const vulnerabilitiesResolver = new VulnerabilitiesResolver([wordfenceVulnerabilitiesProvider]);
+const vulnerabilitiesResolver = new VulnerabilitiesResolver([wordFenceApiPluginVulnerabilitiesProvider]);
 
 const sesMailingProvider = new SESMailingProvider(Config.getMailingSESConfig());
 const mailingResolver = new MailingResolver(sesMailingProvider);
@@ -87,8 +87,8 @@ scheduler.addTask('update-latest-php-version', '*/30 * * * *', () =>
 scheduler.addTask('update-latest-wordpress-version', '*/30 * * * *', () =>
     new UpdateLatestWordPressVersionTask(logger, latestWordPressRuntimeVersionProvider).run()
 );
-scheduler.addTask('update-wordfence-vulnerabilities', '*/30 * * * *', () =>
-    new UpdateWordFenceVulnerabilitiesTask(logger, wordfenceVulnerabilitiesProvider).run()
+scheduler.addTask('update-wordfence-plugin-vulnerabilities', '*/30 * * * *', () =>
+    new UpdateWordFencePluginVulnerabilitiesTask(logger, wordFenceApiPluginVulnerabilitiesProvider).run()
 );
 scheduler.addTask('update-latest-plugin-versions', '*/30 * * * *', () =>
     new UpdateLatestPluginVersionsTask(logger, pluginRepository, latestVersionResolver).run()
@@ -125,5 +125,5 @@ if (Config.get<boolean>('MAILING_REPORT_ENABLED')) {
 (async () => {
     await latestPhpRuntimeVersionProvider.fetch();
     await latestWordPressRuntimeVersionProvider.fetch();
-    await wordfenceVulnerabilitiesProvider.fetch();
+    await wordFenceApiPluginVulnerabilitiesProvider.fetch();
 })();

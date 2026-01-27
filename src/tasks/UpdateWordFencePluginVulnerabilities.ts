@@ -1,11 +1,11 @@
-import WordFenceApiVulnerabilitiesProvider from 'src/resolver/vulnerabilities/providers/plugin/WordFenceApi';
+import WordFenceApiPluginVulnerabilitiesProvider from 'src/resolver/vulnerabilities/providers/plugin/WordFenceApi';
 import Logger from 'src/services/logger/Logger';
 import AbstractTask from 'src/services/scheduler/AbstractTask';
 
-export default class UpdateWordFenceVulnerabilitiesTask extends AbstractTask {
-    private readonly provider: WordFenceApiVulnerabilitiesProvider;
+export default class UpdateWordFencePluginVulnerabilitiesTask extends AbstractTask {
+    private readonly provider: WordFenceApiPluginVulnerabilitiesProvider;
 
-    constructor(logger: Logger, provider: WordFenceApiVulnerabilitiesProvider) {
+    constructor(logger: Logger, provider: WordFenceApiPluginVulnerabilitiesProvider) {
         super(logger);
 
         this.provider = provider;

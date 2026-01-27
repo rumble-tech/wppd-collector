@@ -5,7 +5,7 @@ import AbstractLatestPluginVersionProvider
 import Config from 'src/services/config/Config';
 import Utils from 'src/Utils';
 
-export default class LatestWordPressApiPluginVersionProvider extends AbstractLatestPluginVersionProvider {
+export default class WordPressApiLatestPluginVersionProvider extends AbstractLatestPluginVersionProvider {
     public async fetchVersion(slug: TPlugin['slug']): Promise<TPluginVersion> {
         try {
             const response = await axios({

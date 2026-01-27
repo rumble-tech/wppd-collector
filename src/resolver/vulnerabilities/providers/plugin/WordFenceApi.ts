@@ -5,7 +5,7 @@ import AbstractPluginVulnerabilitiesProvider from 'src/resolver/vulnerabilities/
 import Config from 'src/services/config/Config';
 import Utils from 'src/Utils';
 
-export default class WordFenceApiVulnerabilitiesProvider extends AbstractPluginVulnerabilitiesProvider {
+export default class WordFenceApiPluginVulnerabilitiesProvider extends AbstractPluginVulnerabilitiesProvider {
     private vulnerabilities: Record<
         TPlugin['slug'],
         Omit<TPluginVulnerability, 'id' | 'createdAt' | 'pluginId'>[] | null

@@ -1,11 +1,11 @@
-import WordFenceApiVulnerabilitiesProvider from 'src/resolver/vulnerabilities/providers/plugin/WordFenceApi';
+import WordFenceApiPluginVulnerabilitiesProvider from 'src/resolver/vulnerabilities/providers/plugin/WordFenceApi';
 import Logger from 'src/services/logger/Logger';
-import UpdateWordFenceVulnerabilitiesTask from 'src/tasks/UpdateWordFenceVulnerabilities';
+import UpdateWordFencePluginVulnerabilitiesTask from 'src/tasks/UpdateWordFencePluginVulnerabilities';
 
 describe('UpdateWordFenceVulnerabilities', () => {
-    let task: UpdateWordFenceVulnerabilitiesTask;
+    let task: UpdateWordFencePluginVulnerabilitiesTask;
     let mockLogger: jest.Mocked<Logger>;
-    let mockProvider: jest.Mocked<WordFenceApiVulnerabilitiesProvider>;
+    let mockProvider: jest.Mocked<WordFenceApiPluginVulnerabilitiesProvider>;
 
     beforeEach(() => {
         mockLogger = {
@@ -18,9 +18,9 @@ describe('UpdateWordFenceVulnerabilities', () => {
 
         mockProvider = {
             fetch: jest.fn(),
-        } as unknown as jest.Mocked<WordFenceApiVulnerabilitiesProvider>;
+        } as unknown as jest.Mocked<WordFenceApiPluginVulnerabilitiesProvider>;
 
-        task = new UpdateWordFenceVulnerabilitiesTask(mockLogger, mockProvider);
+        task = new UpdateWordFencePluginVulnerabilitiesTask(mockLogger, mockProvider);
 
         jest.clearAllMocks();
     });

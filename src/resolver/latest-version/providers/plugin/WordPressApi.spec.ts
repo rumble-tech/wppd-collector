@@ -1,5 +1,5 @@
 import axios from 'axios';
-import LatestWordPressApiPluginVersionProvider from 'src/resolver/latest-version/providers/plugin/WordPressApi';
+import WordPressApiLatestPluginVersionProvider from 'src/resolver/latest-version/providers/plugin/WordPressApi';
 import Config from 'src/services/config/Config';
 
 jest.mock('axios');
@@ -8,15 +8,15 @@ jest.mock('/src/services/config/Config');
 const mockedAxios = axios as jest.MockedFunction<typeof axios>;
 const mockedConfigGet = Config.get as jest.MockedFunction<typeof Config.get>;
 
-describe('LatestWordPressApiPluginVersionProvider', () => {
-    let provider: LatestWordPressApiPluginVersionProvider;
+describe('WordPressApiLatestPluginVersionProvider', () => {
+    let provider: WordPressApiLatestPluginVersionProvider;
 
     beforeEach(() => {
-        provider = new LatestWordPressApiPluginVersionProvider();
+        provider = new WordPressApiLatestPluginVersionProvider();
         jest.clearAllMocks();
     });
 
-    describe('LatestWordPressApiPluginVersionProvider.fetchVersion', () => {
+    describe('WordPressApiLatestPluginVersionProvider.fetchVersion', () => {
         it('should return the latest plugin version on successful API call', async () => {
             const apiUrl = 'https://example.com/plugin-version';
             mockedConfigGet.mockReturnValue(apiUrl);

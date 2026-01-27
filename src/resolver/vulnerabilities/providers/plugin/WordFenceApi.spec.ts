@@ -1,5 +1,5 @@
 import axios from 'axios';
-import WordFenceApiVulnerabilitiesProvider from 'src/resolver/vulnerabilities/providers/plugin/WordFenceApi';
+import WordFenceApiPluginVulnerabilitiesProvider from 'src/resolver/vulnerabilities/providers/plugin/WordFenceApi';
 import Config from 'src/services/config/Config';
 
 jest.mock('axios');
@@ -8,15 +8,15 @@ jest.mock('/src/services/config/Config');
 const mockedAxios = axios as jest.MockedFunction<typeof axios>;
 const mockedConfigGet = Config.get as jest.MockedFunction<typeof Config.get>;
 
-describe('WordFenceApiVulnerabilitiesProvider', () => {
-    let provider: WordFenceApiVulnerabilitiesProvider;
+describe('WordFenceApiPluginVulnerabilitiesProvider', () => {
+    let provider: WordFenceApiPluginVulnerabilitiesProvider;
 
     beforeEach(() => {
-        provider = new WordFenceApiVulnerabilitiesProvider();
+        provider = new WordFenceApiPluginVulnerabilitiesProvider();
         jest.clearAllMocks();
     });
 
-    describe('WordFenceApiVulnerabilitiesProvider.get', () => {
+    describe('WordFenceApiPluginVulnerabilitiesProvider.get', () => {
         const vulnerabilitySample = {
             description: 'sample-description',
             publishedAt: new Date('2026-01-01T00:00:00Z'),
@@ -53,7 +53,7 @@ describe('WordFenceApiVulnerabilitiesProvider', () => {
         });
     });
 
-    describe('WordFenceApiVulnerabilitiesProvider.fetch', () => {
+    describe('WordFenceApiPluginVulnerabilitiesProvider.fetch', () => {
         const vulnerabilitiesSample = [
             {
                 description: 'sample-description',
