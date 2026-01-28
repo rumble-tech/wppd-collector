@@ -1,6 +1,8 @@
 import { and, eq } from 'drizzle-orm';
+import SitePlugin from 'src/entities/SitePlugin';
 import SitePluginRepository from 'src/repositories/SitePluginRepository';
 import { TDatabase, TSitePluginsTable } from 'src/services/database/Types';
+import { testDataSitePluginEntity, testDataSitePluginJSON } from 'test-utils/test-data/SitePlugin';
 
 describe('SitePluginRepository', () => {
     let sitePluginRepository: SitePluginRepository;
@@ -21,33 +23,10 @@ describe('SitePluginRepository', () => {
     });
 
     describe('SitePluginRepository.findAll', () => {
-        const sitePluginsPayload = [
-            {
-                createdAt: new Date('2026-01-01T00:00:00Z'),
-                updatedAt: new Date('2026-01-01T00:00:00Z'),
-                siteId: 1,
-                pluginId: 1,
-                installedVersion: '1.0.0',
-                requiredPhpVersion: '8.5.1',
-                requiredWpVersion: '6.9.0',
-                isActive: true,
-            },
-            {
-                createdAt: new Date('2026-01-02T00:00:00Z'),
-                updatedAt: new Date('2026-01-02T00:00:00Z'),
-                siteId: 2,
-                pluginId: 2,
-                installedVersion: '1.0.0',
-                requiredPhpVersion: '8.5.1',
-                requiredWpVersion: '6.9.0',
-                isActive: false,
-            },
-        ] as const;
-
         it('should return all site plugins', async () => {
             const builder = {
                 from: jest.fn().mockReturnThis(),
-                execute: jest.fn().mockResolvedValue(sitePluginsPayload),
+                execute: jest.fn().mockResolvedValue([testDataSitePluginJSON]),
             };
 
             (database.select as jest.Mock).mockReturnValueOnce(builder);
@@ -58,79 +37,36 @@ describe('SitePluginRepository', () => {
             expect(builder.from).toHaveBeenCalledWith(sitePluginsTable);
             expect(builder.execute).toHaveBeenCalled();
 
-            expect(sitePlugins).toHaveLength(2);
+            expect(sitePlugins).toHaveLength(1);
 
-            const [firstSitePlugin, secondSitePlugin] = sitePlugins;
+            const [sitePlugin] = sitePlugins;
 
-            expect(firstSitePlugin.getSiteId()).toBe(sitePluginsPayload[0].siteId);
-            expect(firstSitePlugin.getPluginId()).toBe(sitePluginsPayload[0].pluginId);
-            expect(firstSitePlugin.getInstalledVersion()).toBe(sitePluginsPayload[0].installedVersion);
-            expect(firstSitePlugin.getRequiredPhpVersion()).toBe(sitePluginsPayload[0].requiredPhpVersion);
-            expect(firstSitePlugin.getRequiredWpVersion()).toBe(sitePluginsPayload[0].requiredWpVersion);
-
-            expect(secondSitePlugin.getSiteId()).toBe(sitePluginsPayload[1].siteId);
-            expect(secondSitePlugin.getPluginId()).toBe(sitePluginsPayload[1].pluginId);
-            expect(secondSitePlugin.getInstalledVersion()).toBe(sitePluginsPayload[1].installedVersion);
-            expect(secondSitePlugin.getRequiredPhpVersion()).toBe(sitePluginsPayload[1].requiredPhpVersion);
-            expect(secondSitePlugin.getRequiredWpVersion()).toBe(sitePluginsPayload[1].requiredWpVersion);
+            expect(sitePlugin).toEqualSitePluginEntity(testDataSitePluginEntity);
         });
     });
 
     describe('SitePluginRepository.findAllBySiteId', () => {
-        const sitePluginsPayload = [
-            {
-                createdAt: new Date('2026-01-01T00:00:00Z'),
-                updatedAt: new Date('2026-01-01T00:00:00Z'),
-                siteId: 1,
-                pluginId: 1,
-                installedVersion: '1.0.0',
-                requiredPhpVersion: '8.5.1',
-                requiredWpVersion: '6.9.0',
-                isActive: true,
-            },
-            {
-                createdAt: new Date('2026-01-02T00:00:00Z'),
-                updatedAt: new Date('2026-01-02T00:00:00Z'),
-                siteId: 1,
-                pluginId: 2,
-                installedVersion: '1.0.0',
-                requiredPhpVersion: '8.5.1',
-                requiredWpVersion: '6.9.0',
-                isActive: false,
-            },
-        ] as const;
-
         it('should return all site plugins for a given siteId', async () => {
             const builder = {
                 from: jest.fn().mockReturnThis(),
                 where: jest.fn().mockReturnThis(),
-                execute: jest.fn().mockResolvedValue(sitePluginsPayload),
+                execute: jest.fn().mockResolvedValue([testDataSitePluginJSON]),
             };
 
             (database.select as jest.Mock).mockReturnValueOnce(builder);
 
-            const sitePlugins = await sitePluginRepository.findAllBySiteId(1);
+            const sitePlugins = await sitePluginRepository.findAllBySiteId(testDataSitePluginJSON.siteId);
 
             expect(database.select).toHaveBeenCalled();
             expect(builder.from).toHaveBeenCalledWith(sitePluginsTable);
-            expect(builder.where).toHaveBeenCalledWith(eq(sitePluginsTable.siteId, 1));
+            expect(builder.where).toHaveBeenCalledWith(eq(sitePluginsTable.siteId, testDataSitePluginJSON.siteId));
             expect(builder.execute).toHaveBeenCalled();
 
-            expect(sitePlugins).toHaveLength(2);
+            expect(sitePlugins).toHaveLength(1);
 
-            const [firstSitePlugin, secondSitePlugin] = sitePlugins;
+            const [sitePlugin] = sitePlugins;
 
-            expect(firstSitePlugin.getSiteId()).toBe(sitePluginsPayload[0].siteId);
-            expect(firstSitePlugin.getPluginId()).toBe(sitePluginsPayload[0].pluginId);
-            expect(firstSitePlugin.getInstalledVersion()).toBe(sitePluginsPayload[0].installedVersion);
-            expect(firstSitePlugin.getRequiredPhpVersion()).toBe(sitePluginsPayload[0].requiredPhpVersion);
-            expect(firstSitePlugin.getRequiredWpVersion()).toBe(sitePluginsPayload[0].requiredWpVersion);
-
-            expect(secondSitePlugin.getSiteId()).toBe(sitePluginsPayload[1].siteId);
-            expect(secondSitePlugin.getPluginId()).toBe(sitePluginsPayload[1].pluginId);
-            expect(secondSitePlugin.getInstalledVersion()).toBe(sitePluginsPayload[1].installedVersion);
-            expect(secondSitePlugin.getRequiredPhpVersion()).toBe(sitePluginsPayload[1].requiredPhpVersion);
-            expect(secondSitePlugin.getRequiredWpVersion()).toBe(sitePluginsPayload[1].requiredWpVersion);
+            expect(sitePlugin).toEqualSitePluginEntity(testDataSitePluginEntity);
         });
     });
 
@@ -140,38 +76,29 @@ describe('SitePluginRepository', () => {
                 from: jest.fn().mockReturnThis(),
                 where: jest.fn().mockReturnThis(),
                 limit: jest.fn().mockReturnThis(),
-                execute: jest.fn().mockResolvedValue([
-                    {
-                        createdAt: new Date('2026-01-01T00:00:00Z'),
-                        updatedAt: new Date('2026-01-01T00:00:00Z'),
-                        siteId: 1,
-                        pluginId: 1,
-                        installedVersion: '1.0.0',
-                        requiredPhpVersion: '8.5.1',
-                        requiredWpVersion: '6.9.0',
-                        isActive: true,
-                    },
-                ]),
+                execute: jest.fn().mockResolvedValue([testDataSitePluginJSON]),
             };
 
             (database.select as jest.Mock).mockReturnValueOnce(builder);
 
-            const sitePlugin = await sitePluginRepository.findBySiteIdAndPluginId(1, 1);
+            const sitePlugin = await sitePluginRepository.findBySiteIdAndPluginId(
+                testDataSitePluginJSON.siteId,
+                testDataSitePluginJSON.pluginId
+            );
 
             expect(database.select).toHaveBeenCalled();
             expect(builder.from).toHaveBeenCalledWith(sitePluginsTable);
             expect(builder.where).toHaveBeenCalledWith(
-                and(eq(sitePluginsTable.siteId, 1), eq(sitePluginsTable.pluginId, 1))
+                and(
+                    eq(sitePluginsTable.siteId, testDataSitePluginJSON.siteId),
+                    eq(sitePluginsTable.pluginId, testDataSitePluginJSON.pluginId)
+                )
             );
             expect(builder.limit).toHaveBeenCalledWith(1);
             expect(builder.execute).toHaveBeenCalled();
 
             expect(sitePlugin).not.toBeNull();
-            expect(sitePlugin?.getSiteId()).toBe(1);
-            expect(sitePlugin?.getPluginId()).toBe(1);
-            expect(sitePlugin?.getInstalledVersion()).toBe('1.0.0');
-            expect(sitePlugin?.getRequiredPhpVersion()).toBe('8.5.1');
-            expect(sitePlugin?.getRequiredWpVersion()).toBe('6.9.0');
+            expect(sitePlugin).toEqualSitePluginEntity(testDataSitePluginEntity);
         });
 
         it('should return null if the plugin could not be found by its id', async () => {
@@ -184,12 +111,18 @@ describe('SitePluginRepository', () => {
 
             (database.select as jest.Mock).mockReturnValueOnce(builder);
 
-            const sitePlugin = await sitePluginRepository.findBySiteIdAndPluginId(1, 1);
+            const sitePlugin = await sitePluginRepository.findBySiteIdAndPluginId(
+                testDataSitePluginJSON.siteId,
+                testDataSitePluginJSON.pluginId
+            );
 
             expect(database.select).toHaveBeenCalled();
             expect(builder.from).toHaveBeenCalledWith(sitePluginsTable);
             expect(builder.where).toHaveBeenCalledWith(
-                and(eq(sitePluginsTable.siteId, 1), eq(sitePluginsTable.pluginId, 1))
+                and(
+                    eq(sitePluginsTable.siteId, testDataSitePluginJSON.siteId),
+                    eq(sitePluginsTable.pluginId, testDataSitePluginJSON.pluginId)
+                )
             );
             expect(builder.limit).toHaveBeenCalledWith(1);
             expect(builder.execute).toHaveBeenCalled();
@@ -199,14 +132,14 @@ describe('SitePluginRepository', () => {
     });
 
     describe('SitePluginRepository.insert', () => {
-        const sitePluginPayload = {
-            siteId: 1,
-            pluginId: 1,
-            installedVersion: '1.0.0',
-            requiredPhpVersion: '8.5.1',
-            requiredWpVersion: '6.9.0',
-            isActive: true,
-        } as const;
+        const insertSitePluginPayload = {
+            siteId: testDataSitePluginJSON.siteId,
+            pluginId: testDataSitePluginJSON.pluginId,
+            installedVersion: testDataSitePluginJSON.installedVersion,
+            requiredPhpVersion: testDataSitePluginJSON.requiredPhpVersion,
+            requiredWpVersion: testDataSitePluginJSON.requiredWpVersion,
+            isActive: testDataSitePluginJSON.isActive,
+        };
 
         const fixedSystemTime = new Date('2026-01-01T00:00:00Z');
 
@@ -227,38 +160,37 @@ describe('SitePluginRepository', () => {
                     {
                         createdAt: fixedSystemTime,
                         updatedAt: fixedSystemTime,
-                        ...sitePluginPayload,
+                        ...insertSitePluginPayload,
                     },
                 ]),
             };
 
             (database.insert as jest.Mock).mockReturnValueOnce(builder);
 
-            const insertedSitePlugin = await sitePluginRepository.insert(sitePluginPayload);
+            const insertedSitePlugin = await sitePluginRepository.insert(insertSitePluginPayload);
 
             expect(database.insert).toHaveBeenCalledWith(sitePluginsTable);
             expect(builder.values).toHaveBeenCalledWith({
                 createdAt: fixedSystemTime,
                 updatedAt: fixedSystemTime,
-                siteId: sitePluginPayload.siteId,
-                pluginId: sitePluginPayload.pluginId,
-                installedVersion: sitePluginPayload.installedVersion,
-                requiredPhpVersion: sitePluginPayload.requiredPhpVersion,
-                requiredWpVersion: sitePluginPayload.requiredWpVersion,
-                isActive: sitePluginPayload.isActive ? 1 : 0,
+                siteId: insertSitePluginPayload.siteId,
+                pluginId: insertSitePluginPayload.pluginId,
+                installedVersion: insertSitePluginPayload.installedVersion,
+                requiredPhpVersion: insertSitePluginPayload.requiredPhpVersion,
+                requiredWpVersion: insertSitePluginPayload.requiredWpVersion,
+                isActive: insertSitePluginPayload.isActive ? 1 : 0,
             });
             expect(builder.returning).toHaveBeenCalled();
             expect(builder.execute).toHaveBeenCalled();
 
             expect(insertedSitePlugin).not.toBeNull();
-            expect(insertedSitePlugin?.getCreatedAt()).toEqual(fixedSystemTime);
-            expect(insertedSitePlugin?.getUpdatedAt()).toEqual(fixedSystemTime);
-            expect(insertedSitePlugin?.getSiteId()).toBe(1);
-            expect(insertedSitePlugin?.getPluginId()).toBe(1);
-            expect(insertedSitePlugin?.getInstalledVersion()).toBe(sitePluginPayload.installedVersion);
-            expect(insertedSitePlugin?.getRequiredPhpVersion()).toBe(sitePluginPayload.requiredPhpVersion);
-            expect(insertedSitePlugin?.getRequiredWpVersion()).toBe(sitePluginPayload.requiredWpVersion);
-            expect(insertedSitePlugin?.getIsActive()).toBeTruthy();
+            expect(insertedSitePlugin).toEqualSitePluginEntity(
+                new SitePlugin({
+                    ...testDataSitePluginJSON,
+                    createdAt: fixedSystemTime,
+                    updatedAt: fixedSystemTime,
+                })
+            );
         });
 
         it('should return null when the site plugin insert fails', async () => {
@@ -270,18 +202,18 @@ describe('SitePluginRepository', () => {
 
             (database.insert as jest.Mock).mockReturnValueOnce(builder);
 
-            const insertedSitePlugin = await sitePluginRepository.insert(sitePluginPayload);
+            const insertedSitePlugin = await sitePluginRepository.insert(insertSitePluginPayload);
 
             expect(database.insert).toHaveBeenCalledWith(sitePluginsTable);
             expect(builder.values).toHaveBeenCalledWith({
                 createdAt: fixedSystemTime,
                 updatedAt: fixedSystemTime,
-                siteId: sitePluginPayload.siteId,
-                pluginId: sitePluginPayload.pluginId,
-                installedVersion: sitePluginPayload.installedVersion,
-                requiredPhpVersion: sitePluginPayload.requiredPhpVersion,
-                requiredWpVersion: sitePluginPayload.requiredWpVersion,
-                isActive: sitePluginPayload.isActive ? 1 : 0,
+                siteId: insertSitePluginPayload.siteId,
+                pluginId: insertSitePluginPayload.pluginId,
+                installedVersion: insertSitePluginPayload.installedVersion,
+                requiredPhpVersion: insertSitePluginPayload.requiredPhpVersion,
+                requiredWpVersion: insertSitePluginPayload.requiredWpVersion,
+                isActive: insertSitePluginPayload.isActive ? 1 : 0,
             });
             expect(builder.returning).toHaveBeenCalled();
             expect(builder.execute).toHaveBeenCalled();
@@ -291,14 +223,14 @@ describe('SitePluginRepository', () => {
     });
 
     describe('SitePluginRepository.update', () => {
-        const sitePluginPayload = {
-            siteId: 1,
-            pluginId: 1,
-            installedVersion: '1.0.0',
-            requiredPhpVersion: '8.5.1',
-            requiredWpVersion: '6.9.0',
-            isActive: true,
-        } as const;
+        const updateSitePluginPayload = {
+            siteId: testDataSitePluginJSON.siteId,
+            pluginId: testDataSitePluginJSON.pluginId,
+            installedVersion: testDataSitePluginJSON.installedVersion,
+            requiredPhpVersion: testDataSitePluginJSON.requiredPhpVersion,
+            requiredWpVersion: testDataSitePluginJSON.requiredWpVersion,
+            isActive: testDataSitePluginJSON.isActive,
+        };
 
         const fixedSystemTime = new Date('2026-01-01T00:00:00Z');
 
@@ -318,42 +250,41 @@ describe('SitePluginRepository', () => {
                 returning: jest.fn().mockReturnThis(),
                 execute: jest.fn().mockResolvedValue([
                     {
-                        createdAt: fixedSystemTime,
+                        createdAt: testDataSitePluginJSON.createdAt,
                         updatedAt: fixedSystemTime,
-                        ...sitePluginPayload,
+                        ...updateSitePluginPayload,
                     },
                 ]),
             };
 
             (database.update as jest.Mock).mockReturnValueOnce(builder);
 
-            const updatedSitePlugin = await sitePluginRepository.update(sitePluginPayload);
+            const updatedSitePlugin = await sitePluginRepository.update(updateSitePluginPayload);
 
             expect(database.update).toHaveBeenCalledWith(sitePluginsTable);
             expect(builder.set).toHaveBeenCalledWith({
                 updatedAt: fixedSystemTime,
-                installedVersion: sitePluginPayload.installedVersion,
-                requiredPhpVersion: sitePluginPayload.requiredPhpVersion,
-                requiredWpVersion: sitePluginPayload.requiredWpVersion,
-                isActive: sitePluginPayload.isActive ? 1 : 0,
+                installedVersion: updateSitePluginPayload.installedVersion,
+                requiredPhpVersion: updateSitePluginPayload.requiredPhpVersion,
+                requiredWpVersion: updateSitePluginPayload.requiredWpVersion,
+                isActive: updateSitePluginPayload.isActive ? 1 : 0,
             });
             expect(builder.where).toHaveBeenCalledWith(
                 and(
-                    eq(sitePluginsTable.siteId, sitePluginPayload.siteId),
-                    eq(sitePluginsTable.pluginId, sitePluginPayload.pluginId)
+                    eq(sitePluginsTable.siteId, updateSitePluginPayload.siteId),
+                    eq(sitePluginsTable.pluginId, updateSitePluginPayload.pluginId)
                 )
             );
             expect(builder.returning).toHaveBeenCalled();
             expect(builder.execute).toHaveBeenCalled();
 
-            expect(updatedSitePlugin?.getCreatedAt()).toEqual(fixedSystemTime);
-            expect(updatedSitePlugin?.getUpdatedAt()).toEqual(fixedSystemTime);
-            expect(updatedSitePlugin?.getSiteId()).toBe(sitePluginPayload.siteId);
-            expect(updatedSitePlugin?.getPluginId()).toBe(sitePluginPayload.pluginId);
-            expect(updatedSitePlugin?.getInstalledVersion()).toBe(sitePluginPayload.installedVersion);
-            expect(updatedSitePlugin?.getRequiredPhpVersion()).toBe(sitePluginPayload.requiredPhpVersion);
-            expect(updatedSitePlugin?.getRequiredWpVersion()).toBe(sitePluginPayload.requiredWpVersion);
-            expect(updatedSitePlugin?.getIsActive()).toBeTruthy();
+            expect(updatedSitePlugin).not.toBeNull();
+            expect(updatedSitePlugin).toEqualSitePluginEntity(
+                new SitePlugin({
+                    ...testDataSitePluginJSON,
+                    updatedAt: fixedSystemTime,
+                })
+            );
         });
 
         it('should return null when the site plugin update fails', async () => {
@@ -366,20 +297,20 @@ describe('SitePluginRepository', () => {
 
             (database.update as jest.Mock).mockReturnValueOnce(builder);
 
-            const updatedSitePlugin = await sitePluginRepository.update(sitePluginPayload);
+            const updatedSitePlugin = await sitePluginRepository.update(updateSitePluginPayload);
 
             expect(database.update).toHaveBeenCalledWith(sitePluginsTable);
             expect(builder.set).toHaveBeenCalledWith({
                 updatedAt: fixedSystemTime,
-                installedVersion: sitePluginPayload.installedVersion,
-                requiredPhpVersion: sitePluginPayload.requiredPhpVersion,
-                requiredWpVersion: sitePluginPayload.requiredWpVersion,
-                isActive: sitePluginPayload.isActive ? 1 : 0,
+                installedVersion: updateSitePluginPayload.installedVersion,
+                requiredPhpVersion: updateSitePluginPayload.requiredPhpVersion,
+                requiredWpVersion: updateSitePluginPayload.requiredWpVersion,
+                isActive: updateSitePluginPayload.isActive ? 1 : 0,
             });
             expect(builder.where).toHaveBeenCalledWith(
                 and(
-                    eq(sitePluginsTable.siteId, sitePluginPayload.siteId),
-                    eq(sitePluginsTable.pluginId, sitePluginPayload.pluginId)
+                    eq(sitePluginsTable.siteId, updateSitePluginPayload.siteId),
+                    eq(sitePluginsTable.pluginId, updateSitePluginPayload.pluginId)
                 )
             );
             expect(builder.returning).toHaveBeenCalled();
@@ -390,26 +321,6 @@ describe('SitePluginRepository', () => {
     });
 
     describe('SitePluginRepository.delete', () => {
-        const sitePluginPayload = {
-            siteId: 1,
-            pluginId: 1,
-            installedVersion: '1.0.0',
-            requiredPhpVersion: '8.5.1',
-            requiredWpVersion: '6.9.0',
-            isActive: true,
-        } as const;
-
-        const fixedSystemTime = new Date('2026-01-01T00:00:00Z');
-
-        beforeEach(() => {
-            jest.useFakeTimers();
-            jest.setSystemTime(fixedSystemTime);
-        });
-
-        afterEach(() => {
-            jest.useRealTimers();
-        });
-
         it('should return true when deletion was successful', async () => {
             const builder = {
                 where: jest.fn().mockReturnThis(),
@@ -420,13 +331,16 @@ describe('SitePluginRepository', () => {
 
             (database.delete as jest.Mock).mockReturnValueOnce(builder);
 
-            const isSitePluginDeleted = await sitePluginRepository.delete(1, 1);
+            const isSitePluginDeleted = await sitePluginRepository.delete(
+                testDataSitePluginJSON.siteId,
+                testDataSitePluginJSON.pluginId
+            );
 
             expect(database.delete).toHaveBeenCalledWith(sitePluginsTable);
             expect(builder.where).toHaveBeenCalledWith(
                 and(
-                    eq(sitePluginsTable.siteId, sitePluginPayload.siteId),
-                    eq(sitePluginsTable.pluginId, sitePluginPayload.pluginId)
+                    eq(sitePluginsTable.siteId, testDataSitePluginJSON.siteId),
+                    eq(sitePluginsTable.pluginId, testDataSitePluginJSON.pluginId)
                 )
             );
             expect(builder.execute).toHaveBeenCalled();
@@ -444,60 +358,21 @@ describe('SitePluginRepository', () => {
 
             (database.delete as jest.Mock).mockReturnValueOnce(builder);
 
-            const isSitePluginDeleted = await sitePluginRepository.delete(1, 1);
+            const isSitePluginDeleted = await sitePluginRepository.delete(
+                testDataSitePluginJSON.siteId,
+                testDataSitePluginJSON.pluginId
+            );
 
             expect(database.delete).toHaveBeenCalledWith(sitePluginsTable);
             expect(builder.where).toHaveBeenCalledWith(
                 and(
-                    eq(sitePluginsTable.siteId, sitePluginPayload.siteId),
-                    eq(sitePluginsTable.pluginId, sitePluginPayload.pluginId)
+                    eq(sitePluginsTable.siteId, testDataSitePluginJSON.siteId),
+                    eq(sitePluginsTable.pluginId, testDataSitePluginJSON.pluginId)
                 )
             );
             expect(builder.execute).toHaveBeenCalled();
 
             expect(isSitePluginDeleted).toBeFalsy();
-        });
-    });
-
-    describe('SitePluginRepository.delete', () => {
-        it('should delete a site plugin and return true', async () => {
-            const builder = {
-                set: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                execute: jest.fn().mockResolvedValue({ changes: 1 }),
-            };
-
-            (database.delete as jest.Mock).mockReturnValueOnce(builder);
-
-            const isDeleted = await sitePluginRepository.delete(1, 1);
-
-            expect(database.delete).toHaveBeenCalledWith(sitePluginsTable);
-            expect(builder.where).toHaveBeenCalledWith(
-                and(eq(sitePluginsTable.siteId, 1), eq(sitePluginsTable.pluginId, 1))
-            );
-            expect(builder.execute).toHaveBeenCalled();
-
-            expect(isDeleted).toBeTruthy();
-        });
-
-        it('should fail to delete a site plugin and return false', async () => {
-            const builder = {
-                set: jest.fn().mockReturnThis(),
-                where: jest.fn().mockReturnThis(),
-                execute: jest.fn().mockResolvedValue({ changes: 0 }),
-            };
-
-            (database.delete as jest.Mock).mockReturnValueOnce(builder);
-
-            const isDeleted = await sitePluginRepository.delete(1, 1);
-
-            expect(database.delete).toHaveBeenCalledWith(sitePluginsTable);
-            expect(builder.where).toHaveBeenCalledWith(
-                and(eq(sitePluginsTable.siteId, 1), eq(sitePluginsTable.pluginId, 1))
-            );
-            expect(builder.execute).toHaveBeenCalled();
-
-            expect(isDeleted).toBeFalsy();
         });
     });
 });

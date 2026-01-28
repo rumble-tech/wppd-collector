@@ -1,6 +1,8 @@
 import { and, eq } from 'drizzle-orm';
+import Site from 'src/entities/Site';
 import SiteRepository from 'src/repositories/SiteRepository';
 import { TDatabase, TSitesTable } from 'src/services/database/Types';
+import { testDataSiteEntity, testDataSiteJSON } from 'test-utils/test-data/Site';
 
 describe('SiteRepository', () => {
     let siteRepository: SiteRepository;
@@ -24,19 +26,7 @@ describe('SiteRepository', () => {
         it('should return all sites', async () => {
             const builder = {
                 from: jest.fn().mockReturnThis(),
-                execute: jest.fn().mockResolvedValue([
-                    {
-                        id: 1,
-                        createdAt: new Date('2026-01-01T00:00:00Z'),
-                        updatedAt: new Date('2026-01-02T00:00:00Z'),
-                        name: 'Site1',
-                        url: 'https://example.com/site1',
-                        apiKey: 'api-key-1',
-                        environment: 'development',
-                        phpVersion: '8.5.1',
-                        wpVersion: '6.9.0',
-                    },
-                ]),
+                execute: jest.fn().mockResolvedValue([testDataSiteJSON]),
             };
 
             (database.select as jest.Mock).mockReturnValueOnce(builder);
@@ -47,15 +37,11 @@ describe('SiteRepository', () => {
             expect(builder.from).toHaveBeenCalledWith(sitesTable);
             expect(builder.execute).toHaveBeenCalled();
 
-            expect(sites[0].getId()).toBe(1);
-            expect(sites[0].getCreatedAt()).toEqual(new Date('2026-01-01T00:00:00Z'));
-            expect(sites[0].getUpdatedAt()).toEqual(new Date('2026-01-02T00:00:00Z'));
-            expect(sites[0].getName()).toBe('Site1');
-            expect(sites[0].getUrl()).toBe('https://example.com/site1');
-            expect(sites[0].getApiKey()).toBe('api-key-1');
-            expect(sites[0].getEnvironment()).toBe('development');
-            expect(sites[0].getPhpVersion()).toBe('8.5.1');
-            expect(sites[0].getWpVersion()).toBe('6.9.0');
+            expect(sites).toHaveLength(1);
+
+            const [site] = sites;
+
+            expect(site).toEqualSiteEntity(testDataSiteEntity);
         });
     });
 
@@ -65,41 +51,21 @@ describe('SiteRepository', () => {
                 from: jest.fn().mockReturnThis(),
                 where: jest.fn().mockReturnThis(),
                 limit: jest.fn().mockReturnThis(),
-                execute: jest.fn().mockResolvedValue([
-                    {
-                        id: 1,
-                        createdAt: new Date('2026-01-01T00:00:00Z'),
-                        updatedAt: new Date('2026-01-02T00:00:00Z'),
-                        name: 'Site1',
-                        url: 'https://example.com/site1',
-                        apiKey: 'api-key-1',
-                        environment: 'development',
-                        phpVersion: '8.5.1',
-                        wpVersion: '6.9.0',
-                    },
-                ]),
+                execute: jest.fn().mockResolvedValue([testDataSiteJSON]),
             };
 
             (database.select as jest.Mock).mockReturnValueOnce(builder);
 
-            const site = await siteRepository.findById(1);
+            const site = await siteRepository.findById(testDataSiteJSON.id);
 
             expect(database.select).toHaveBeenCalled();
             expect(builder.from).toHaveBeenCalledWith(sitesTable);
-            expect(builder.where).toHaveBeenCalledWith(eq(sitesTable.id, 1));
+            expect(builder.where).toHaveBeenCalledWith(eq(sitesTable.id, testDataSiteJSON.id));
             expect(builder.limit).toHaveBeenCalledWith(1);
             expect(builder.execute).toHaveBeenCalled();
 
             expect(site).not.toBeNull();
-            expect(site?.getId()).toBe(1);
-            expect(site?.getCreatedAt()).toEqual(new Date('2026-01-01T00:00:00Z'));
-            expect(site?.getUpdatedAt()).toEqual(new Date('2026-01-02T00:00:00Z'));
-            expect(site?.getName()).toBe('Site1');
-            expect(site?.getUrl()).toBe('https://example.com/site1');
-            expect(site?.getApiKey()).toBe('api-key-1');
-            expect(site?.getEnvironment()).toBe('development');
-            expect(site?.getPhpVersion()).toBe('8.5.1');
-            expect(site?.getWpVersion()).toBe('6.9.0');
+            expect(site).toEqualSiteEntity(testDataSiteEntity);
         });
 
         it('should return null if the site could not be found by its id', async () => {
@@ -112,11 +78,11 @@ describe('SiteRepository', () => {
 
             (database.select as jest.Mock).mockReturnValueOnce(builder);
 
-            const site = await siteRepository.findById(1);
+            const site = await siteRepository.findById(testDataSiteJSON.id);
 
             expect(database.select).toHaveBeenCalled();
             expect(builder.from).toHaveBeenCalledWith(sitesTable);
-            expect(builder.where).toHaveBeenCalledWith(eq(sitesTable.id, 1));
+            expect(builder.where).toHaveBeenCalledWith(eq(sitesTable.id, testDataSiteJSON.id));
             expect(builder.limit).toHaveBeenCalledWith(1);
             expect(builder.execute).toHaveBeenCalled();
 
@@ -130,43 +96,23 @@ describe('SiteRepository', () => {
                 from: jest.fn().mockReturnThis(),
                 where: jest.fn().mockReturnThis(),
                 limit: jest.fn().mockReturnThis(),
-                execute: jest.fn().mockResolvedValue([
-                    {
-                        id: 1,
-                        createdAt: new Date('2026-01-01T00:00:00Z'),
-                        updatedAt: new Date('2026-01-02T00:00:00Z'),
-                        name: 'Site1',
-                        url: 'https://example.com/site1',
-                        apiKey: 'api-key-1',
-                        environment: 'development',
-                        phpVersion: '8.5.1',
-                        wpVersion: '6.9.0',
-                    },
-                ]),
+                execute: jest.fn().mockResolvedValue([testDataSiteJSON]),
             };
 
             (database.select as jest.Mock).mockReturnValueOnce(builder);
 
-            const site = await siteRepository.findByNameAndUrl('Site1', 'https://example.com/site1');
+            const site = await siteRepository.findByNameAndUrl(testDataSiteJSON.name, testDataSiteJSON.url);
 
             expect(database.select).toHaveBeenCalled();
             expect(builder.from).toHaveBeenCalledWith(sitesTable);
             expect(builder.where).toHaveBeenCalledWith(
-                and(eq(sitesTable.name, 'Site1'), eq(sitesTable.url, 'https://example.com/site1'))
+                and(eq(sitesTable.name, testDataSiteJSON.name), eq(sitesTable.url, testDataSiteJSON.url))
             );
             expect(builder.limit).toHaveBeenCalledWith(1);
             expect(builder.execute).toHaveBeenCalled();
 
             expect(site).not.toBeNull();
-            expect(site?.getId()).toBe(1);
-            expect(site?.getCreatedAt()).toEqual(new Date('2026-01-01T00:00:00Z'));
-            expect(site?.getUpdatedAt()).toEqual(new Date('2026-01-02T00:00:00Z'));
-            expect(site?.getName()).toBe('Site1');
-            expect(site?.getUrl()).toBe('https://example.com/site1');
-            expect(site?.getApiKey()).toBe('api-key-1');
-            expect(site?.getEnvironment()).toBe('development');
-            expect(site?.getPhpVersion()).toBe('8.5.1');
-            expect(site?.getWpVersion()).toBe('6.9.0');
+            expect(site).toEqualSiteEntity(testDataSiteEntity);
         });
 
         it('should return null if the site could not be found by its name and url', async () => {
@@ -179,12 +125,12 @@ describe('SiteRepository', () => {
 
             (database.select as jest.Mock).mockReturnValueOnce(builder);
 
-            const site = await siteRepository.findByNameAndUrl('Site1', 'https://example.com/site1');
+            const site = await siteRepository.findByNameAndUrl(testDataSiteJSON.name, testDataSiteJSON.url);
 
             expect(database.select).toHaveBeenCalled();
             expect(builder.from).toHaveBeenCalledWith(sitesTable);
             expect(builder.where).toHaveBeenCalledWith(
-                and(eq(sitesTable.name, 'Site1'), eq(sitesTable.url, 'https://example.com/site1'))
+                and(eq(sitesTable.name, testDataSiteJSON.name), eq(sitesTable.url, testDataSiteJSON.url))
             );
             expect(builder.limit).toHaveBeenCalledWith(1);
             expect(builder.execute).toHaveBeenCalled();
@@ -194,12 +140,12 @@ describe('SiteRepository', () => {
     });
 
     describe('SiteRepository.insert', () => {
-        const sitePayload = {
-            name: 'Site1',
-            url: 'https://example.com/site1',
-            apiKey: 'api-key-1',
-            environment: 'development',
-        } as const;
+        const siteInsertPayload = {
+            name: testDataSiteJSON.name,
+            url: testDataSiteJSON.url,
+            apiKey: testDataSiteJSON.apiKey,
+            environment: testDataSiteJSON.environment,
+        };
 
         const fixedSystemTime = new Date('2026-01-01T00:00:00Z');
 
@@ -218,10 +164,10 @@ describe('SiteRepository', () => {
                 returning: jest.fn().mockReturnThis(),
                 execute: jest.fn().mockResolvedValue([
                     {
-                        id: 1,
+                        id: testDataSiteJSON.id,
                         createdAt: fixedSystemTime,
                         updatedAt: fixedSystemTime,
-                        ...sitePayload,
+                        ...siteInsertPayload,
                         phpVersion: null,
                         wpVersion: null,
                     },
@@ -230,13 +176,13 @@ describe('SiteRepository', () => {
 
             (database.insert as jest.Mock).mockReturnValueOnce(builder);
 
-            const insertedSite = await siteRepository.insert(sitePayload);
+            const insertedSite = await siteRepository.insert(siteInsertPayload);
 
             expect(database.insert).toHaveBeenCalledWith(sitesTable);
             expect(builder.values).toHaveBeenCalledWith({
                 createdAt: fixedSystemTime,
                 updatedAt: fixedSystemTime,
-                ...sitePayload,
+                ...siteInsertPayload,
                 phpVersion: null,
                 wpVersion: null,
             });
@@ -244,15 +190,15 @@ describe('SiteRepository', () => {
             expect(builder.execute).toHaveBeenCalled();
 
             expect(insertedSite).not.toBeNull();
-            expect(insertedSite?.getId()).toBe(1);
-            expect(insertedSite?.getCreatedAt()).toEqual(fixedSystemTime);
-            expect(insertedSite?.getUpdatedAt()).toEqual(fixedSystemTime);
-            expect(insertedSite?.getName()).toBe(sitePayload.name);
-            expect(insertedSite?.getUrl()).toBe(sitePayload.url);
-            expect(insertedSite?.getApiKey()).toBe(sitePayload.apiKey);
-            expect(insertedSite?.getEnvironment()).toBe(sitePayload.environment);
-            expect(insertedSite?.getPhpVersion()).toBeNull();
-            expect(insertedSite?.getWpVersion()).toBeNull();
+            expect(insertedSite).toEqualSiteEntity(
+                new Site({
+                    ...testDataSiteJSON,
+                    createdAt: fixedSystemTime,
+                    updatedAt: fixedSystemTime,
+                    phpVersion: null,
+                    wpVersion: null,
+                })
+            );
         });
 
         it('should return null when the site insert fails', async () => {
@@ -264,13 +210,13 @@ describe('SiteRepository', () => {
 
             (database.insert as jest.Mock).mockReturnValueOnce(builder);
 
-            const insertedSite = await siteRepository.insert(sitePayload);
+            const insertedSite = await siteRepository.insert(siteInsertPayload);
 
             expect(database.insert).toHaveBeenCalledWith(sitesTable);
             expect(builder.values).toHaveBeenCalledWith({
                 createdAt: fixedSystemTime,
                 updatedAt: fixedSystemTime,
-                ...sitePayload,
+                ...siteInsertPayload,
                 phpVersion: null,
                 wpVersion: null,
             });
@@ -282,15 +228,15 @@ describe('SiteRepository', () => {
     });
 
     describe('SiteRepository.update', () => {
-        const sitePayload = {
-            id: 1,
-            name: 'Site1',
-            url: 'https://example.com/site1',
-            apiKey: 'api-key-1',
-            environment: 'development',
-            phpVersion: '8.5.1',
-            wpVersion: '6.9.0',
-        } as const;
+        const siteUpdatePayload = {
+            id: testDataSiteJSON.id,
+            name: testDataSiteJSON.name,
+            url: testDataSiteJSON.url,
+            apiKey: testDataSiteJSON.apiKey,
+            environment: testDataSiteJSON.environment,
+            phpVersion: testDataSiteJSON.phpVersion,
+            wpVersion: testDataSiteJSON.wpVersion,
+        };
 
         const fixedSystemTime = new Date('2026-01-01T00:00:00Z');
 
@@ -310,41 +256,38 @@ describe('SiteRepository', () => {
                 returning: jest.fn().mockReturnThis(),
                 execute: jest.fn().mockResolvedValue([
                     {
-                        createdAt: fixedSystemTime,
+                        createdAt: testDataSiteJSON.createdAt,
                         updatedAt: fixedSystemTime,
-                        ...sitePayload,
+                        ...siteUpdatePayload,
                     },
                 ]),
             };
 
             (database.update as jest.Mock).mockReturnValueOnce(builder);
 
-            const updatedSite = await siteRepository.update(sitePayload);
+            const updatedSite = await siteRepository.update(siteUpdatePayload);
 
             expect(database.update).toHaveBeenCalledWith(sitesTable);
             expect(builder.set).toHaveBeenCalledWith({
                 updatedAt: fixedSystemTime,
-                name: sitePayload.name,
-                url: sitePayload.url,
-                apiKey: sitePayload.apiKey,
-                environment: sitePayload.environment,
-                phpVersion: sitePayload.phpVersion,
-                wpVersion: sitePayload.wpVersion,
+                name: siteUpdatePayload.name,
+                url: siteUpdatePayload.url,
+                apiKey: siteUpdatePayload.apiKey,
+                environment: siteUpdatePayload.environment,
+                phpVersion: siteUpdatePayload.phpVersion,
+                wpVersion: siteUpdatePayload.wpVersion,
             });
-            expect(builder.where).toHaveBeenCalledWith(eq(sitesTable.id, sitePayload.id));
+            expect(builder.where).toHaveBeenCalledWith(eq(sitesTable.id, siteUpdatePayload.id));
             expect(builder.returning).toHaveBeenCalled();
             expect(builder.execute).toHaveBeenCalled();
 
             expect(updatedSite).not.toBeNull();
-            expect(updatedSite?.getId()).toBe(1);
-            expect(updatedSite?.getCreatedAt()).toEqual(fixedSystemTime);
-            expect(updatedSite?.getUpdatedAt()).toEqual(fixedSystemTime);
-            expect(updatedSite?.getName()).toBe(sitePayload.name);
-            expect(updatedSite?.getUrl()).toBe(sitePayload.url);
-            expect(updatedSite?.getApiKey()).toBe(sitePayload.apiKey);
-            expect(updatedSite?.getEnvironment()).toBe(sitePayload.environment);
-            expect(updatedSite?.getPhpVersion()).toBe(sitePayload.phpVersion);
-            expect(updatedSite?.getWpVersion()).toBe(sitePayload.wpVersion);
+            expect(updatedSite).toEqualSiteEntity(
+                new Site({
+                    ...testDataSiteJSON,
+                    updatedAt: fixedSystemTime,
+                })
+            );
         });
 
         it('should return null when the site update fails', async () => {
@@ -357,19 +300,19 @@ describe('SiteRepository', () => {
 
             (database.update as jest.Mock).mockReturnValueOnce(builder);
 
-            const updatedSite = await siteRepository.update(sitePayload);
+            const updatedSite = await siteRepository.update(siteUpdatePayload);
 
             expect(database.update).toHaveBeenCalledWith(sitesTable);
             expect(builder.set).toHaveBeenCalledWith({
                 updatedAt: fixedSystemTime,
-                name: sitePayload.name,
-                url: sitePayload.url,
-                apiKey: sitePayload.apiKey,
-                environment: sitePayload.environment,
-                phpVersion: sitePayload.phpVersion,
-                wpVersion: sitePayload.wpVersion,
+                name: siteUpdatePayload.name,
+                url: siteUpdatePayload.url,
+                apiKey: siteUpdatePayload.apiKey,
+                environment: siteUpdatePayload.environment,
+                phpVersion: siteUpdatePayload.phpVersion,
+                wpVersion: siteUpdatePayload.wpVersion,
             });
-            expect(builder.where).toHaveBeenCalledWith(eq(sitesTable.id, sitePayload.id));
+            expect(builder.where).toHaveBeenCalledWith(eq(sitesTable.id, siteUpdatePayload.id));
             expect(builder.returning).toHaveBeenCalled();
             expect(builder.execute).toHaveBeenCalled();
 
@@ -387,10 +330,10 @@ describe('SiteRepository', () => {
 
             (database.delete as jest.Mock).mockReturnValueOnce(builder);
 
-            const isDeleted = await siteRepository.delete(1);
+            const isDeleted = await siteRepository.delete(testDataSiteJSON.id);
 
             expect(database.delete).toHaveBeenCalledWith(sitesTable);
-            expect(builder.where).toHaveBeenCalledWith(eq(sitesTable.id, 1));
+            expect(builder.where).toHaveBeenCalledWith(eq(sitesTable.id, testDataSiteJSON.id));
             expect(builder.execute).toHaveBeenCalled();
 
             expect(isDeleted).toBeTruthy();
@@ -405,10 +348,10 @@ describe('SiteRepository', () => {
 
             (database.delete as jest.Mock).mockReturnValueOnce(builder);
 
-            const isDeleted = await siteRepository.delete(1);
+            const isDeleted = await siteRepository.delete(testDataSiteJSON.id);
 
             expect(database.delete).toHaveBeenCalledWith(sitesTable);
-            expect(builder.where).toHaveBeenCalledWith(eq(sitesTable.id, 1));
+            expect(builder.where).toHaveBeenCalledWith(eq(sitesTable.id, testDataSiteJSON.id));
             expect(builder.execute).toHaveBeenCalled();
 
             expect(isDeleted).toBeFalsy();

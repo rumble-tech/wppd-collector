@@ -35,4 +35,5 @@ module.exports = {
         '^test-utils/(.*)$': '<rootDir>/test-utils/$1',
     },
     setupFiles: ['tsconfig-paths/register'],
+    setupFilesAfterEnv: ['<rootDir>/test-utils/Expects.ts'],
 };
