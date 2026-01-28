@@ -45,7 +45,7 @@ export default {
         type: 'string',
         required: false,
     },
-    MAILING_SES_SECRET_ACCESS_KEY: {
+    MAILING_SES_ACCESS_KEY_SECRET: {
         type: 'string',
         required: false,
     },

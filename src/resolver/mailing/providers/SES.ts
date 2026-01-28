@@ -17,7 +17,7 @@ export default class SESMailingProvider extends AbstractMailingProvider {
             region: this.config.region,
             credentials: {
                 accessKeyId: this.config.accessKeyId,
-                secretAccessKey: this.config.secretAccessKey,
+                secretAccessKey: this.config.accessKeySecret,
             },
         });
 

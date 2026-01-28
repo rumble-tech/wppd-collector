@@ -79,7 +79,7 @@ export default class Config {
         return {
             region: Config.get<string>('MAILING_SES_REGION'),
             accessKeyId: Config.get<string>('MAILING_SES_ACCESS_KEY_ID'),
-            secretAccessKey: Config.get<string>('MAILING_SES_SECRET_ACCESS_KEY'),
+            accessKeySecret: Config.get<string>('MAILING_SES_ACCESS_KEY_SECRET'),
         };
     }
 

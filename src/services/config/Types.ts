@@ -34,7 +34,7 @@ type TServerConfig = {
 type TMailingSESConfig = {
     region: string;
     accessKeyId: string;
-    secretAccessKey: string;
+    accessKeySecret: string;
 };
 
 export type { TConfigSchema, TLoggerConfig, TServerConfig, TMailingSESConfig };
