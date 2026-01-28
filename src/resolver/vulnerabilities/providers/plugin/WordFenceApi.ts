@@ -2,10 +2,11 @@ import axios from 'axios';
 import { TPlugin } from 'src/entities/Plugin';
 import { TPluginVulnerability } from 'src/entities/PluginVulnerability';
 import AbstractPluginVulnerabilitiesProvider from 'src/resolver/vulnerabilities/providers/plugin/AbstractPluginVulnerabilitiesProvider';
-import Config from 'src/services/config/Config';
 import Utils from 'src/Utils';
 
 export default class WordFenceApiPluginVulnerabilitiesProvider extends AbstractPluginVulnerabilitiesProvider {
+    private readonly apiUrl = 'https://www.wordfence.com/api/intelligence/v2/vulnerabilities/production';
+
     private vulnerabilities: Record<
         TPlugin['slug'],
         Omit<TPluginVulnerability, 'id' | 'createdAt' | 'pluginId'>[] | null
@@ -25,7 +26,7 @@ export default class WordFenceApiPluginVulnerabilitiesProvider extends AbstractP
         try {
             const response = await axios({
                 method: 'GET',
-                url: Config.get<string>('WORDFENCE_VULNERABILITIES_API'),
+                url: this.apiUrl,
                 headers: {
                     'Content-Type': 'application/json',
                 },

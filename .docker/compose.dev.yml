@@ -10,8 +10,3 @@ services:
       - ../src:/app/src
       - ../logs:/app/logs
       - ../sqlite:/app/sqlite
-    environment:
-      PHP_VERSION_API: 'https://www.php.net/releases/index.php?json'
-      WP_VERSION_API: 'https://api.wordpress.org/core/version-check/1.7/'
-      WP_PLUGIN_VERSION_API: 'https://api.wordpress.org/plugins/info/1.0'
-      WORDFENCE_VULNERABILITIES_API: 'https://www.wordfence.com/api/intelligence/v2/vulnerabilities/production'

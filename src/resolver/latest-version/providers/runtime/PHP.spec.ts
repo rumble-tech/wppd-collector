@@ -1,18 +1,17 @@
 import axios from 'axios';
 import LatestPhpRuntimeVersionProvider from 'src/resolver/latest-version/providers/runtime/PHP';
-import Config from 'src/services/config/Config';
 
 jest.mock('axios');
-jest.mock('/src/services/config/Config');
-
 const mockedAxios = axios as jest.MockedFunction<typeof axios>;
-const mockedConfigGet = Config.get as jest.MockedFunction<typeof Config.get>;
 
 describe('LatestPhpRuntimeVersionProvider', () => {
     let provider: LatestPhpRuntimeVersionProvider;
+    const apiUrl = 'https://example.com/php-version';
 
     beforeEach(() => {
         provider = new LatestPhpRuntimeVersionProvider();
+        (provider as unknown as { apiUrl: string }).apiUrl = apiUrl;
+
         jest.clearAllMocks();
     });
 
@@ -36,9 +35,6 @@ describe('LatestPhpRuntimeVersionProvider', () => {
 
     describe('LatestPhpRuntimeVersionProvider.fetch', () => {
         it('should set the latest PHP version on successful API call', async () => {
-            const apiUrl = 'https://example.com/php-version';
-            mockedConfigGet.mockReturnValue(apiUrl);
-
             const phpVersionApiResponse = {
                 '7': {
                     version: '7.4.0',
@@ -52,7 +48,6 @@ describe('LatestPhpRuntimeVersionProvider', () => {
 
             await provider.fetch();
 
-            expect(mockedConfigGet).toHaveBeenCalledWith('PHP_VERSION_API');
             expect(mockedAxios).toHaveBeenCalledWith({
                 method: 'GET',
                 url: apiUrl,
@@ -62,14 +57,10 @@ describe('LatestPhpRuntimeVersionProvider', () => {
         });
 
         it('should set the latest PHP to null on failed API call', async () => {
-            const apiUrl = 'https://example.com/php-version';
-            mockedConfigGet.mockReturnValue(apiUrl);
-
             mockedAxios.mockRejectedValue(new Error('Network Error'));
 
             await provider.fetch();
 
-            expect(mockedConfigGet).toHaveBeenCalledWith('PHP_VERSION_API');
             expect(mockedAxios).toHaveBeenCalledWith({
                 method: 'GET',
                 url: apiUrl,

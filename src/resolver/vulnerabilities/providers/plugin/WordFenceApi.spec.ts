@@ -1,18 +1,17 @@
 import axios from 'axios';
 import WordFenceApiPluginVulnerabilitiesProvider from 'src/resolver/vulnerabilities/providers/plugin/WordFenceApi';
-import Config from 'src/services/config/Config';
 
 jest.mock('axios');
-jest.mock('/src/services/config/Config');
-
 const mockedAxios = axios as jest.MockedFunction<typeof axios>;
-const mockedConfigGet = Config.get as jest.MockedFunction<typeof Config.get>;
 
 describe('WordFenceApiPluginVulnerabilitiesProvider', () => {
     let provider: WordFenceApiPluginVulnerabilitiesProvider;
+    const apiUrl = 'https://example.com/vulnerabilities';
 
     beforeEach(() => {
         provider = new WordFenceApiPluginVulnerabilitiesProvider();
+        (provider as unknown as { apiUrl: string }).apiUrl = apiUrl;
+
         jest.clearAllMocks();
     });
 
@@ -132,9 +131,6 @@ describe('WordFenceApiPluginVulnerabilitiesProvider', () => {
         ] as const;
 
         it('should set the vulnerabilities on successful API call', async () => {
-            const apiUrl = 'https://example.com/vulnerabilities';
-            mockedConfigGet.mockReturnValue(apiUrl);
-
             const wordFenceApiResponse = {
                 'vulnerability-1': {
                     description: 'sample-description',
@@ -237,7 +233,6 @@ describe('WordFenceApiPluginVulnerabilitiesProvider', () => {
 
             await provider.fetch();
 
-            expect(mockedConfigGet).toHaveBeenCalledWith('WORDFENCE_VULNERABILITIES_API');
             expect(mockedAxios).toHaveBeenCalledWith({
                 method: 'GET',
                 url: apiUrl,
@@ -249,14 +244,10 @@ describe('WordFenceApiPluginVulnerabilitiesProvider', () => {
         });
 
         it('should set the vulnerabilities to an empty object on failed API call', async () => {
-            const apiUrl = 'https://example.com/vulnerabilities';
-            mockedConfigGet.mockReturnValue(apiUrl);
-
             mockedAxios.mockRejectedValue(new Error('Network Error'));
 
             await provider.fetch();
 
-            expect(mockedConfigGet).toHaveBeenCalledWith('WORDFENCE_VULNERABILITIES_API');
             expect(mockedAxios).toHaveBeenCalledWith({
                 method: 'GET',
                 url: apiUrl,

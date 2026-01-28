@@ -21,22 +21,6 @@ export default {
         type: 'string',
         required: true,
     },
-    PHP_VERSION_API: {
-        type: 'string',
-        required: true,
-    },
-    WP_VERSION_API: {
-        type: 'string',
-        required: true,
-    },
-    WP_PLUGIN_VERSION_API: {
-        type: 'string',
-        required: true,
-    },
-    WORDFENCE_VULNERABILITIES_API: {
-        type: 'string',
-        required: true,
-    },
     MAILING_SES_REGION: {
         type: 'string',
         required: false,

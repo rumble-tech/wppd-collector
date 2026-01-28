@@ -1,18 +1,17 @@
 import axios from 'axios';
 import LatestWordPressRuntimeVersionProvider from 'src/resolver/latest-version/providers/runtime/WordPress';
-import Config from 'src/services/config/Config';
 
 jest.mock('axios');
-jest.mock('/src/services/config/Config');
-
 const mockedAxios = axios as jest.MockedFunction<typeof axios>;
-const mockedConfigGet = Config.get as jest.MockedFunction<typeof Config.get>;
 
 describe('LatestWordPressRuntimeVersionProvider', () => {
     let provider: LatestWordPressRuntimeVersionProvider;
+    const apiUrl = 'https://example.com/wp-version';
 
     beforeEach(() => {
         provider = new LatestWordPressRuntimeVersionProvider();
+        (provider as unknown as { apiUrl: string }).apiUrl = apiUrl;
+
         jest.clearAllMocks();
     });
 
@@ -36,9 +35,6 @@ describe('LatestWordPressRuntimeVersionProvider', () => {
 
     describe('LatestWordPressRuntimeVersionProvider.fetch', () => {
         it('should set the latest WordPress version on successful API call', async () => {
-            const apiUrl = 'https://example.com/wp-version';
-            mockedConfigGet.mockReturnValue(apiUrl);
-
             const wordPressVersionApiResponse = {
                 offers: [{ version: '8.0' }],
             };
@@ -47,7 +43,6 @@ describe('LatestWordPressRuntimeVersionProvider', () => {
 
             await provider.fetch();
 
-            expect(mockedConfigGet).toHaveBeenCalledWith('WP_VERSION_API');
             expect(mockedAxios).toHaveBeenCalledWith({
                 method: 'GET',
                 url: apiUrl,
@@ -57,14 +52,10 @@ describe('LatestWordPressRuntimeVersionProvider', () => {
         });
 
         it('should set the latest WordPress to null on failed API call', async () => {
-            const apiUrl = 'https://example.com/wp-version';
-            mockedConfigGet.mockReturnValue(apiUrl);
-
             mockedAxios.mockRejectedValue(new Error('Network Error'));
 
             await provider.fetch();
 
-            expect(mockedConfigGet).toHaveBeenCalledWith('WP_VERSION_API');
             expect(mockedAxios).toHaveBeenCalledWith({
                 method: 'GET',
                 url: apiUrl,

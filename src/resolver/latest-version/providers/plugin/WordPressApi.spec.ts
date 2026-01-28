@@ -1,26 +1,22 @@
 import axios from 'axios';
 import WordPressApiLatestPluginVersionProvider from 'src/resolver/latest-version/providers/plugin/WordPressApi';
-import Config from 'src/services/config/Config';
 
 jest.mock('axios');
-jest.mock('/src/services/config/Config');
-
 const mockedAxios = axios as jest.MockedFunction<typeof axios>;
-const mockedConfigGet = Config.get as jest.MockedFunction<typeof Config.get>;
 
 describe('WordPressApiLatestPluginVersionProvider', () => {
     let provider: WordPressApiLatestPluginVersionProvider;
+    const apiUrl = 'https://example.com/plugin-version';
 
     beforeEach(() => {
         provider = new WordPressApiLatestPluginVersionProvider();
+        (provider as unknown as { apiUrl: string }).apiUrl = apiUrl;
+
         jest.clearAllMocks();
     });
 
     describe('WordPressApiLatestPluginVersionProvider.get', () => {
         it('should return the latest plugin version on successful API call', async () => {
-            const apiUrl = 'https://example.com/plugin-version';
-            mockedConfigGet.mockReturnValue(apiUrl);
-
             const pluginVersionApiResponse = {
                 version: '1.0.0',
                 requires_php: '8.5.1',
@@ -31,7 +27,6 @@ describe('WordPressApiLatestPluginVersionProvider', () => {
 
             const latestPluginVersion = await provider.get('plugin-slug');
 
-            expect(mockedConfigGet).toHaveBeenCalledWith('WP_PLUGIN_VERSION_API');
             expect(mockedAxios).toHaveBeenCalledWith({
                 method: 'GET',
                 url: `${apiUrl}/plugins/plugin-slug.json`,
@@ -45,14 +40,10 @@ describe('WordPressApiLatestPluginVersionProvider', () => {
         });
 
         it('should return null values on failed API call', async () => {
-            const apiUrl = 'https://example.com/plugin-version';
-            mockedConfigGet.mockReturnValue(apiUrl);
-
             mockedAxios.mockRejectedValue(new Error('Network Error'));
 
             const latestPluginVersion = await provider.get('plugin-slug');
 
-            expect(mockedConfigGet).toHaveBeenCalledWith('WP_PLUGIN_VERSION_API');
             expect(mockedAxios).toHaveBeenCalledWith({
                 method: 'GET',
                 url: `${apiUrl}/plugins/plugin-slug.json`,

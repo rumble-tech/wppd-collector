@@ -1,14 +1,15 @@
 import axios from 'axios';
 import AbstractLatestRuntimeVersionProvider from 'src/resolver/latest-version/providers/runtime/AbstractLatestRuntimeVersionProvider';
-import Config from 'src/services/config/Config';
 import Utils from 'src/Utils';
 
 export default class LatestPhpRuntimeVersionProvider extends AbstractLatestRuntimeVersionProvider {
+    private readonly apiUrl = 'https://www.php.net/releases/index.php?json';
+
     public async fetch(): Promise<void> {
         try {
             const response = await axios({
                 method: 'GET',
-                url: Config.get<string>('PHP_VERSION_API'),
+                url: this.apiUrl,
                 headers: {
                     'Content-Type': 'application/json',
                 },
