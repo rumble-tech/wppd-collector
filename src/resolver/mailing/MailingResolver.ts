@@ -8,10 +8,6 @@ export default class MailingResolver {
     }
 
     public async sendMail(from: string, to: string, subject: string, body: string): Promise<void> {
-        if (!this.provider) {
-            throw new Error('Mailing provider is not configured');
-        }
-
         const transporter = this.provider.getTransporter();
 
         return new Promise((resolve, reject) => {

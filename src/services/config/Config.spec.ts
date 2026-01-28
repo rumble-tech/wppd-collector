@@ -140,4 +140,25 @@ describe('Config', () => {
             }
         });
     });
+
+    describe('Config.getMailingSESConfig', () => {
+        it('should return the correct mailing SES config', () => {
+            process.env.MAILING_SES_REGION = 'ses-region';
+            process.env.MAILING_SES_ACCESS_KEY_ID = 'ses-access-key-id';
+            process.env.MAILING_SES_ACCESS_KEY_SECRET = 'ses-access-key-secret';
+
+            const schema: TConfigSchema = {
+                MAILING_SES_REGION: { type: 'string', required: false },
+                MAILING_SES_ACCESS_KEY_ID: { type: 'string', required: false },
+                MAILING_SES_ACCESS_KEY_SECRET: { type: 'string', required: false },
+            };
+
+            expect(() => Config.load(schema)).not.toThrow();
+            expect(Config.getMailingSESConfig()).toEqual({
+                region: 'ses-region',
+                accessKeyId: 'ses-access-key-id',
+                accessKeySecret: 'ses-access-key-secret',
+            });
+        });
+    });
 });
