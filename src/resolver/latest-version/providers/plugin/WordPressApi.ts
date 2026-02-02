@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { TPlugin, TPluginVersion } from 'src/entities/Plugin';
-import AbstractLatestPluginVersionProvider
-    from 'src/resolver/latest-version/providers/plugin/AbstractLatestPluginVersionProvider';
+import AbstractLatestPluginVersionProvider from 'src/resolver/latest-version/providers/plugin/AbstractLatestPluginVersionProvider';
 import Utils from 'src/Utils';
 
 export default class WordPressApiLatestPluginVersionProvider extends AbstractLatestPluginVersionProvider {
