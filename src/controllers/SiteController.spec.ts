@@ -1,7 +1,3 @@
-import Plugin from 'src/entities/Plugin';
-import PluginVulnerability from 'src/entities/PluginVulnerability';
-import Site from 'src/entities/Site';
-import SitePlugin from 'src/entities/SitePlugin';
 import PluginRepository from 'src/repositories/PluginRepository';
 import PluginVulnerabilityRepository from 'src/repositories/PluginVulnerabilityRepository';
 import SitePluginRepository from 'src/repositories/SitePluginRepository';
@@ -11,6 +7,14 @@ import VulnerabilitiesResolver from 'src/resolver/vulnerabilities/Vulnerabilitie
 import Logger from 'src/services/logger/Logger';
 import request from 'supertest';
 import { setupTestServer } from 'test-utils/SetupServer';
+import { testDataPluginEntity, testDataPluginJSON } from 'test-utils/test-data/Plugin';
+import {
+    testDataPluginVulnerabilityEntity,
+    testDataPluginVulnerabilityJSON,
+    testDataPluginVulnerabilityResolverJSON,
+} from 'test-utils/test-data/PluginVulnerability';
+import { testDataSiteEntity, testDataSiteJSON } from 'test-utils/test-data/Site';
+import { testDataSitePluginEntity, testDataSitePluginJSON } from 'test-utils/test-data/SitePlugin';
 
 describe('SiteController', () => {
     let mockSiteRepository: jest.Mocked<SiteRepository>;
@@ -73,24 +77,12 @@ describe('SiteController', () => {
     });
 
     describe('GET /site', () => {
-        const siteDB = {
-            id: 1,
-            createdAt: new Date('2026-01-01T00:00:00Z'),
-            updatedAt: new Date('2026-01-02T00:00:00Z'),
-            name: 'Site1',
-            url: 'https://example.com/site1',
-            apiKey: 'api-key-1',
-            environment: 'development',
-            phpVersion: '8.5.1',
-            wpVersion: '6.9.0',
-        } as const;
-
         const requestConfig = {
             url: '/site',
         };
 
         it('should respond with (200) and { message: "Successfully retrieved all sites", data: [...] }', async () => {
-            mockSiteRepository.findAll.mockResolvedValue([new Site(siteDB)]);
+            mockSiteRepository.findAll.mockResolvedValue([testDataSiteEntity]);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app).get(requestConfig.url);
@@ -100,10 +92,10 @@ describe('SiteController', () => {
                 message: 'Successfully retrieved all sites',
                 data: [
                     {
-                        id: siteDB.id,
-                        name: siteDB.name,
-                        url: siteDB.url,
-                        environment: siteDB.environment,
+                        id: testDataSiteJSON.id,
+                        name: testDataSiteJSON.name,
+                        url: testDataSiteJSON.url,
+                        environment: testDataSiteJSON.environment,
                     },
                 ],
             });
@@ -124,27 +116,15 @@ describe('SiteController', () => {
     });
 
     describe('GET /site/{siteId}', () => {
-        const siteDB = {
-            id: 1,
-            createdAt: new Date('2026-01-01T00:00:00Z'),
-            updatedAt: new Date('2026-01-02T00:00:00Z'),
-            name: 'Site1',
-            url: 'https://example.com/site1',
-            apiKey: 'api-key-1',
-            environment: 'development',
-            phpVersion: '8.5.1',
-            wpVersion: '6.9.0',
-        } as const;
-
         const requestConfig = {
-            url: `/site/${siteDB.id}`,
+            url: `/site/${testDataSiteJSON.id}`,
         };
 
         it('should respond with (200) and { message: "Successfully retrieved site", data: [...] }', async () => {
             const latestPhpVersion = '8.5.1';
             const latestWordPressVersion = '6.9.0';
 
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
             mockLatestVersionResolver.resolvePhp.mockReturnValue(latestPhpVersion);
             mockLatestVersionResolver.resolveWordPress.mockReturnValue(latestWordPressVersion);
 
@@ -158,17 +138,17 @@ describe('SiteController', () => {
             expect(response.body).toEqual({
                 message: 'Successfully retrieved site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    environment: siteDB.environment,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    environment: testDataSiteJSON.environment,
                     phpVersion: {
-                        installed: siteDB.phpVersion,
+                        installed: testDataSiteJSON.phpVersion,
                         latest: latestPhpVersion,
                         difference: 'same',
                     },
                     wpVersion: {
-                        installed: siteDB.wpVersion,
+                        installed: testDataSiteJSON.wpVersion,
                         latest: latestWordPressVersion,
                         difference: 'same',
                     },
@@ -180,7 +160,7 @@ describe('SiteController', () => {
             const latestPhpVersion = null;
             const latestWordPressVersion = null;
 
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
             mockLatestVersionResolver.resolvePhp.mockReturnValue(latestPhpVersion);
             mockLatestVersionResolver.resolveWordPress.mockReturnValue(latestWordPressVersion);
 
@@ -194,17 +174,17 @@ describe('SiteController', () => {
             expect(response.body).toEqual({
                 message: 'Successfully retrieved site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    environment: siteDB.environment,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    environment: testDataSiteJSON.environment,
                     phpVersion: {
-                        installed: siteDB.phpVersion,
+                        installed: testDataSiteJSON.phpVersion,
                         latest: latestPhpVersion,
                         difference: null,
                     },
                     wpVersion: {
-                        installed: siteDB.wpVersion,
+                        installed: testDataSiteJSON.wpVersion,
                         latest: latestWordPressVersion,
                         difference: null,
                     },
@@ -251,68 +231,16 @@ describe('SiteController', () => {
     });
 
     describe('GET /site/{siteId}/plugins', () => {
-        const siteDB = {
-            id: 1,
-            createdAt: new Date('2026-01-01T00:00:00Z'),
-            updatedAt: new Date('2026-01-02T00:00:00Z'),
-            name: 'Site1',
-            url: 'https://example.com/site1',
-            apiKey: 'api-key-1',
-            environment: 'development',
-            phpVersion: '8.5.1',
-            wpVersion: '6.9.0',
-        } as const;
-
-        const plugin1DB = {
-            id: 1,
-            createdAt: new Date('2026-01-01T00:00:00Z'),
-            updatedAt: new Date('2026-01-01T00:00:00Z'),
-            slug: 'plugin-1',
-            name: 'Plugin1',
-            latestVersion: '1.0.0',
-            requiredPhpVersion: '8.5.1',
-            requiredWpVersion: '6.9.0',
-        };
-
-        const sitePlugin1DB = {
-            createdAt: new Date('2026-01-01T00:00:00Z'),
-            updatedAt: new Date('2026-01-01T00:00:00Z'),
-            siteId: 1,
-            pluginId: 1,
-            installedVersion: '1.0.0',
-            requiredPhpVersion: '8.5.1',
-            requiredWpVersion: '6.9.0',
-            isActive: true,
-        };
-
-        const pluginVulnerability1DB = {
-            id: 1,
-            createdAt: new Date('2026-01-01T00:00:00Z'),
-            pluginId: 1,
-            description: 'Vulnerability in Plugin1',
-            publishedAt: new Date('2025-12-01T00:00:00Z'),
-            severity: 5,
-            references: 'https://example.com/vuln1',
-            fromVersion: {
-                version: '1.0.0',
-                inclusive: true,
-            },
-            toVersion: {
-                version: '2.0.0',
-                inclusive: true,
-            },
-        };
-
         const requestConfig = {
-            url: `/site/${siteDB.id}/plugins`,
+            url: `/site/${testDataSiteJSON.id}/plugins`,
         };
 
         it('should respond with (200) and { message: "Successfully retrieved site plugins", data: [ ... ] }', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
-            mockSitePluginRepository.findAllBySiteId.mockResolvedValue([new SitePlugin(sitePlugin1DB)]);
-            mockPluginRepository.findById.mockResolvedValue(new Plugin(plugin1DB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
+            mockSitePluginRepository.findAllBySiteId.mockResolvedValue([testDataSitePluginEntity]);
+            mockPluginRepository.findById.mockResolvedValue(testDataPluginEntity);
             mockPluginVulnerabilityRepository.findAllByPluginIdAndInstalledVersion.mockResolvedValue([
-                new PluginVulnerability(pluginVulnerability1DB),
+                testDataPluginVulnerabilityEntity,
             ]);
 
             const { app } = await setupTestServer({
@@ -329,32 +257,32 @@ describe('SiteController', () => {
                 message: 'Successfully retrieved site plugins',
                 data: [
                     {
-                        id: plugin1DB.id,
-                        slug: plugin1DB.slug,
-                        name: plugin1DB.name,
+                        id: testDataPluginJSON.id,
+                        slug: testDataPluginJSON.slug,
+                        name: testDataPluginJSON.name,
                         installedVersion: {
-                            version: sitePlugin1DB.installedVersion,
-                            requiredPhpVersion: sitePlugin1DB.requiredPhpVersion,
-                            requiredWpVersion: sitePlugin1DB.requiredWpVersion,
+                            version: testDataSitePluginJSON.installedVersion,
+                            requiredPhpVersion: testDataSitePluginJSON.requiredPhpVersion,
+                            requiredWpVersion: testDataSitePluginJSON.requiredWpVersion,
                         },
                         latestVersion: {
-                            version: plugin1DB.latestVersion,
-                            requiredPhpVersion: plugin1DB.requiredPhpVersion,
-                            requiredWpVersion: plugin1DB.requiredWpVersion,
+                            version: testDataPluginJSON.latestVersion,
+                            requiredPhpVersion: testDataPluginJSON.requiredPhpVersion,
+                            requiredWpVersion: testDataPluginJSON.requiredWpVersion,
                         },
                         versionDifference: 'same',
-                        isActive: sitePlugin1DB.isActive,
+                        isActive: testDataSitePluginJSON.isActive,
                         vulnerabilities: {
                             count: 1,
-                            maxSeverity: pluginVulnerability1DB.severity,
+                            maxSeverity: testDataPluginVulnerabilityJSON.severity,
                             details: [
                                 {
-                                    description: pluginVulnerability1DB.description,
-                                    publishedAt: pluginVulnerability1DB.publishedAt.toISOString(),
-                                    severity: pluginVulnerability1DB.severity,
-                                    references: pluginVulnerability1DB.references,
-                                    fromVersion: pluginVulnerability1DB.fromVersion,
-                                    toVersion: pluginVulnerability1DB.toVersion,
+                                    description: testDataPluginVulnerabilityJSON.description,
+                                    publishedAt: testDataPluginVulnerabilityJSON.publishedAt.toISOString(),
+                                    severity: testDataPluginVulnerabilityJSON.severity,
+                                    references: testDataPluginVulnerabilityJSON.references,
+                                    fromVersion: testDataPluginVulnerabilityJSON.fromVersion,
+                                    toVersion: testDataPluginVulnerabilityJSON.toVersion,
                                 },
                             ],
                         },
@@ -362,8 +290,6 @@ describe('SiteController', () => {
                 ],
             });
         });
-
-        //it('should respond with (200) and { message: "Successfully retrieved site plugins", data: [ ... ] } - versions not categorizable', async () => {});
 
         it('should respond with (400) and { message: "The parameter "siteId" is required and must be a valid number", data: null }', async () => {
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
@@ -404,33 +330,21 @@ describe('SiteController', () => {
     });
 
     describe('POST /site', () => {
-        const siteDB = {
-            id: 1,
-            createdAt: new Date('2026-01-01T00:00:00Z'),
-            updatedAt: new Date('2026-01-01T00:00:00Z'),
-            name: 'Site1',
-            url: 'https://example.com/site1',
-            apiKey: 'api-key-1',
-            environment: 'development',
-            phpVersion: '8.5.1',
-            wpVersion: '6.9.0',
-        } as const;
-
         const requestConfig = {
             url: `/site`,
             headers: {
                 'Content-Type': 'application/json',
             },
             body: {
-                name: siteDB.name,
-                url: siteDB.url,
-                environment: siteDB.environment,
+                name: testDataSiteJSON.name,
+                url: testDataSiteJSON.url,
+                environment: testDataSiteJSON.environment,
             },
         };
 
         it('should respond with (200) and { message: "Successfully registered site", data: { ... } }', async () => {
             mockSiteRepository.findByNameAndUrl.mockResolvedValue(null);
-            mockSiteRepository.insert.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.insert.mockResolvedValue(testDataSiteEntity);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app)
@@ -442,18 +356,18 @@ describe('SiteController', () => {
             expect(response.body).toEqual({
                 message: 'Successfully registered site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    apiKey: siteDB.apiKey,
-                    environment: siteDB.environment,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    apiKey: testDataSiteJSON.apiKey,
+                    environment: testDataSiteJSON.environment,
                 },
             });
         });
 
         it('should respond with (200) and { message: "Successfully re-registered site", data: { ... } }', async () => {
-            mockSiteRepository.findByNameAndUrl.mockResolvedValue(new Site(siteDB));
-            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findByNameAndUrl.mockResolvedValue(testDataSiteEntity);
+            mockSiteRepository.update.mockResolvedValue(testDataSiteEntity);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app)
@@ -465,11 +379,11 @@ describe('SiteController', () => {
             expect(response.body).toEqual({
                 message: 'Successfully re-registered site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    apiKey: siteDB.apiKey,
-                    environment: siteDB.environment,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    apiKey: testDataSiteJSON.apiKey,
+                    environment: testDataSiteJSON.environment,
                 },
             });
         });
@@ -533,7 +447,7 @@ describe('SiteController', () => {
         });
 
         it('should respond with (500) and { message: "Failed to update site", data: null }', async () => {
-            mockSiteRepository.findByNameAndUrl.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findByNameAndUrl.mockResolvedValue(testDataSiteEntity);
             mockSiteRepository.update.mockResolvedValue(null);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
@@ -567,75 +481,26 @@ describe('SiteController', () => {
     });
 
     describe('PUT /site/{siteId}', () => {
-        const siteDB = {
-            id: 1,
-            createdAt: new Date('2026-01-01T00:00:00Z'),
-            updatedAt: new Date('2026-01-01T00:00:00Z'),
-            name: 'Site1',
-            url: 'https://example.com/site1',
-            apiKey: 'api-key-1',
-            environment: 'development',
-            phpVersion: '8.5.1',
-            wpVersion: '6.9.0',
-        } as const;
-
-        const plugin1DB = {
-            id: 1,
-            createdAt: new Date('2026-01-01T00:00:00Z'),
-            updatedAt: new Date('2026-01-01T00:00:00Z'),
-            slug: 'plugin-1',
-            name: 'Plugin1',
-            latestVersion: '1.0.0',
-            requiredPhpVersion: '8.5.1',
-            requiredWpVersion: '6.9.0',
-        };
-
-        const sitePlugin1DB = {
-            createdAt: new Date('2026-01-01T00:00:00Z'),
-            updatedAt: new Date('2026-01-01T00:00:00Z'),
-            siteId: 1,
-            pluginId: 1,
-            installedVersion: '1.0.0',
-            requiredPhpVersion: '8.5.1',
-            requiredWpVersion: '6.9.0',
-            isActive: true,
-        };
-
-        const pluginVulnerability1Resolver = {
-            description: 'Vulnerability in Plugin1',
-            publishedAt: new Date('2025-12-01T00:00:00Z'),
-            severity: 5,
-            references: 'https://example.com/vuln1',
-            fromVersion: {
-                version: '1.0.0',
-                inclusive: true,
-            },
-            toVersion: {
-                version: '2.0.0',
-                inclusive: true,
-            },
-        };
-
         const requestConfig = {
-            url: `/site/${siteDB.id}`,
+            url: `/site/${testDataSiteJSON.id}`,
             headers: {
                 'Content-Type': 'application/json',
-                'X-Auth-Token': siteDB.apiKey,
+                'X-Auth-Token': testDataSiteJSON.apiKey,
             },
             body: {
-                name: siteDB.name,
-                url: siteDB.url,
-                phpVersion: '8.5.1',
-                wpVersion: '6.9.0',
+                name: testDataSiteJSON.name,
+                url: testDataSiteJSON.url,
+                phpVersion: testDataSiteJSON.phpVersion,
+                wpVersion: testDataSiteJSON.wpVersion,
                 plugins: [
                     {
-                        file: 'plugin-1/plugin-1.php',
-                        name: plugin1DB.name,
-                        active: true,
+                        file: `${testDataPluginJSON.slug}/${testDataPluginJSON.slug}.php`,
+                        name: testDataPluginJSON.name,
+                        active: testDataSitePluginJSON.isActive,
                         version: {
-                            installedVersion: '1.0.0',
-                            requiredPhpVersion: '8.5.1',
-                            requiredWpVersion: '6.9.0',
+                            installedVersion: testDataSitePluginJSON.installedVersion,
+                            requiredPhpVersion: testDataSitePluginJSON.requiredPhpVersion,
+                            requiredWpVersion: testDataSitePluginJSON.requiredWpVersion,
                         },
                     },
                 ],
@@ -643,8 +508,8 @@ describe('SiteController', () => {
         };
 
         it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - empty plugin array', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
-            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
+            mockSiteRepository.update.mockResolvedValue(testDataSiteEntity);
             mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
 
             const { app } = await setupTestServer({
@@ -664,19 +529,19 @@ describe('SiteController', () => {
             expect(response.body).toEqual({
                 message: 'Successfully updated site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    environment: siteDB.environment,
-                    phpVersion: siteDB.phpVersion,
-                    wpVersion: siteDB.wpVersion,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    environment: testDataSiteJSON.environment,
+                    phpVersion: testDataSiteJSON.phpVersion,
+                    wpVersion: testDataSiteJSON.wpVersion,
                 },
             });
         });
 
         it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - skip plugins with invalid file format', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
-            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
+            mockSiteRepository.update.mockResolvedValue(testDataSiteEntity);
             mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
 
             const { app } = await setupTestServer({
@@ -713,39 +578,32 @@ describe('SiteController', () => {
             expect(response.body).toEqual({
                 message: 'Successfully updated site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    environment: siteDB.environment,
-                    phpVersion: siteDB.phpVersion,
-                    wpVersion: siteDB.wpVersion,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    environment: testDataSiteJSON.environment,
+                    phpVersion: testDataSiteJSON.phpVersion,
+                    wpVersion: testDataSiteJSON.wpVersion,
                 },
             });
         });
 
         it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - insert new plugin + inserting vulnerabilities', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
-            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
-            mockPluginRepository.findBySlug.mockResolvedValueOnce(null).mockResolvedValue(new Plugin(plugin1DB));
-            mockPluginRepository.insert.mockResolvedValue(new Plugin(plugin1DB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
+            mockSiteRepository.update.mockResolvedValue(testDataSiteEntity);
+            mockPluginRepository.findBySlug.mockResolvedValueOnce(null).mockResolvedValue(testDataPluginEntity);
+            mockPluginRepository.insert.mockResolvedValue(testDataPluginEntity);
             mockLatestVersionResolver.resolvePlugin.mockResolvedValue({
-                version: '1.0.0',
-                requiredPhpVersion: '8.5.1',
-                requiredWpVersion: '6.9.0',
+                version: testDataPluginJSON.latestVersion,
+                requiredPhpVersion: testDataPluginJSON.requiredPhpVersion,
+                requiredWpVersion: testDataPluginJSON.requiredWpVersion,
             });
-            mockVulnerabilitiesResolver.resolvePlugin.mockReturnValue([pluginVulnerability1Resolver]);
+            mockVulnerabilitiesResolver.resolvePlugin.mockReturnValue([testDataPluginVulnerabilityResolverJSON]);
             mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(null);
             mockSitePluginRepository.insert.mockResolvedValue(null);
             mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
             mockPluginVulnerabilityRepository.deleteAllByPluginId.mockResolvedValue(true);
-            mockPluginVulnerabilityRepository.insert.mockResolvedValue(
-                new PluginVulnerability({
-                    id: 1,
-                    createdAt: new Date('2026-01-01T00:00:00Z'),
-                    pluginId: 1,
-                    ...pluginVulnerability1Resolver,
-                })
-            );
+            mockPluginVulnerabilityRepository.insert.mockResolvedValue(testDataPluginVulnerabilityEntity);
 
             const { app } = await setupTestServer({
                 siteRepository: mockSiteRepository,
@@ -768,34 +626,34 @@ describe('SiteController', () => {
             });
             expect(mockLogger.info).toHaveBeenCalledWith('Successfully inserted plugin vulnerability', {
                 slug: 'plugin-1',
-                vulnerability: pluginVulnerability1Resolver,
+                vulnerability: testDataPluginVulnerabilityResolverJSON,
             });
 
             expect(response.status).toBe(200);
             expect(response.body).toEqual({
                 message: 'Successfully updated site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    environment: siteDB.environment,
-                    phpVersion: siteDB.phpVersion,
-                    wpVersion: siteDB.wpVersion,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    environment: testDataSiteJSON.environment,
+                    phpVersion: testDataSiteJSON.phpVersion,
+                    wpVersion: testDataSiteJSON.wpVersion,
                 },
             });
         });
 
         it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - insert new plugin + inserting vulnerabilities fails', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
-            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
-            mockPluginRepository.findBySlug.mockResolvedValueOnce(null).mockResolvedValue(new Plugin(plugin1DB));
-            mockPluginRepository.insert.mockResolvedValue(new Plugin(plugin1DB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
+            mockSiteRepository.update.mockResolvedValue(testDataSiteEntity);
+            mockPluginRepository.findBySlug.mockResolvedValueOnce(null).mockResolvedValue(testDataPluginEntity);
+            mockPluginRepository.insert.mockResolvedValue(testDataPluginEntity);
             mockLatestVersionResolver.resolvePlugin.mockResolvedValue({
                 version: '1.0.0',
                 requiredPhpVersion: '8.5.1',
                 requiredWpVersion: '6.9.0',
             });
-            mockVulnerabilitiesResolver.resolvePlugin.mockReturnValue([pluginVulnerability1Resolver]);
+            mockVulnerabilitiesResolver.resolvePlugin.mockReturnValue([testDataPluginVulnerabilityResolverJSON]);
             mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(null);
             mockSitePluginRepository.insert.mockResolvedValue(null);
             mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
@@ -823,28 +681,28 @@ describe('SiteController', () => {
             });
             expect(mockLogger.error).toHaveBeenCalledWith('Failed to insert plugin vulnerability', {
                 slug: 'plugin-1',
-                vulnerability: pluginVulnerability1Resolver,
+                vulnerability: testDataPluginVulnerabilityResolverJSON,
             });
 
             expect(response.status).toBe(200);
             expect(response.body).toEqual({
                 message: 'Successfully updated site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    environment: siteDB.environment,
-                    phpVersion: siteDB.phpVersion,
-                    wpVersion: siteDB.wpVersion,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    environment: testDataSiteJSON.environment,
+                    phpVersion: testDataSiteJSON.phpVersion,
+                    wpVersion: testDataSiteJSON.wpVersion,
                 },
             });
         });
 
         it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - insert new plugin + fetching vulnerabilities fails', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
-            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
-            mockPluginRepository.findBySlug.mockResolvedValueOnce(null).mockResolvedValue(new Plugin(plugin1DB));
-            mockPluginRepository.insert.mockResolvedValue(new Plugin(plugin1DB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
+            mockSiteRepository.update.mockResolvedValue(testDataSiteEntity);
+            mockPluginRepository.findBySlug.mockResolvedValueOnce(null).mockResolvedValue(testDataPluginEntity);
+            mockPluginRepository.insert.mockResolvedValue(testDataPluginEntity);
             mockLatestVersionResolver.resolvePlugin.mockResolvedValue({
                 version: '1.0.0',
                 requiredPhpVersion: '8.5.1',
@@ -882,21 +740,21 @@ describe('SiteController', () => {
             expect(response.body).toEqual({
                 message: 'Successfully updated site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    environment: siteDB.environment,
-                    phpVersion: siteDB.phpVersion,
-                    wpVersion: siteDB.wpVersion,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    environment: testDataSiteJSON.environment,
+                    phpVersion: testDataSiteJSON.phpVersion,
+                    wpVersion: testDataSiteJSON.wpVersion,
                 },
             });
         });
 
         it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - insert new plugin + insert site plugin', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
-            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
-            mockPluginRepository.findBySlug.mockResolvedValueOnce(null).mockResolvedValue(new Plugin(plugin1DB));
-            mockPluginRepository.insert.mockResolvedValue(new Plugin(plugin1DB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
+            mockSiteRepository.update.mockResolvedValue(testDataSiteEntity);
+            mockPluginRepository.findBySlug.mockResolvedValueOnce(null).mockResolvedValue(testDataPluginEntity);
+            mockPluginRepository.insert.mockResolvedValue(testDataPluginEntity);
             mockLatestVersionResolver.resolvePlugin.mockResolvedValue({
                 version: '1.0.0',
                 requiredPhpVersion: '8.5.1',
@@ -904,7 +762,7 @@ describe('SiteController', () => {
             });
             mockVulnerabilitiesResolver.resolvePlugin.mockReturnValue([]);
             mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(null);
-            mockSitePluginRepository.insert.mockResolvedValue(new SitePlugin(sitePlugin1DB));
+            mockSitePluginRepository.insert.mockResolvedValue(testDataSitePluginEntity);
             mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
 
             const { app } = await setupTestServer({
@@ -926,29 +784,29 @@ describe('SiteController', () => {
                 name: requestConfig.body.plugins[0].name,
             });
             expect(mockLogger.info).toHaveBeenCalledWith('Successfully created site plugin entry', {
-                siteId: siteDB.id,
-                pluginId: plugin1DB.id,
+                siteId: testDataSiteJSON.id,
+                pluginId: testDataPluginJSON.id,
             });
 
             expect(response.status).toBe(200);
             expect(response.body).toEqual({
                 message: 'Successfully updated site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    environment: siteDB.environment,
-                    phpVersion: siteDB.phpVersion,
-                    wpVersion: siteDB.wpVersion,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    environment: testDataSiteJSON.environment,
+                    phpVersion: testDataSiteJSON.phpVersion,
+                    wpVersion: testDataSiteJSON.wpVersion,
                 },
             });
         });
 
         it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - insert new plugin + insert site plugin fails', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
-            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
-            mockPluginRepository.findBySlug.mockResolvedValueOnce(null).mockResolvedValue(new Plugin(plugin1DB));
-            mockPluginRepository.insert.mockResolvedValue(new Plugin(plugin1DB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
+            mockSiteRepository.update.mockResolvedValue(testDataSiteEntity);
+            mockPluginRepository.findBySlug.mockResolvedValueOnce(null).mockResolvedValue(testDataPluginEntity);
+            mockPluginRepository.insert.mockResolvedValue(testDataPluginEntity);
             mockLatestVersionResolver.resolvePlugin.mockResolvedValue({
                 version: '1.0.0',
                 requiredPhpVersion: '8.5.1',
@@ -978,29 +836,29 @@ describe('SiteController', () => {
                 name: requestConfig.body.plugins[0].name,
             });
             expect(mockLogger.error).toHaveBeenCalledWith('Failed to create site plugin entry', {
-                siteId: siteDB.id,
-                pluginId: plugin1DB.id,
+                siteId: testDataSiteJSON.id,
+                pluginId: testDataPluginJSON.id,
             });
 
             expect(response.status).toBe(200);
             expect(response.body).toEqual({
                 message: 'Successfully updated site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    environment: siteDB.environment,
-                    phpVersion: siteDB.phpVersion,
-                    wpVersion: siteDB.wpVersion,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    environment: testDataSiteJSON.environment,
+                    phpVersion: testDataSiteJSON.phpVersion,
+                    wpVersion: testDataSiteJSON.wpVersion,
                 },
             });
         });
 
         it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - insert new plugin + plugin not found after insertion', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
-            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
+            mockSiteRepository.update.mockResolvedValue(testDataSiteEntity);
             mockPluginRepository.findBySlug.mockResolvedValue(null);
-            mockPluginRepository.insert.mockResolvedValue(new Plugin(plugin1DB));
+            mockPluginRepository.insert.mockResolvedValue(testDataPluginEntity);
             mockLatestVersionResolver.resolvePlugin.mockResolvedValue({
                 version: '1.0.0',
                 requiredPhpVersion: '8.5.1',
@@ -1036,19 +894,19 @@ describe('SiteController', () => {
             expect(response.body).toEqual({
                 message: 'Successfully updated site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    environment: siteDB.environment,
-                    phpVersion: siteDB.phpVersion,
-                    wpVersion: siteDB.wpVersion,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    environment: testDataSiteJSON.environment,
+                    phpVersion: testDataSiteJSON.phpVersion,
+                    wpVersion: testDataSiteJSON.wpVersion,
                 },
             });
         });
 
         it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - insert new plugin fails', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
-            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
+            mockSiteRepository.update.mockResolvedValue(testDataSiteEntity);
             mockPluginRepository.findBySlug.mockResolvedValue(null);
             mockPluginRepository.insert.mockResolvedValue(null);
             mockLatestVersionResolver.resolvePlugin.mockResolvedValue({
@@ -1075,31 +933,31 @@ describe('SiteController', () => {
                 name: requestConfig.body.plugins[0].name,
             });
             expect(mockLogger.error).toHaveBeenCalledWith('Failed to create plugin entry', {
-                slug: plugin1DB.slug,
-                name: plugin1DB.name,
+                slug: testDataPluginJSON.slug,
+                name: testDataPluginJSON.name,
             });
 
             expect(response.status).toBe(200);
             expect(response.body).toEqual({
                 message: 'Successfully updated site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    environment: siteDB.environment,
-                    phpVersion: siteDB.phpVersion,
-                    wpVersion: siteDB.wpVersion,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    environment: testDataSiteJSON.environment,
+                    phpVersion: testDataSiteJSON.phpVersion,
+                    wpVersion: testDataSiteJSON.wpVersion,
                 },
             });
         });
 
         it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - skip insertion of existing plugin + insert site plugin', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
-            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
-            mockPluginRepository.findBySlug.mockResolvedValue(new Plugin(plugin1DB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
+            mockSiteRepository.update.mockResolvedValue(testDataSiteEntity);
+            mockPluginRepository.findBySlug.mockResolvedValue(testDataPluginEntity);
             mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
             mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(null);
-            mockSitePluginRepository.insert.mockResolvedValue(new SitePlugin(sitePlugin1DB));
+            mockSitePluginRepository.insert.mockResolvedValue(testDataSitePluginEntity);
 
             const { app } = await setupTestServer({
                 siteRepository: mockSiteRepository,
@@ -1113,28 +971,28 @@ describe('SiteController', () => {
                 .send(requestConfig.body);
 
             expect(mockLogger.info).toHaveBeenCalledWith('Successfully created site plugin entry', {
-                siteId: siteDB.id,
-                pluginId: plugin1DB.id,
+                siteId: testDataSiteJSON.id,
+                pluginId: testDataPluginJSON.id,
             });
 
             expect(response.status).toBe(200);
             expect(response.body).toEqual({
                 message: 'Successfully updated site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    environment: siteDB.environment,
-                    phpVersion: siteDB.phpVersion,
-                    wpVersion: siteDB.wpVersion,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    environment: testDataSiteJSON.environment,
+                    phpVersion: testDataSiteJSON.phpVersion,
+                    wpVersion: testDataSiteJSON.wpVersion,
                 },
             });
         });
 
         it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - skip insertion of existing plugin + insert site plugin fails', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
-            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
-            mockPluginRepository.findBySlug.mockResolvedValue(new Plugin(plugin1DB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
+            mockSiteRepository.update.mockResolvedValue(testDataSiteEntity);
+            mockPluginRepository.findBySlug.mockResolvedValue(testDataPluginEntity);
             mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
             mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(null);
             mockSitePluginRepository.insert.mockResolvedValue(null);
@@ -1151,31 +1009,31 @@ describe('SiteController', () => {
                 .send(requestConfig.body);
 
             expect(mockLogger.error).toHaveBeenCalledWith('Failed to create site plugin entry', {
-                siteId: siteDB.id,
-                pluginId: plugin1DB.id,
+                siteId: testDataSiteJSON.id,
+                pluginId: testDataPluginJSON.id,
             });
 
             expect(response.status).toBe(200);
             expect(response.body).toEqual({
                 message: 'Successfully updated site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    environment: siteDB.environment,
-                    phpVersion: siteDB.phpVersion,
-                    wpVersion: siteDB.wpVersion,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    environment: testDataSiteJSON.environment,
+                    phpVersion: testDataSiteJSON.phpVersion,
+                    wpVersion: testDataSiteJSON.wpVersion,
                 },
             });
         });
 
         it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - skip insertion of existing plugin + update site plugin', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
-            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
-            mockPluginRepository.findBySlug.mockResolvedValue(new Plugin(plugin1DB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
+            mockSiteRepository.update.mockResolvedValue(testDataSiteEntity);
+            mockPluginRepository.findBySlug.mockResolvedValue(testDataPluginEntity);
             mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
-            mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(new SitePlugin(sitePlugin1DB));
-            mockSitePluginRepository.update.mockResolvedValue(new SitePlugin(sitePlugin1DB));
+            mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(testDataSitePluginEntity);
+            mockSitePluginRepository.update.mockResolvedValue(testDataSitePluginEntity);
 
             const { app } = await setupTestServer({
                 siteRepository: mockSiteRepository,
@@ -1189,30 +1047,30 @@ describe('SiteController', () => {
                 .send(requestConfig.body);
 
             expect(mockLogger.info).toHaveBeenCalledWith('Successfully updated site plugin entry', {
-                siteId: siteDB.id,
-                pluginId: plugin1DB.id,
+                siteId: testDataSiteJSON.id,
+                pluginId: testDataPluginJSON.id,
             });
 
             expect(response.status).toBe(200);
             expect(response.body).toEqual({
                 message: 'Successfully updated site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    environment: siteDB.environment,
-                    phpVersion: siteDB.phpVersion,
-                    wpVersion: siteDB.wpVersion,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    environment: testDataSiteJSON.environment,
+                    phpVersion: testDataSiteJSON.phpVersion,
+                    wpVersion: testDataSiteJSON.wpVersion,
                 },
             });
         });
 
         it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - skip insertion of existing plugin + update site plugin fails', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
-            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
-            mockPluginRepository.findBySlug.mockResolvedValue(new Plugin(plugin1DB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
+            mockSiteRepository.update.mockResolvedValue(testDataSiteEntity);
+            mockPluginRepository.findBySlug.mockResolvedValue(testDataPluginEntity);
             mockSitePluginRepository.findAllBySiteId.mockResolvedValue([]);
-            mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(new SitePlugin(sitePlugin1DB));
+            mockSitePluginRepository.findBySiteIdAndPluginId.mockResolvedValue(testDataSitePluginEntity);
             mockSitePluginRepository.update.mockResolvedValue(null);
 
             const { app } = await setupTestServer({
@@ -1227,30 +1085,30 @@ describe('SiteController', () => {
                 .send(requestConfig.body);
 
             expect(mockLogger.error).toHaveBeenCalledWith('Failed to update site plugin entry', {
-                siteId: siteDB.id,
-                pluginId: plugin1DB.id,
+                siteId: testDataSiteJSON.id,
+                pluginId: testDataPluginJSON.id,
             });
 
             expect(response.status).toBe(200);
             expect(response.body).toEqual({
                 message: 'Successfully updated site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    environment: siteDB.environment,
-                    phpVersion: siteDB.phpVersion,
-                    wpVersion: siteDB.wpVersion,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    environment: testDataSiteJSON.environment,
+                    phpVersion: testDataSiteJSON.phpVersion,
+                    wpVersion: testDataSiteJSON.wpVersion,
                 },
             });
         });
 
         it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - delete unused site plugins', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
-            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
-            mockPluginRepository.findBySlug.mockResolvedValue(new Plugin(plugin1DB));
-            mockSitePluginRepository.findAllBySiteId.mockResolvedValue([new SitePlugin(sitePlugin1DB)]);
-            mockPluginRepository.findById.mockResolvedValue(new Plugin(plugin1DB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
+            mockSiteRepository.update.mockResolvedValue(testDataSiteEntity);
+            mockPluginRepository.findBySlug.mockResolvedValue(testDataPluginEntity);
+            mockSitePluginRepository.findAllBySiteId.mockResolvedValue([testDataSitePluginEntity]);
+            mockPluginRepository.findById.mockResolvedValue(testDataPluginEntity);
             mockSitePluginRepository.delete.mockResolvedValue(true);
 
             const { app } = await setupTestServer({
@@ -1268,30 +1126,30 @@ describe('SiteController', () => {
             });
 
             expect(mockLogger.info).toHaveBeenCalledWith('Successfully deleted site plugin entry', {
-                siteId: siteDB.id,
-                pluginId: plugin1DB.id,
+                siteId: testDataSiteJSON.id,
+                pluginId: testDataPluginJSON.id,
             });
 
             expect(response.status).toBe(200);
             expect(response.body).toEqual({
                 message: 'Successfully updated site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    environment: siteDB.environment,
-                    phpVersion: siteDB.phpVersion,
-                    wpVersion: siteDB.wpVersion,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    environment: testDataSiteJSON.environment,
+                    phpVersion: testDataSiteJSON.phpVersion,
+                    wpVersion: testDataSiteJSON.wpVersion,
                 },
             });
         });
 
         it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - delete unused site plugins fails', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
-            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
-            mockPluginRepository.findBySlug.mockResolvedValue(new Plugin(plugin1DB));
-            mockSitePluginRepository.findAllBySiteId.mockResolvedValue([new SitePlugin(sitePlugin1DB)]);
-            mockPluginRepository.findById.mockResolvedValue(new Plugin(plugin1DB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
+            mockSiteRepository.update.mockResolvedValue(testDataSiteEntity);
+            mockPluginRepository.findBySlug.mockResolvedValue(testDataPluginEntity);
+            mockSitePluginRepository.findAllBySiteId.mockResolvedValue([testDataSitePluginEntity]);
+            mockPluginRepository.findById.mockResolvedValue(testDataPluginEntity);
             mockSitePluginRepository.delete.mockResolvedValue(false);
 
             const { app } = await setupTestServer({
@@ -1309,29 +1167,29 @@ describe('SiteController', () => {
             });
 
             expect(mockLogger.error).toHaveBeenCalledWith('Failed to delete site plugin entry', {
-                siteId: siteDB.id,
-                pluginId: plugin1DB.id,
+                siteId: testDataSiteJSON.id,
+                pluginId: testDataPluginJSON.id,
             });
 
             expect(response.status).toBe(200);
             expect(response.body).toEqual({
                 message: 'Successfully updated site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    environment: siteDB.environment,
-                    phpVersion: siteDB.phpVersion,
-                    wpVersion: siteDB.wpVersion,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    environment: testDataSiteJSON.environment,
+                    phpVersion: testDataSiteJSON.phpVersion,
+                    wpVersion: testDataSiteJSON.wpVersion,
                 },
             });
         });
 
         it('should respond with (200) and { message: "Successfully updated site", data: { ... } } - delete unused site plugins skips when plugin cannot be found', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
-            mockSiteRepository.update.mockResolvedValue(new Site(siteDB));
-            mockPluginRepository.findBySlug.mockResolvedValue(new Plugin(plugin1DB));
-            mockSitePluginRepository.findAllBySiteId.mockResolvedValue([new SitePlugin(sitePlugin1DB)]);
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
+            mockSiteRepository.update.mockResolvedValue(testDataSiteEntity);
+            mockPluginRepository.findBySlug.mockResolvedValue(testDataPluginEntity);
+            mockSitePluginRepository.findAllBySiteId.mockResolvedValue([testDataSitePluginEntity]);
             mockPluginRepository.findById.mockResolvedValue(null);
 
             const { app } = await setupTestServer({
@@ -1349,25 +1207,25 @@ describe('SiteController', () => {
             });
 
             expect(mockLogger.info).not.toHaveBeenCalledWith('Successfully deleted site plugin entry', {
-                siteId: siteDB.id,
-                pluginId: plugin1DB.id,
+                siteId: testDataSiteJSON.id,
+                pluginId: testDataPluginJSON.id,
             });
 
             expect(mockLogger.error).not.toHaveBeenCalledWith('Failed to delete site plugin entry', {
-                siteId: siteDB.id,
-                pluginId: plugin1DB.id,
+                siteId: testDataSiteJSON.id,
+                pluginId: testDataPluginJSON.id,
             });
 
             expect(response.status).toBe(200);
             expect(response.body).toEqual({
                 message: 'Successfully updated site',
                 data: {
-                    id: siteDB.id,
-                    name: siteDB.name,
-                    url: siteDB.url,
-                    environment: siteDB.environment,
-                    phpVersion: siteDB.phpVersion,
-                    wpVersion: siteDB.wpVersion,
+                    id: testDataSiteJSON.id,
+                    name: testDataSiteJSON.name,
+                    url: testDataSiteJSON.url,
+                    environment: testDataSiteJSON.environment,
+                    phpVersion: testDataSiteJSON.phpVersion,
+                    wpVersion: testDataSiteJSON.wpVersion,
                 },
             });
         });
@@ -1384,7 +1242,7 @@ describe('SiteController', () => {
         });
 
         it('should respond with (400) and { message: "The field "name" is required and must be a non-empty string", data: null }', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app).put(requestConfig.url).set(requestConfig.headers).send({});
@@ -1397,7 +1255,7 @@ describe('SiteController', () => {
         });
 
         it('should respond with (400) and { message: "The field "url" is required and must be a non-empty string", data: null }', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app).put(requestConfig.url).set(requestConfig.headers).send({
@@ -1412,7 +1270,7 @@ describe('SiteController', () => {
         });
 
         it('should respond with (400) and { message: "The field "phpVersion" is required and must be a valid version string", data: null }', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app).put(requestConfig.url).set(requestConfig.headers).send({
@@ -1428,7 +1286,7 @@ describe('SiteController', () => {
         });
 
         it('should respond with (400) and { message: "The field "wpVersion" is required and must be a valid version string", data: null }', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app).put(requestConfig.url).set(requestConfig.headers).send({
@@ -1445,7 +1303,7 @@ describe('SiteController', () => {
         });
 
         it('should respond with (400) and { message: "The field "plugins" is required and must be an array", data: null }', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app).put(requestConfig.url).set(requestConfig.headers).send({
@@ -1463,7 +1321,7 @@ describe('SiteController', () => {
         });
 
         it('should respond with (400) and { message: "The field "plugins[i].file" is required and must be a string", data: null }', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app)
@@ -1485,7 +1343,7 @@ describe('SiteController', () => {
         });
 
         it('should respond with (400) and { message: "The field "plugins[i].name" is required and must be a string", data: null }', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app)
@@ -1511,7 +1369,7 @@ describe('SiteController', () => {
         });
 
         it('should respond with (400) and { message: "The field "plugins[i].active" is required and must be a boolean", data: null }', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app)
@@ -1538,7 +1396,7 @@ describe('SiteController', () => {
         });
 
         it('should respond with (400) and { message: "The field "plugins[i].version" is required and must be an object", data: null }', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app)
@@ -1566,7 +1424,7 @@ describe('SiteController', () => {
         });
 
         it('should respond with (400) and { message: "The field "plugins[i].version.installedVersion" is required and must be a valid version string or null", data: null }', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app)
@@ -1596,7 +1454,7 @@ describe('SiteController', () => {
         });
 
         it('should respond with (400) and { message: "The field "plugins[i].version.requiredPhpVersion" is required and must be a valid version string or null", data: null }', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app)
@@ -1628,7 +1486,7 @@ describe('SiteController', () => {
         });
 
         it('should respond with (400) and { message: "The field "plugins[i].version.requiredWpVersion" is required and must be a valid version string or null", data: null }', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app)
@@ -1677,7 +1535,7 @@ describe('SiteController', () => {
         });
 
         it('should respond with (403) and { message: "The "X-Auth-Token" header is invalid", data: null }', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
             const response = await request(app)
@@ -1712,7 +1570,7 @@ describe('SiteController', () => {
         });
 
         it('should respond with (500) and { message: "Failed to update site", data: null }', async () => {
-            mockSiteRepository.findById.mockResolvedValue(new Site(siteDB));
+            mockSiteRepository.findById.mockResolvedValue(testDataSiteEntity);
             mockSiteRepository.update.mockResolvedValue(null);
 
             const { app } = await setupTestServer({ siteRepository: mockSiteRepository });
