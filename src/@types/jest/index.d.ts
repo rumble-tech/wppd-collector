@@ -1,12 +1,15 @@
+import Plugin from 'src/entities/Plugin';
+import PluginVulnerability from 'src/entities/PluginVulnerability';
+import Site from 'src/entities/Site';
+import SitePlugin from 'src/entities/SitePlugin';
+
 declare global {
     namespace jest {
-        interface Matchers<R> {
-            toEqualSiteEntity(expected: unknown): R;
-            toEqualPluginEntity(expected: unknown): R;
-            toEqualSitePluginEntity(expected: unknown): R;
-            toEqualPluginVulnerabilityEntity(expected: unknown): R;
+        export interface Matchers<R> {
+            toEqualSiteEntity(expected: Site): R;
+            toEqualPluginEntity(expected: Plugin): R;
+            toEqualSitePluginEntity(expected: SitePlugin): R;
+            toEqualPluginVulnerabilityEntity(expected: PluginVulnerability): R;
         }
     }
 }
-
-export {};
