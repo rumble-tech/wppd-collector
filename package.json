@@ -5,7 +5,6 @@
     "scripts": {
         "dev:start": "docker-compose -f ./.docker/compose.dev.yml -f ./.docker/compose.dev.override.yml up --build",
         "dev:stop": "docker-compose -f ./.docker/compose.dev.yml -f ./.docker/compose.dev.override.yml down",
-        "dev:stop-v": "docker-compose -f ./.docker/compose.dev.yml -f ./.docker/compose.dev.override.yml down -v",
         "test": "docker build --no-cache -f ./.docker/Dockerfile.jest -t rumble-wppd-collector:jest . && docker run --rm -v ./src/:/app/src -v ./coverage:/app/coverage rumble-wppd-collector:jest",
         "db:migrate": "npx drizzle-kit generate"
     },
