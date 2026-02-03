@@ -5,4 +5,4 @@ node_modules
 coverage
 .DS_Store
 logs
-sqlite/sqlite.db
+sqlite/data
