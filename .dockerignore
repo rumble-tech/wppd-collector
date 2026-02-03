@@ -1,6 +1,7 @@
 node_modules
 .idea
 .docker
+.github
 .gitignore
 .dockerignore
 coverage
