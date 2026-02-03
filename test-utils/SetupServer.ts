@@ -41,10 +41,6 @@ export async function setupTestServer({
             type: 'string',
             required: true,
         },
-        npm_package_version: {
-            type: 'string',
-            required: true,
-        },
     });
 
     Server.setConfig({ port: 0, corsOptions: {} });
