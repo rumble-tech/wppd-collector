@@ -9,8 +9,9 @@ describe('IndexController', () => {
         expect(response.status).toBe(200);
         expect(response.body).toEqual({
             message: 'Welcome to the API!',
-            NODE_ENV: process.env.NODE_ENV,
-            VERSION: process.env.npm_package_version,
+            data: {
+                NODE_ENV: process.env.NODE_ENV,
+            },
         });
     });
 

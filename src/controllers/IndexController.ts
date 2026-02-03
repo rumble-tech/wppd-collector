@@ -19,8 +19,9 @@ export default class IndexController extends AbstractController {
     private welcomeRoute(req: Request, res: Response): void {
         res.status(200).json({
             message: 'Welcome to the API!',
-            NODE_ENV: Config.get<string>('NODE_ENV'),
-            VERSION: Config.get<string>('npm_package_version'),
+            data: {
+                NODE_ENV: Config.get<string>('NODE_ENV'),
+            },
         });
     }
 }
