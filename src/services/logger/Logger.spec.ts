@@ -86,7 +86,7 @@ describe('Logger', () => {
             expect(outputError).toBe('2026-01-01 00:00:00 [error] Test error message');
         });
 
-        it('should format the log message wit meta information', () => {
+        it('should format the log message with meta information', () => {
             const loggerConfig: TLoggerConfig = {
                 level: 'info',
                 directory: baseDirectory,
@@ -153,7 +153,7 @@ describe('Logger', () => {
             expect(output).toBe('2026-01-01 00:00:00 [info] Test info message');
         });
 
-        it('should format the log message wit meta information', () => {
+        it('should format the log message with meta information', () => {
             const loggerConfig: TLoggerConfig = {
                 level: 'silly',
                 directory: baseDirectory,
