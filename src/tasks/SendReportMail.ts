@@ -1,175 +1,166 @@
-import { LoggerInterface } from 'src/components/logger/LoggerInterface';
-import Config from 'src/config/Config';
-import { TPlugin } from 'src/models/Plugin';
-import { siteEnvironments, TSite, TSiteEnvironment } from 'src/models/Site';
-import { TSitePlugin } from 'src/models/SitePlugin';
+import { TPlugin } from 'src/entities/Plugin';
+import { TSite, TSiteEnvironment } from 'src/entities/Site';
+import { TSitePlugin } from 'src/entities/SitePlugin';
 import PluginRepository from 'src/repositories/PluginRepository';
+import PluginVulnerabilityRepository from 'src/repositories/PluginVulnerabilityRepository';
+import SitePluginRepository from 'src/repositories/SitePluginRepository';
 import SiteRepository from 'src/repositories/SiteRepository';
-import LatestVersionResolver from 'src/services/latest-version/LatestVersionResolver';
-import MailResolver from 'src/services/mailing/MailResolver';
-import AbstractTask from 'src/tasks/AbstractTask';
-import { TaskInterface } from 'src/tasks/TaskInterface';
-import Tools from 'src/Tools';
+import LatestVersionResolver from 'src/resolver/latest-version/LatestVersionResolver';
+import MailingResolver from 'src/resolver/mailing/MailingResolver';
+import Config from 'src/services/config/Config';
+import Logger from 'src/services/logger/Logger';
+import AbstractTask from 'src/services/scheduler/AbstractTask';
+import Utils, { TVersionDiffCategory } from 'src/Utils';
 
 type TSiteReport = {
     name: TSite['name'];
     url: TSite['url'];
-    environment: TSiteEnvironment;
+    environment: TSite['environment'];
     phpVersion: {
         installed: TSite['phpVersion'];
-        latest: string | null;
-        diff: 'major' | 'minor' | 'patch' | 'igl' | 'same' | 'invalid' | null;
+        latest: TSite['phpVersion'];
+        diff: TVersionDiffCategory | null;
     };
     wpVersion: {
         installed: TSite['wpVersion'];
-        latest: string | null;
-        diff: 'major' | 'minor' | 'patch' | 'igl' | 'same' | 'invalid' | null;
+        latest: TSite['wpVersion'];
+        diff: TVersionDiffCategory | null;
     };
     plugins: {
-        total: number;
-        matchingVersions: number;
+        countTotal: number;
+        countMatchingVersions: number;
         mismatchingVersions: {
             slug: TPlugin['slug'];
             isActive: TSitePlugin['isActive'];
-            installedVersion: TSitePlugin['installedVersion'];
-            latestVersion: TPlugin['latestVersion'];
-            difference: 'major' | 'minor' | 'patch' | 'igl';
-            severity: {
-                countVulnerabilities: number;
-                highestScore: number;
+            version: {
+                installed: string;
+                latest: string;
+                diff: TVersionDiffCategory;
+            };
+            vulnerabilities: {
+                count: number;
+                highestSeverity: number;
             };
         }[];
     };
 };
 
-type GroupedReport = Record<TSiteEnvironment, TSiteReport[]>;
+type TGroupedReports = Record<TSiteEnvironment, TSiteReport[]>;
 
-export default class SendReportMailTask extends AbstractTask implements TaskInterface {
-    private siteRepository: SiteRepository;
-    private pluginRepository: PluginRepository;
-    private latestVersionResolver: LatestVersionResolver;
-    private mailResolver: MailResolver;
+export default class SendReportMailTask extends AbstractTask {
+    private readonly siteRepository: SiteRepository;
+    private readonly pluginRepository: PluginRepository;
+    private readonly sitePluginRepository: SitePluginRepository;
+    private readonly pluginVulnerabilityRepository: PluginVulnerabilityRepository;
+    private readonly latestVersionResolver: LatestVersionResolver;
+    private readonly mailingResolver: MailingResolver;
+    private readonly mailSender: string;
+    private readonly mailRecipient: string;
 
     constructor(
-        logger: LoggerInterface,
+        logger: Logger,
         siteRepository: SiteRepository,
         pluginRepository: PluginRepository,
+        sitePluginRepository: SitePluginRepository,
+        pluginVulnerabilityRepository: PluginVulnerabilityRepository,
         latestVersionResolver: LatestVersionResolver,
-        mailResolver: MailResolver
+        mailingResolver: MailingResolver
     ) {
         super(logger);
+
         this.siteRepository = siteRepository;
         this.pluginRepository = pluginRepository;
+        this.sitePluginRepository = sitePluginRepository;
+        this.pluginVulnerabilityRepository = pluginVulnerabilityRepository;
         this.latestVersionResolver = latestVersionResolver;
-        this.mailResolver = mailResolver;
+        this.mailingResolver = mailingResolver;
+
+        this.mailSender = Config.get<string>('MAILING_REPORT_SENDER');
+        this.mailRecipient = Config.get<string>('MAILING_REPORT_RECIPIENT');
     }
 
     public async run(): Promise<void> {
         try {
-            if (!Config.get<boolean>('MAILING_ENABLED')) {
-                this.logger.info('Mailing is disabled, skipping report mail sending.');
-                return;
-            }
-
             const groupedReports = await this.getGroupedReports();
-            const mailContent = this.buildMailContent(groupedReports);
+            const mailBody = this.buildMailBody(groupedReports);
 
-            this.logger.info('Sending report mail...');
-
-            await this.mailResolver.sendMail(
-                Config.get<string>('MAILING_REPORT_SENDER'),
-                Config.get<string>('MAILING_REPORT_RECIPIENT'),
-                'Rumble WPPD Report',
-                mailContent
-            );
-            this.logger.info('Rumble WPPD Report generated and sent via email.');
-        } catch (err) {
-            this.logger.error('Failed to send Rumble WPPD Report via email', { error: err });
+            await this.mailingResolver.sendMail(this.mailSender, this.mailRecipient, 'Rumble WPPD Report', mailBody);
+        } catch (e) {
+            this.logger.error('Failed to send report mail', { err: e });
         }
     }
 
-    private async getGroupedReports(): Promise<GroupedReport> {
-        const siteSortPriority: Record<string, number> = {
+    private async getGroupedReports(): Promise<TGroupedReports> {
+        const siteSortPriority: Record<TSiteEnvironment & null, number> = {
             production: 1,
             staging: 2,
             development: 3,
             null: 4,
         };
 
-        const pluginSortPriority: Record<string, number> = {
+        const pluginSortPriority: Record<Exclude<TVersionDiffCategory, 'same' | 'invalid'>, number> = {
             major: 1,
             minor: 2,
             patch: 3,
             igl: 4,
         };
 
-        const siteReports: TSiteReport[] = [];
+        const reports: TSiteReport[] = [];
 
         const sites = await this.siteRepository.findAll();
-        const latestPhpVersion = await this.latestVersionResolver.resolvePhp();
-        const latestWpVersion = await this.latestVersionResolver.resolveWp();
+        const latestPhpVersion = this.latestVersionResolver.resolvePhp();
+        const latestWpVersion = this.latestVersionResolver.resolveWordPress();
 
         for (const site of sites) {
-            const sitePlugins = await this.siteRepository.findAllSitePlugins(site.getId());
-            const sitePluginsWithMismatchingVersions: TSiteReport['plugins']['mismatchingVersions'] = [];
+            const sitePlugins = await this.sitePluginRepository.findAllBySiteId(site.getId());
+            const sitePluginsMismatchingVersions: TSiteReport['plugins']['mismatchingVersions'] = [];
 
             for (const sitePlugin of sitePlugins) {
-                const installedVersion = sitePlugin.getInstalledVersion();
-                const latestVersion = sitePlugin.getLatestVersion();
+                const plugin = await this.pluginRepository.findById(sitePlugin.getPluginId());
 
-                if (installedVersion.version === null || latestVersion.version === null) {
+                if (!plugin) {
                     continue;
                 }
 
-                const sitePluginVersionDiffCategory = Tools.categorizeVersionDiff(
-                    installedVersion.version,
-                    latestVersion.version
+                const installedVersion = sitePlugin.getInstalledVersion();
+                const latestVersion = plugin.getLatestVersion();
+
+                if (!installedVersion || !latestVersion) {
+                    continue;
+                }
+
+                const versionDiffCategory = Utils.categorizeVersionDifference(installedVersion, latestVersion);
+                if (versionDiffCategory === 'same' || versionDiffCategory === 'invalid') {
+                    continue;
+                }
+
+                const vulnerabilities = await this.pluginVulnerabilityRepository.findAllByPluginIdAndInstalledVersion(
+                    plugin.getId(),
+                    installedVersion
                 );
 
-                if (sitePluginVersionDiffCategory === 'invalid' || sitePluginVersionDiffCategory === 'same') {
-                    continue;
-                }
-
-                const vulnerabilities = await this.pluginRepository.getVulnerabilities(sitePlugin.getSlug());
-                if (vulnerabilities === null) {
-                    this.logger.warn(`Failed to fetch vulnerabilities for plugin`, { slug: sitePlugin.getSlug() });
-                    continue;
-                }
-
-                const filteredVulnerabilities = vulnerabilities.filter(({ to }) => {
-                    if (to.version === '*' || !to.version || !installedVersion.version) {
-                        return true;
-                    }
-
-                    const cmp = Tools.compareVersions(to.version, installedVersion.version);
-
-                    if (cmp === null) {
-                        return false;
-                    }
-
-                    return cmp > 0 || (cmp === 0 && to.inclusive);
-                });
-
-                sitePluginsWithMismatchingVersions.push({
-                    slug: sitePlugin.getSlug(),
+                sitePluginsMismatchingVersions.push({
+                    slug: plugin.getSlug(),
                     isActive: sitePlugin.getIsActive(),
-                    installedVersion: installedVersion.version,
-                    latestVersion: latestVersion.version,
-                    difference: sitePluginVersionDiffCategory,
-                    severity: {
-                        countVulnerabilities: filteredVulnerabilities.length,
-                        highestScore: filteredVulnerabilities.reduce(
-                            (max, vulnerability) => Math.max(max, vulnerability.score),
+                    version: {
+                        installed: installedVersion,
+                        latest: latestVersion,
+                        diff: versionDiffCategory,
+                    },
+                    vulnerabilities: {
+                        count: vulnerabilities.length,
+                        highestSeverity: vulnerabilities.reduce(
+                            (max, vulnerability) => Math.max(max, vulnerability.getSeverity()),
                             0
                         ),
                     },
                 });
             }
 
-            if (sitePluginsWithMismatchingVersions.length > 0) {
-                sitePluginsWithMismatchingVersions.sort((a, b) => {
-                    const priorityA = pluginSortPriority[a.difference];
-                    const priorityB = pluginSortPriority[b.difference];
+            if (sitePluginsMismatchingVersions.length > 0) {
+                sitePluginsMismatchingVersions.sort((a, b) => {
+                    const priorityA = pluginSortPriority[a.version.diff];
+                    const priorityB = pluginSortPriority[b.version.diff];
 
                     if (priorityA === priorityB) {
                         if (a.slug < b.slug) {
@@ -183,55 +174,54 @@ export default class SendReportMailTask extends AbstractTask implements TaskInte
                 });
             }
 
-            const sitePhpVersion = site.getPhpVersion();
-            const siteWpVersion = site.getWpVersion();
+            const installedPhpVersion = site.getPhpVersion();
+            const installedWpVersion = site.getWpVersion();
 
-            siteReports.push({
+            reports.push({
                 name: site.getName(),
                 url: site.getUrl(),
                 environment: site.getEnvironment(),
                 phpVersion: {
-                    installed: sitePhpVersion,
+                    installed: installedPhpVersion,
                     latest: latestPhpVersion,
                     diff:
-                        sitePhpVersion && latestPhpVersion
-                            ? Tools.categorizeVersionDiff(sitePhpVersion, latestPhpVersion)
+                        installedPhpVersion && latestPhpVersion
+                            ? Utils.categorizeVersionDifference(installedPhpVersion, latestPhpVersion)
                             : null,
                 },
                 wpVersion: {
-                    installed: siteWpVersion,
+                    installed: installedWpVersion,
                     latest: latestWpVersion,
                     diff:
-                        siteWpVersion && latestWpVersion
-                            ? Tools.categorizeVersionDiff(siteWpVersion, latestWpVersion)
+                        installedWpVersion && latestWpVersion
+                            ? Utils.categorizeVersionDifference(installedWpVersion, latestWpVersion)
                             : null,
                 },
                 plugins: {
-                    total: sitePlugins.length,
-                    matchingVersions: sitePlugins.length - sitePluginsWithMismatchingVersions.length,
-                    mismatchingVersions: sitePluginsWithMismatchingVersions,
+                    countTotal: sitePlugins.length,
+                    countMatchingVersions: sitePlugins.length - sitePluginsMismatchingVersions.length,
+                    mismatchingVersions: sitePluginsMismatchingVersions,
                 },
             });
         }
 
-        siteReports.sort((a, b) => {
+        reports.sort((a, b) => {
             return siteSortPriority[a.environment] - siteSortPriority[b.environment];
         });
 
-        const groupedReports: GroupedReport = siteReports.reduce((acc, report) => {
+        return reports.reduce((acc, report) => {
             if (!acc[report.environment]) {
                 acc[report.environment] = [];
             }
 
             acc[report.environment].push(report);
-            return acc;
-        }, {} as GroupedReport);
 
-        return groupedReports;
+            return acc;
+        }, {} as TGroupedReports);
     }
 
-    private buildMailContent(reports: GroupedReport): string {
-        const html = `
+    private buildMailBody(groupedReports: TGroupedReports): string {
+        return `
             <html>
                 <head>
                     <style>
@@ -239,15 +229,15 @@ export default class SendReportMailTask extends AbstractTask implements TaskInte
                             font-family: Arial, sans-serif;
                             font-size: 14px;
                         }
-                        hr {
-                            margin-bottom: 16px;
-                            margin-top: 16px;
-                        }
                         span#title {
                             font-size: 24px;
                             font-weight: bold;
                         }
-                        div.environment-wrapper > span.environment-title {
+                        hr {
+                            margin-bottom: 16px;
+                            margin-top: 16px;
+                        }
+                        span.environment-title {
                             font-size: 20px;
                             font-weight: bold;
                         }
@@ -270,139 +260,124 @@ export default class SendReportMailTask extends AbstractTask implements TaskInte
                             background: #ccc;
                             font-weight: bold;
                         }
-
                     </style>
                 </head>
                 <body>
                     <span id="title">Rumble WPPD Report</span>
-                    ${siteEnvironments
-                        .map((environment) =>
-                            reports[environment]
-                                ? `
-                        <hr>
-                        <div class="environment-wrapper">
-                            <span class="environment-title">${
-                                environment.charAt(0).toUpperCase() + environment.slice(1)
-                            }</span>
-                            ${reports[environment]
-                                .map(
-                                    (siteReport) =>
-                                        `
-                            <hr>
-                            <div class="site-wrapper">
-                                <table>
-                                    <tbody>
-                                        <tr class="odd">
-                                            <td class="key title">Site</td>
-                                            <td colspan="6">${siteReport.name}</td>
-                                        </tr>
-                                        <tr class="even">
-                                            <td class="key title">URL</td>
-                                            <td colspan="6">${siteReport.url}</td>
-                                        </tr>
-                                        <tr class="odd">
-                                            <td class="key title" rowspan="2">PHP Version</td>
-                                            <td class="title">Installed</td>
-                                            <td class="title">Latest</td>
-                                            <td class="title">Diff</td>
-                                            <td class="title" colspan="3"></td>
-                                        </tr>
-                                        <tr class="even">
-                                            <td>${siteReport.phpVersion.installed}</td>
-                                            <td>${siteReport.phpVersion.latest}</td>
-                                             <td style="color: ${this.getColorForVersionDiff(
-                                                 siteReport.phpVersion.diff
-                                             )}; font-weight: bold;">${
-                                            siteReport.phpVersion.diff ? siteReport.phpVersion.diff.toUpperCase() : '-'
-                                        }</td>
-                                            <td colspan="3"></td>
-                                        </tr>
-                                        <tr class="odd">
-                                            <td class="key title" rowspan="2">WP Version</td>
-                                            <td class="title">Installed</td>
-                                            <td class="title">Latest</td>
-                                            <td class="title">Diff</td>
-                                            <td class="title" colspan="3"></td>
-                                        </tr>
-                                        <tr class="even">
-                                            <td>${siteReport.wpVersion.installed}</td>
-                                            <td>${siteReport.wpVersion.latest}</td>
-                                             <td style="color: ${this.getColorForVersionDiff(
-                                                 siteReport.wpVersion.diff
-                                             )}; font-weight: bold;">${
-                                            siteReport.wpVersion.diff ? siteReport.wpVersion.diff.toUpperCase() : '-'
-                                        }</td>
-                                            <td colspan="3"></td>
-                                        </tr>
-                                        <tr class="odd">
-                                            <td class="key title">Total Plugins</td>
-                                            <td colspan="6">${siteReport.plugins.total}</td>
-                                        </tr>
-                                        <tr class="even">
-                                            <td class="key title">Plugins with matching versions</td>
-                                            <td colspan="6">${siteReport.plugins.matchingVersions}</td>
-                                        </tr>
-                                        <tr class="odd">
-                                            <td class="key title" rowspan="${
-                                                siteReport.plugins.mismatchingVersions.length > 0
-                                                    ? siteReport.plugins.mismatchingVersions.length + 1
-                                                    : 1
-                                            }">Plugins with mismatching versions</td>
-                                            ${
-                                                siteReport.plugins.mismatchingVersions.length > 0
-                                                    ? `
-                                            <td class="title">Plugin ID</td>
-                                            <td class="title" style="width: 10%;">Active</td>
-                                            <td class="title" style="width: 10%;">Installed Version</td>
-                                            <td class="title" style="width: 10%;">Latest Version</td>
-                                            <td class="title" style="width: 10%;">Difference</td>
-                                            <td class="title" style="width: 10%;">Severity</td>
-                                            `
-                                                    : `
-                                            <td colspan="6">0</td>
-                                            `
-                                            }
-                                        </tr>
-                                        ${siteReport.plugins.mismatchingVersions
-                                            .map(
-                                                (plugin, index) =>
+                    ${Object.keys(groupedReports)
+                        .map(
+                            (environment) =>
+                                groupedReports[environment].length > 0 &&
+                                `
+                                <hr>
+                                <div>
+                                    <span class="environment-title">${environment.charAt(0).toUpperCase() + environment.slice(1)}</span>
+                                    ${groupedReports[environment]
+                                        .map(
+                                            (report: TSiteReport) => `
+                                        <hr>
+                                        <div>
+                                            <table>
+                                                <tbody>
+                                                    <tr class="odd">
+                                                        <td class="key title">Site</td>
+                                                        <td colspan="6">${report.name}</td>
+                                                    </tr>
+                                                    <tr class="even">
+                                                        <td class="key title">URL</td>
+                                                        <td colspan="6">${report.url}</td>
+                                                    </tr>
+                                                    <tr class="odd">
+                                                        <td class="key title" rowspan="2">PHP Version</td>
+                                                        <td class="title">Installed</td>
+                                                        <td class="title">Latest</td>
+                                                        <td class="title">Diff</td>
+                                                        <td class="title" colspan="3"></td>
+                                                    </tr>
+                                                    <tr class="even">
+                                                        <td>${report.phpVersion.installed}</td>
+                                                        <td>${report.phpVersion.latest}</td>
+                                                        <td style="color: ${this.getColorForVersionDifference(
+                                                            report.phpVersion.diff
+                                                        )}; font-weight: bold;">${
+                                                            report.phpVersion.diff
+                                                                ? report.phpVersion.diff.toUpperCase()
+                                                                : '-'
+                                                        }</td>
+                                                        <td colspan="3"></td>
+                                                    </tr>
+                                                    <tr class="odd">
+                                                        <td class="key title" rowspan="2">WP Version</td>
+                                                        <td class="title">Installed</td>
+                                                        <td class="title">Latest</td>
+                                                        <td class="title">Diff</td>
+                                                        <td class="title" colspan="3"></td>
+                                                    </tr>
+                                                    <tr class="even">
+                                                        <td>${report.wpVersion.installed}</td>
+                                                        <td>${report.wpVersion.latest}</td>
+                                                        <td style="color: ${this.getColorForVersionDifference(
+                                                            report.wpVersion.diff
+                                                        )}; font-weight: bold;">${
+                                                            report.wpVersion.diff
+                                                                ? report.wpVersion.diff.toUpperCase()
+                                                                : '-'
+                                                        }</td>
+                                                        <td colspan="3"></td>
+                                                    </tr>
+                                                    <tr class="odd">
+                                                        <td class="key title">Total Plugins</td>
+                                                        <td colspan="6">${report.plugins.countTotal}</td>
+                                                    </tr>
+                                                    <tr class="even">
+                                                        <td class="key title">Plugins with matching versions</td>
+                                                        <td colspan="6">${report.plugins.countMatchingVersions}</td>
+                                                    </tr>
+                                                </tbody>
+                                                <tr class="odd">
+                                                    <td class="key title" rowspan="${report.plugins.mismatchingVersions.length === 0 ? 1 : report.plugins.mismatchingVersions.length + 1}">Plugins with mismatching versions</td>
+                                                    ${
+                                                        report.plugins.mismatchingVersions.length === 0
+                                                            ? '<td colspan="6">0</td>'
+                                                            : `
+                                                        <td class="title">Slug</td>
+                                                        <td class="title" style="width: 10%;">Active</td>
+                                                        <td class="title" style="width: 10%;">Installed Version</td>
+                                                        <td class="title" style="width: 10%;">Latest Version</td>
+                                                        <td class="title" style="width: 10%;">Version Difference</td>
+                                                        <td class="title" style="width: 10%;">Vulnerabilities</td>
                                                     `
-                                        <tr class="${index % 2 === 0 ? 'even' : 'odd'}">
-                                            <td>${plugin.slug}</td>
-                                            <td>${plugin.isActive === true ? 'Yes' : 'No'}</td>
-                                            <td>${plugin.installedVersion}</td>
-                                            <td>${plugin.latestVersion}</td>
-                                            <td style="color: ${this.getColorForVersionDiff(
-                                                plugin.difference
-                                            )}; font-weight: bold;">${plugin.difference.toUpperCase()}</td>
-                                            <td>${
-                                                plugin.severity.countVulnerabilities > 0
-                                                    ? `${plugin.severity.countVulnerabilities} - ${plugin.severity.highestScore}`
-                                                    : '-'
-                                            }</td>
-                                        </tr>
-                                        `
-                                            )
-                                            .join('')}
-                                    </tbody>
-                                </table>
-                            </div>
+                                                    }
+                                                </tr>
+                                                ${report.plugins.mismatchingVersions
+                                                    .map(
+                                                        (plugin, index) => `
+                                                    <tr class="${index % 2 === 0 ? 'even' : 'odd'}">
+                                                        <td>${plugin.slug}</td>
+                                                        <td>${plugin.isActive ? 'Yes' : 'No'}</td>
+                                                        <td>${plugin.version.installed}</td>
+                                                        <td>${plugin.version.latest}</td>
+                                                        <td style="font-weight: bold; color: ${this.getColorForVersionDifference(plugin.version.diff)}">${plugin.version.diff.toUpperCase()}</td>
+                                                        <td>${plugin.vulnerabilities.count === 0 ? '-' : `${plugin.vulnerabilities.count} - ${plugin.vulnerabilities.highestSeverity}`}</td>
+                                                    </tr>
+                                                `
+                                                    )
+                                                    .join('')}
+                                            </table>
+                                        </div>
+                                    `
+                                        )
+                                        .join('')}
+                                </div>
                             `
-                                )
-                                .join('')}
-                        </div>
-                        `
-                                : ''
                         )
                         .join('')}
                 </body>
-            <html>
+            </html>
         `;
-
-        return html;
     }
 
-    private getColorForVersionDiff(diff: 'major' | 'minor' | 'patch' | 'igl' | 'same' | 'invalid' | null): string {
+    private getColorForVersionDifference(diff: TVersionDiffCategory | null): string {
         switch (diff) {
             case 'major':
                 return '#f2495d';

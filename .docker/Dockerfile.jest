@@ -1,0 +1,8 @@
+FROM node:25-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --no-cache
+COPY . .
+RUN mkdir -p ./sqlite/data
+ENV NODE_ENV=test
+CMD ["sh", "-c", "npx ts-node src/services/database/Migrate.ts && npx jest --color"]

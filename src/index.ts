@@ -1,118 +1,129 @@
-import { db } from 'src/components/database/Database';
-import { pluginsTable, pluginVulnerabilitiesTable, sitePluginsTable, sitesTable } from 'src/components/database/Schema';
-import AppLogger from 'src/components/logger/AppLogger';
-import SchdulerLogger from 'src/components/logger/SchedulerLogger';
-import Scheduler from 'src/components/Scheduler';
-import Server from 'src/components/server/Server';
-import Config from 'src/config/Config';
-import ConfigSchema from 'src/config/Schema';
 import IndexController from 'src/controllers/IndexController';
 import SiteController from 'src/controllers/SiteController';
 import PluginRepository from 'src/repositories/PluginRepository';
+import PluginVulnerabilityRepository from 'src/repositories/PluginVulnerabilityRepository';
+import SitePluginRepository from 'src/repositories/SitePluginRepository';
 import SiteRepository from 'src/repositories/SiteRepository';
-import LatestVersionResolver from 'src/services/latest-version/LatestVersionResolver';
-import PhpLatestVersionProvider from 'src/services/latest-version/providers/PHP';
-import WordPressApiLatestVersionProvider from 'src/services/latest-version/providers/plugin/WordPressApi';
-import WordPressLatestVersionProvider from 'src/services/latest-version/providers/WordPress';
-import MailResolver from 'src/services/mailing/MailResolver';
-import SESMailProvider from 'src/services/mailing/providers/SES';
-import WordFenceApiVulnerabilitiesProvider from 'src/services/vulnerabilities/providers/WordFenceApi';
-import VulnerabilitiesResolver from 'src/services/vulnerabilities/VulnerabilitiesResolver';
-import DeletePluginsUnusedTask from 'src/tasks/DeletePluginsUnused';
-import DeleteSitesInactiveTask from 'src/tasks/DeleteSitesInactive';
+import LatestVersionResolver from 'src/resolver/latest-version/LatestVersionResolver';
+import WordPressApiLatestPluginVersionProvider from 'src/resolver/latest-version/providers/plugin/WordPressApi';
+import LatestPhpRuntimeVersionProvider from 'src/resolver/latest-version/providers/runtime/PHP';
+import LatestWordPressRuntimeVersionProvider from 'src/resolver/latest-version/providers/runtime/WordPress';
+import MailingResolver from 'src/resolver/mailing/MailingResolver';
+import SESMailingProvider from 'src/resolver/mailing/providers/SES';
+import WordFenceApiPluginVulnerabilitiesProvider from 'src/resolver/vulnerabilities/providers/plugin/WordFenceApi';
+import VulnerabilitiesResolver from 'src/resolver/vulnerabilities/VulnerabilitiesResolver';
+import Config from 'src/services/config/Config';
+import configSchema from 'src/services/config/Schema';
+import { database } from 'src/services/database/Database';
+import { pluginsTable, pluginVulnerabilitiesTable, sitePluginsTable, sitesTable } from 'src/services/database/Schema';
+import Logger from 'src/services/logger/Logger';
+import Scheduler from 'src/services/scheduler/Scheduler';
+import Server from 'src/services/server/Server';
+import DeleteInactiveSitesTask from 'src/tasks/DeleteInactiveSites';
+import DeleteUnusedPluginsTask from 'src/tasks/DeleteUnusedPlugins';
 import SendReportMailTask from 'src/tasks/SendReportMail';
-import UpdatePluginsLatestVersionTask from 'src/tasks/UpdatePluginsLatestVersion';
-import UpdatePluginsVulnerabilitiesTask from 'src/tasks/UpdatePluginsVulnerabilities';
-import UpdateLatestPhpVersionProviderTask from 'src/tasks/UpdateLatestPhpVersionProvider';
-import UpdateLatestWpVersionProviderTask from 'src/tasks/UpdateLatestWpVersionProvider';
-import UpdateWordFenceVulnerabilitiesProviderTask from 'src/tasks/UpdateWordFenceVulnerabilitiesProvider';
+import UpdateLatestPhpVersionTask from 'src/tasks/UpdateLatestPhpVersion';
+import UpdateLatestPluginVersionsTask from 'src/tasks/UpdateLatestPluginVersions';
+import UpdateLatestWordPressVersionTask from 'src/tasks/UpdateLatestWordPressVersion';
+import UpdatePluginVulnerabilitiesTask from 'src/tasks/UpdatePluginVulnerabilities';
+import UpdateWordFencePluginVulnerabilitiesTask from 'src/tasks/UpdateWordFencePluginVulnerabilities';
 
-Config.load(ConfigSchema);
+Config.load(configSchema);
 
-const appLogger = new AppLogger(Config.getAppLoggerConfig());
-const schedulerLogger = new SchdulerLogger(Config.getSchedulerLoggerConfig());
+const logger = new Logger(Config.getLoggerConfig());
 
 Server.setConfig(Config.getServerConfig());
-const server = Server.getInstance(appLogger);
+const server = Server.getInstance(logger);
 
-const latestVersionResolver = new LatestVersionResolver();
-const phpLatestVersionProvider = new PhpLatestVersionProvider();
-latestVersionResolver.setPhpProvider(phpLatestVersionProvider);
+const siteRepository = new SiteRepository(database, sitesTable);
+const pluginRepository = new PluginRepository(database, pluginsTable);
+const sitePluginRepository = new SitePluginRepository(database, sitePluginsTable);
+const pluginVulnerabilityRepository = new PluginVulnerabilityRepository(database, pluginVulnerabilitiesTable);
 
-const wpLatestVersionProvider = new WordPressLatestVersionProvider();
-latestVersionResolver.setWpProvider(wpLatestVersionProvider);
+const latestPhpRuntimeVersionProvider = new LatestPhpRuntimeVersionProvider();
+const latestWordPressRuntimeVersionProvider = new LatestWordPressRuntimeVersionProvider();
+const wordPressApiLatestPluginVersionProvider = new WordPressApiLatestPluginVersionProvider();
 
-latestVersionResolver.addPluginProvider(new WordPressApiLatestVersionProvider());
-
-const wordFenceApiVulnerabilitiesProvider = new WordFenceApiVulnerabilitiesProvider();
-
-const vulnerabilitiesResolver = new VulnerabilitiesResolver();
-vulnerabilitiesResolver.addProvider(wordFenceApiVulnerabilitiesProvider);
-
-const mailResolver = new MailResolver();
-mailResolver.setProvider(new SESMailProvider(Config.getMailingSESConfig()));
-
-const siteRepository = new SiteRepository(db, sitesTable, pluginsTable, sitePluginsTable);
-const pluginRepository = new PluginRepository(
-    db,
-    pluginsTable,
-    sitePluginsTable,
-    pluginVulnerabilitiesTable,
-    vulnerabilitiesResolver
+const latestVersionResolver = new LatestVersionResolver(
+    latestPhpRuntimeVersionProvider,
+    latestWordPressRuntimeVersionProvider,
+    [wordPressApiLatestPluginVersionProvider]
 );
 
-const indexController = new IndexController(appLogger);
-const siteController = new SiteController(appLogger, siteRepository, pluginRepository, latestVersionResolver);
+const wordFenceApiPluginVulnerabilitiesProvider = new WordFenceApiPluginVulnerabilitiesProvider();
 
-server.useRouter('/', indexController.getRouter());
-server.useRouter('/site', siteController.getRouter());
+const vulnerabilitiesResolver = new VulnerabilitiesResolver([wordFenceApiPluginVulnerabilitiesProvider]);
+
+const sesMailingProvider = new SESMailingProvider(Config.getMailingSESConfig());
+const mailingResolver = new MailingResolver(sesMailingProvider);
+
+server.registerController(new IndexController(logger));
+server.registerController(
+    new SiteController(
+        logger,
+        siteRepository,
+        pluginRepository,
+        sitePluginRepository,
+        pluginVulnerabilityRepository,
+        latestVersionResolver,
+        vulnerabilitiesResolver
+    )
+);
 server
     .start()
     .then(() => {
-        appLogger.info('Server started successfully');
+        logger.info('Successfully started server');
     })
-    .catch((error) => {
-        appLogger.error('Failed to start server:', error);
+    .catch((err) => {
+        logger.error('Failed to start server', { err });
         process.exit(1);
     });
 
-const scheduler = Scheduler.getInstance(appLogger);
-scheduler.addTask('update-plugins-latest-versions', '0 * * * *', () =>
-    new UpdatePluginsLatestVersionTask(schedulerLogger, pluginRepository, latestVersionResolver).run()
-); // Every hour
-scheduler.addTask('update-plugins-vulnerabilities', '0 */3 * * *', () =>
-    new UpdatePluginsVulnerabilitiesTask(schedulerLogger, pluginRepository).run()
-); // Every 3 hours
-scheduler.addTask('delete-plugins-unused', '0 12 * * *', () =>
-    new DeletePluginsUnusedTask(schedulerLogger, pluginRepository).run()
-); // Every day at 12:00
-scheduler.addTask('delete-sites-inactive', '0 12 */7 * *', () =>
-    new DeleteSitesInactiveTask(schedulerLogger, siteRepository).run()
-); // Every 7 days at 12:00
-scheduler.addTask('send-report-mail', '0 12 * * *', () =>
-    new SendReportMailTask(schedulerLogger, siteRepository, pluginRepository, latestVersionResolver, mailResolver).run()
-); // Every day at 12:00
-scheduler.addTask('update-latest-php-version', '* */30 * * *', () =>
-    new UpdateLatestPhpVersionProviderTask(schedulerLogger, phpLatestVersionProvider).run()
-); // Every 30 minutes
-scheduler.addTask('update-latest-wp-version', '* */30 * * *', () =>
-    new UpdateLatestWpVersionProviderTask(schedulerLogger, wpLatestVersionProvider).run()
-); // Every 30 minutes
-scheduler.addTask('update-wordfence-vulnerabilities-version', '* */30 * * *', () =>
-    new UpdateWordFenceVulnerabilitiesProviderTask(schedulerLogger, wordFenceApiVulnerabilitiesProvider).run()
-); // Every 30 minutes
+const scheduler = Scheduler.getInstance(logger);
 
-async function main() {
-    try {
-        await phpLatestVersionProvider.fetchLatestVersion();
-        await wpLatestVersionProvider.fetchLatestVersion();
-        await wordFenceApiVulnerabilitiesProvider.fetchVulnerabilities();
-    } catch (err) {
-        appLogger.error('Error while fetching initial data. Exiting application...', {
-            error: err,
-        });
-        process.exit(1);
-    }
+scheduler.addTask('update-latest-php-version', '*/30 * * * *', () =>
+    new UpdateLatestPhpVersionTask(logger, latestPhpRuntimeVersionProvider).run()
+);
+scheduler.addTask('update-latest-wordpress-version', '*/30 * * * *', () =>
+    new UpdateLatestWordPressVersionTask(logger, latestWordPressRuntimeVersionProvider).run()
+);
+scheduler.addTask('update-wordfence-plugin-vulnerabilities', '*/30 * * * *', () =>
+    new UpdateWordFencePluginVulnerabilitiesTask(logger, wordFenceApiPluginVulnerabilitiesProvider).run()
+);
+scheduler.addTask('update-latest-plugin-versions', '*/30 * * * *', () =>
+    new UpdateLatestPluginVersionsTask(logger, pluginRepository, latestVersionResolver).run()
+);
+scheduler.addTask('update-plugin-vulnerabilities', '*/30 * * * *', () =>
+    new UpdatePluginVulnerabilitiesTask(
+        logger,
+        pluginRepository,
+        pluginVulnerabilityRepository,
+        vulnerabilitiesResolver
+    ).run()
+);
+scheduler.addTask('delete-inactive-sites', '0 12 */7 * *', () =>
+    new DeleteInactiveSitesTask(logger, siteRepository).run()
+);
+scheduler.addTask('delete-unused-plugins', '0 12 * * *', () =>
+    new DeleteUnusedPluginsTask(logger, pluginRepository, sitePluginRepository).run()
+);
+
+if (Config.get<boolean>('MAILING_REPORT_ENABLED')) {
+    scheduler.addTask('send-report-mail', '0 12 * * *', () =>
+        new SendReportMailTask(
+            logger,
+            siteRepository,
+            pluginRepository,
+            sitePluginRepository,
+            pluginVulnerabilityRepository,
+            latestVersionResolver,
+            mailingResolver
+        ).run()
+    );
 }
 
-main();
+(async () => {
+    await latestPhpRuntimeVersionProvider.fetch();
+    await latestWordPressRuntimeVersionProvider.fetch();
+    await wordFenceApiPluginVulnerabilitiesProvider.fetch();
+})();

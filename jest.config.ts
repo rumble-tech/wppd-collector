@@ -8,19 +8,22 @@ module.exports = {
     coveragePathIgnorePatterns: [
         '/node_modules/',
         './src/index.ts',
-        './src/@types',
-        './src/components/database',
+        './src/services/config/Schema.ts',
+        './src/services/database',
+        './src/services/server/AbstractController.ts',
+        './src/repositories/AbstractRepository.ts',
         './src/entities',
-        './src/models',
-        './src/controllers/AbstractController.ts',
-        './src/tasks/AbstractTask.ts',
-        './src/components/logger/AbstractLogger.ts',
-        './src/config/Schema.ts',
+        './src/resolver/latest-version/providers/runtime/AbstractLatestRuntimeVersionProvider.ts',
+        './src/resolver/latest-version/providers/plugin/AbstractLatestPluginVersionProvider.ts',
+        './src/services/scheduler/AbstractTask.ts',
+        './src/@types',
+        './src/resolver/vulnerabilities/providers/plugin/AbstractPluginVulnerabilitiesProvider.ts',
+        './src/resolver/mailing/providers/AbstractMailingProvider.ts',
     ],
     coverageReporters: ['text', 'cobertura'],
     coverageDirectory: './coverage',
     transform: {
-        '^.+\\.tsx?$': [
+        '^.+\\.ts$': [
             'ts-jest',
             {
                 tsconfig: 'tsconfig.json',
@@ -32,4 +35,5 @@ module.exports = {
         '^test-utils/(.*)$': '<rootDir>/test-utils/$1',
     },
     setupFiles: ['tsconfig-paths/register'],
+    setupFilesAfterEnv: ['<rootDir>/test-utils/Expects.ts'],
 };

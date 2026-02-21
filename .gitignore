@@ -1,8 +1,8 @@
 node_modules
-dist
-logs
-sqlite
+.idea/*
+.docker/*override*
+!.docker/compose.dev.override.example.yml
 coverage
-docker/**override**
-!docker/compose.dev.override.example.yml
 .DS_Store
+logs
+sqlite/data
