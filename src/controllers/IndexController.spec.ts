@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { setupTestServer } from 'test-utils/setup-server';
+import { setupTestServer } from 'test-utils/SetupServer';
 
 describe('IndexController', () => {
     it('should respond with (200) and { message: "Welcome to the API", data: { ... } }', async () => {
@@ -8,9 +8,9 @@ describe('IndexController', () => {
 
         expect(response.status).toBe(200);
         expect(response.body).toEqual({
-            message: 'Welcome to the API',
+            message: 'Welcome to the API!',
             data: {
-                version: process.env.npm_package_version,
+                NODE_ENV: process.env.NODE_ENV,
             },
         });
     });

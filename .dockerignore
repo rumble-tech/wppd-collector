@@ -1,4 +1,9 @@
 node_modules
-logs
-sqlite
+.idea
+.docker
+.github
+.gitignore
+.dockerignore
 coverage
+logs
+sqlite/data

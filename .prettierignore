@@ -1,3 +1,2 @@
-*.yml
 *.md
-src/components/database/migrations
+*.yml
