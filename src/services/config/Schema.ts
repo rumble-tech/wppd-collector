@@ -41,4 +41,8 @@ export default {
         type: 'string',
         required: false,
     },
+    WORDFENCE_API_KEY: {
+        type: 'string',
+        required: true,
+    },
 } as TConfigSchema;

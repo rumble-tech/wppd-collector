@@ -50,7 +50,7 @@ const latestVersionResolver = new LatestVersionResolver(
     [wordPressApiLatestPluginVersionProvider]
 );
 
-const wordFenceApiPluginVulnerabilitiesProvider = new WordFenceApiPluginVulnerabilitiesProvider();
+const wordFenceApiPluginVulnerabilitiesProvider = new WordFenceApiPluginVulnerabilitiesProvider(logger);
 
 const vulnerabilitiesResolver = new VulnerabilitiesResolver([wordFenceApiPluginVulnerabilitiesProvider]);
 
@@ -87,7 +87,7 @@ scheduler.addTask('update-latest-php-version', '*/30 * * * *', () =>
 scheduler.addTask('update-latest-wordpress-version', '*/30 * * * *', () =>
     new UpdateLatestWordPressVersionTask(logger, latestWordPressRuntimeVersionProvider).run()
 );
-scheduler.addTask('update-wordfence-plugin-vulnerabilities', '*/30 * * * *', () =>
+scheduler.addTask('update-wordfence-plugin-vulnerabilities', '*/45 * * * *', () =>
     new UpdateWordFencePluginVulnerabilitiesTask(logger, wordFenceApiPluginVulnerabilitiesProvider).run()
 );
 scheduler.addTask('update-latest-plugin-versions', '*/30 * * * *', () =>

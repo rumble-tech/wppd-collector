@@ -1,11 +1,13 @@
-import axios from 'axios';
 import { TPlugin } from 'src/entities/Plugin';
 import { TPluginVulnerability } from 'src/entities/PluginVulnerability';
 import AbstractPluginVulnerabilitiesProvider from 'src/resolver/vulnerabilities/providers/plugin/AbstractPluginVulnerabilitiesProvider';
 import Utils from 'src/Utils';
+import Config from 'src/services/config/Config';
+import axios from 'axios';
 
 export default class WordFenceApiPluginVulnerabilitiesProvider extends AbstractPluginVulnerabilitiesProvider {
-    private readonly apiUrl = 'https://www.wordfence.com/api/intelligence/v2/vulnerabilities/production';
+    private readonly apiUrl = 'https://www.wordfence.com/api/intelligence/v3/vulnerabilities/production';
+    private readonly apiKey = Config.get<string>('WORDFENCE_API_KEY');
 
     private vulnerabilities: Record<
         TPlugin['slug'],
@@ -29,6 +31,7 @@ export default class WordFenceApiPluginVulnerabilitiesProvider extends AbstractP
                 url: this.apiUrl,
                 headers: {
                     'Content-Type': 'application/json',
+                    Authorization: `Bearer ${this.apiKey}`,
                 },
             });
 
@@ -96,7 +99,11 @@ export default class WordFenceApiPluginVulnerabilitiesProvider extends AbstractP
             });
 
             this.vulnerabilities = map;
-        } catch {
+        } catch (e) {
+            this.logger.error('Failed to fetch vulnerabilities from WordFence API', {
+                error: e.message,
+            });
+
             this.vulnerabilities = {};
         }
     }
