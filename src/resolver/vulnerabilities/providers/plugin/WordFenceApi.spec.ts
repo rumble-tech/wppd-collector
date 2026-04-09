@@ -1,16 +1,28 @@
 import axios from 'axios';
 import WordFenceApiPluginVulnerabilitiesProvider from 'src/resolver/vulnerabilities/providers/plugin/WordFenceApi';
+import Logger from 'src/services/logger/Logger';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.MockedFunction<typeof axios>;
 
 describe('WordFenceApiPluginVulnerabilitiesProvider', () => {
     let provider: WordFenceApiPluginVulnerabilitiesProvider;
+    let mockLogger: jest.Mocked<Logger>;
     const apiUrl = 'https://example.com/vulnerabilities';
+    const apiKey = 'wordfence-api-key';
 
     beforeEach(() => {
-        provider = new WordFenceApiPluginVulnerabilitiesProvider();
+        mockLogger = {
+            info: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
+            debug: jest.fn(),
+            silly: jest.fn(),
+        } as unknown as jest.Mocked<Logger>;
+
+        provider = new WordFenceApiPluginVulnerabilitiesProvider(mockLogger);
         (provider as unknown as { apiUrl: string }).apiUrl = apiUrl;
+        (provider as unknown as { apiKey: string }).apiKey = apiKey;
 
         jest.clearAllMocks();
     });
@@ -236,7 +248,7 @@ describe('WordFenceApiPluginVulnerabilitiesProvider', () => {
             expect(mockedAxios).toHaveBeenCalledWith({
                 method: 'GET',
                 url: apiUrl,
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
             });
             expect(provider['vulnerabilities']).toStrictEqual({
                 'sample-plugin': vulnerabilitiesSample,
@@ -251,7 +263,7 @@ describe('WordFenceApiPluginVulnerabilitiesProvider', () => {
             expect(mockedAxios).toHaveBeenCalledWith({
                 method: 'GET',
                 url: apiUrl,
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
             });
             expect(provider['vulnerabilities']).toStrictEqual({});
         });
