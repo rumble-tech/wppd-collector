@@ -40,14 +40,14 @@
         "typescript-eslint": "^8.52.0"
     },
     "dependencies": {
-        "@aws-sdk/client-sesv2": "^3.975.0",
-        "axios": "^1.13.2",
+        "@aws-sdk/client-sesv2": "^3.1047.0",
+        "axios": "^1.15.2",
         "better-sqlite3": "^12.5.0",
         "cors": "^2.8.5",
-        "drizzle-orm": "^0.45.1",
+        "drizzle-orm": "^0.45.2",
         "express": "^5.2.1",
         "node-schedule": "^2.1.1",
-        "nodemailer": "^7.0.12",
+        "nodemailer": "^8.0.5",
         "winston": "^3.19.0",
         "winston-daily-rotate-file": "^5.0.0"
     }
